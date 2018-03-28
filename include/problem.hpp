@@ -18,8 +18,6 @@ class Problem {
   static Problem read(std::string prefix);
   void write(std::string prefix) const;
 
-  void check(const Solution&);
-
   const std::vector<Item>& items() const{ return items_; }
   const std::vector<std::vector<Item> >& sequenceItems() const { return sequenceItems_; }
 
@@ -27,6 +25,10 @@ class Problem {
   const std::vector<std::vector<Defect> >& plateDefects() const { return plateDefects_; }
 
   const Params params() const { return params_; }
+
+ private:
+  void buildSequences();
+  void buildPlates();
 
  private:
   std::vector<Item> items_;

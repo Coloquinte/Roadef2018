@@ -93,13 +93,14 @@ void IOProblem::readDefect(const std::string &s, std::vector<Defect> &defects) {
   for (const string &s : csv_fields)
     defect_fields.push_back(stod(s));
 
-  Defect defect;
+  Defect defect (
+    floor(defect_fields[2])
+  , floor(defect_fields[3])
+  , ceil(defect_fields[4])
+  , ceil(defect_fields[5])
+  );
   defect.id = defect_fields[0];
   defect.plate_id = defect_fields[1];
-  defect.x = floor(defect_fields[2]);
-  defect.y = floor(defect_fields[3]);
-  defect.width  = ceil(defect_fields[4]);
-  defect.height = ceil(defect_fields[5]);
   defects.push_back(defect);
 }
 
@@ -135,10 +136,10 @@ void IOProblem::writeDefects(const std::vector<Defect> &defects) {
   for (Defect defect : defects) {
     f << defect.id << ";";
     f << defect.plate_id << ";";
-    f << defect.x << ";";
-    f << defect.y << ";";
-    f << defect.width << ";";
-    f << defect.height << endl;
+    f << defect.minX() << ";";
+    f << defect.minY() << ";";
+    f << defect.width() << ";";
+    f << defect.height() << endl;
   }
 }
 

@@ -8,6 +8,10 @@ struct Item {
   int height;
   int stack;
   int sequence;
+
+  int area() const {
+    return width * height;
+  }
 };
 
 #endif

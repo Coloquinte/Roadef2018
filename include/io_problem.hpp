@@ -1,4 +1,7 @@
 
+#ifndef IO_PROBLEM_HPP
+#define IO_PROBLEM_HPP
+
 #include "problem.hpp"
 
 class IOProblem {
@@ -28,4 +31,5 @@ class IOProblem {
   std::string namePrefix_;
 };
 
+#endif
 

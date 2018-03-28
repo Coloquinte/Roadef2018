@@ -15,6 +15,7 @@ option(BUILD_TEST "Build unit tests" ON)
 SET (SOURCES
   src/problem.cpp
   src/io_problem.cpp
+  src/solution_checker.cpp
   src/main.cpp
 )
 

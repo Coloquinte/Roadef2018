@@ -2,9 +2,14 @@
 #ifndef SOLUTION_HPP
 #define SOLUTION_HPP
 
+#include "item.hpp"
+#include "rectangle.hpp"
+
+#include <vector>
+
 struct ItemSolution {
-  Rectangle r;
-  int item_id;
+  Item item;
+  Rectangle pos;
 };
 
 struct RowSolution {
@@ -12,9 +17,14 @@ struct RowSolution {
   std::vector<ItemSolution> items;
 };
 
-struct PlateSolution {
+struct CutSolution {
   Rectangle r;
   std::vector<RowSolution> rows;
+};
+
+struct PlateSolution {
+  Rectangle r;
+  std::vector<CutSolution> cuts;
 };
 
 struct Solution {
