@@ -1,5 +1,7 @@
 
 #include "problem.hpp"
+#include "solver.hpp"
+#include "solution_checker.hpp"
 
 #include <iostream>
 
@@ -17,6 +19,9 @@ int main(int argc, char** argv) {
   if (argc >= 3) {
     pb.write(argv[2]);
   }
+
+  Solution solution = Solver::run(pb);
+  SolutionChecker::check(pb, solution);
 
   return 0;
 }

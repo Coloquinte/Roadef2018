@@ -14,8 +14,11 @@ option(BUILD_TEST "Build unit tests" ON)
 
 SET (SOURCES
   src/problem.cpp
+  src/solution.cpp
   src/io_problem.cpp
   src/solution_checker.cpp
+  src/sequence_packer.cpp
+  src/solver.cpp
   src/main.cpp
 )
 

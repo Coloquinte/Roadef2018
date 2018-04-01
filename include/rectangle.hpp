@@ -19,11 +19,22 @@ class Rectangle {
     maxY_ = 0;
   }
 
-  Rectangle(int x, int y, int w, int h) {
-    minX_ = x;
-    minY_ = y;
-    maxX_ = x + w;
-    maxY_ = y + h;
+  static Rectangle FromDimensions(int x, int y, int w, int h) {
+    return Rectangle(
+      x,
+      y,
+      x + w,
+      y + h
+    );
+  }
+
+  static Rectangle FromCoordinates(int minX, int minY, int maxX, int maxY) {
+    return Rectangle(
+      minX,
+      minY,
+      maxX,
+      maxY
+    );
   }
 
   bool contains(const Rectangle &o) const {
@@ -38,6 +49,14 @@ class Rectangle {
         && maxX_ >= o.minX_
         && minY_ <= o.maxY_
         && maxY_ >= o.minY_;
+  }
+
+ protected:
+  Rectangle(int minX, int minY, int maxX, int maxY) {
+    minX_ = minX;
+    minY_ = minY;
+    maxX_ = maxX;
+    maxY_ = maxY;
   }
 
  private:

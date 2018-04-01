@@ -21,10 +21,15 @@ class SolutionChecker {
   void checkCut(const CutSolution &cut);
   void checkRow(const RowSolution &row);
   void checkItem(const ItemSolution &row);
-  void checkDefects(const PlateSolution &plate, const std::vector<Defect> &defects);
+
+  void checkPlateDivision(const PlateSolution &plate);
+  void checkCutDivision(const CutSolution &cut);
+  void checkRowDivision(const RowSolution &row);
 
   void checkItemUnicity();
   void checkSequences();
+
+  bool fitsMinWaste(int a, int b) const;
 
  private:
   const Problem &problem_;
