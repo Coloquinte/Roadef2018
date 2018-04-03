@@ -116,6 +116,14 @@ std::vector<std::string> IOProblem::readCSVLine(const string &s) {
 
 void IOProblem::writeParams(const Params &params) {
   ofstream f(nameParams().c_str());
+  f << "NAME;VALUE" << endl;
+  f << "nPlates;" << params.nPlates << endl;
+  f << "widthPlates;" << params.widthPlates << endl;
+  f << "heightPlates;" << params.heightPlates << endl;
+  f << "minXX;" << params.minXX<< endl;
+  f << "maxXX;" << params.maxXX<< endl;
+  f << "minYY;" << params.minYY<< endl;
+  f << "minWaste;" << params.minWaste<< endl;
 }
 
 void IOProblem::writeItems(const std::vector<Item> &items) {

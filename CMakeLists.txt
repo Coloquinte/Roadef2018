@@ -19,6 +19,7 @@ SET (SOURCES
   src/solution_checker.cpp
   src/sequence_packer.cpp
   src/solver.cpp
+  src/utils.cpp
   src/main.cpp
 )
 

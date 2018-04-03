@@ -59,7 +59,7 @@ class Rectangle {
     maxY_ = maxY;
   }
 
- private:
+ public:
   int minX_;
   int maxX_;
   int minY_;

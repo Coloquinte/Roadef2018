@@ -2,6 +2,7 @@
 #include "problem.hpp"
 #include "solver.hpp"
 #include "solution_checker.hpp"
+#include "utils.hpp"
 
 #include <iostream>
 
