@@ -21,7 +21,11 @@ int main(int argc, char** argv) {
     pb.write(argv[2]);
   }
 
-  Solution solution = Solver::run(pb);
+  Problem down = downscale(pb, 40);
+  Solution downsol = Solver::run(down);
+  Solution solution = upscale(pb, downsol, 40);
+
+  solution.write(cout);
   SolutionChecker::check(pb, solution);
 
   return 0;

@@ -1,6 +1,20 @@
 
 #include "sequence_packer.hpp"
 
+#include <cassert>
+#include <algorithm>
+
+/*
+ * Dynamic programming on all cutting points
+ *
+ *
+ * TODO:
+ *  * prune infeasible cases
+ *  * skip redundant cases (for example from solutions with whitespace)
+ *  * grid pitch reduction
+ *  * counting-only versions (no dynamic allocation)
+ */
+
 using namespace std;
 
 Solution SequencePacker::run(const Problem &problem, const std::vector<Item> &sequence) {
@@ -19,6 +33,7 @@ void SequencePacker::run() {
   Rectangle plateRect = Rectangle::FromCoordinates(0, 0, problem_.params().widthPlates, problem_.params().heightPlates);
 
   for (int i = 0; i < problem_.params().nPlates; ++i) {
+    if (packedItems_ == (int) sequence_.size()) break;
     PlateSolution plate = packPlate(packedItems_, plateRect);
     packedItems_ += plate.nItems();
     solution_.plates.push_back(plate);
@@ -27,18 +42,104 @@ void SequencePacker::run() {
 
 PlateSolution SequencePacker::packPlate(int fromItem, Rectangle plate) {
   // Dynamic programming on the first-level cuts
+  assert (plate.minX() == 0);
+  assert (plate.minY() == 0);
 
+  int maxX = plate.maxX();
+  int minSpacing = problem_.params().minXX;
+  int maxSpacing = problem_.params().maxXX;
+
+  std::vector<int> packingVec(maxX + 1, fromItem);
+  std::vector<int> previousXVec(maxX + 1, 0);
+
+  for (int x_end = minSpacing; x_end <= maxX; ++x_end) {
+    int bestPacking = fromItem;
+    int bestPreviousX = 0;
+
+    for (int x_begin = max(1, x_end - maxSpacing); x_begin <= x_end - minSpacing; ++x_begin) {
+      Rectangle cut = Rectangle::FromCoordinates(x_begin, 0, x_end, plate.maxY());
+      auto solution = packCut(packingVec[x_begin], cut);
+      int packing = packingVec[x_begin] + solution.nItems();
+
+      if (packing < bestPacking) {
+        bestPacking = packing;
+        bestPreviousX = x_begin;
+      }
+    }
+
+    packingVec[x_end] = bestPacking;
+    previousXVec[x_end] = bestPreviousX;
+  }
+
+  // Backtrack for the best solution
+  PlateSolution plateSolution(plate);
+  int x = maxX;
+  while (x != 0) {
+    int x_end = x;
+    int x_begin = previousXVec[x];
+
+    Rectangle cut = Rectangle::FromCoordinates(x_begin, 0, x_end, plate.maxY());
+    auto solution = packCut(packingVec[x_begin], cut);
+    plateSolution.cuts.push_back(solution);
+    x = x_begin;
+  }
+  reverse(plateSolution.cuts.begin(), plateSolution.cuts.end());
+
+  return plateSolution;
 }
 
 CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
   // Dynamic programming on the rows i.e. second-level cuts
+  assert (cut.minY() == 0);
+
+  int maxY = cut.maxY();
+  int minSpacing = problem_.params().minYY;
+
+  std::vector<int> packingVec(maxY + 1, fromItem);
+  std::vector<int> previousYVec(maxY + 1, 0);
+
+  // TODO: early exit for the last plate
+  for (int y_end = minSpacing; y_end <= maxY; ++y_end) {
+    int bestPacking = fromItem;
+    int bestPreviousY = 0;
+
+    for (int y_begin = 1; y_begin <= y_end - minSpacing; ++y_begin) {
+      Rectangle row = Rectangle::FromCoordinates(cut.minX(), y_begin, cut.maxX(), y_end);
+      auto solution = packRow(packingVec[y_begin], row);
+      int packing = packingVec[y_begin] + solution.nItems();
+
+      if (packing < bestPacking) {
+        bestPacking = packing;
+        bestPreviousY = y_begin;
+      }
+    }
+
+    packingVec[y_end] = bestPacking;
+    previousYVec[y_end] = bestPreviousY;
+  }
+
+  // Backtrack for the best solution
+  CutSolution cutSolution(cut);
+  int y = maxY;
+  while (y != 0) {
+    int y_end = y;
+    int y_begin = previousYVec[y];
+
+    Rectangle row = Rectangle::FromCoordinates(cut.minX(), y_begin, cut.maxX(), y_end);
+    auto solution = packRow(packingVec[y_begin], row);
+    cutSolution.rows.push_back(solution);
+    y = y_begin;
+  }
+  reverse(cutSolution.rows.begin(), cutSolution.rows.end());
   
+  return cutSolution;
 }
 
 RowSolution SequencePacker::packRow(int fromItem, Rectangle row) {
-  // Optimal placement at fixed ordering
-  int currentX = row.minX();
+  // Greedy placement
   RowSolution solution(row);
+
+  int currentX = row.minX();
   for (int i = fromItem; i < nItems(); ++i) {
     // Attempt to place the item with the best possible size
     Item item = sequence_[i];

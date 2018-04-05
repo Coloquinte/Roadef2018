@@ -6,39 +6,87 @@
 
 using namespace std;
 
-void divideUp(int pitch, int &l) {
-  l = (l + pitch - 1) / pitch;
-}
+class DownScaler {
+ public:
+  DownScaler(const Problem &problem, int pitch)
+  : problem_(problem)
+  , pitch_(pitch) {
+  }
 
-void divideDown(int pitch, int &l) {
-  l = l / pitch;
-}
+  Problem run() {
+    downscaleParams();
+    downscaleItems();
+    downscaleDefects();
+    return Problem(params_, items_, defects_);
+  }
+
+ private:
+  void downscaleParams() {
+    params_ = problem_.params();
+
+    divideUp(params_.minXX);
+    divideUp(params_.minYY);
+    divideUp(params_.minWaste);
+
+    divideDown(params_.widthPlates);
+    divideDown(params_.heightPlates);
+    divideDown(params_.maxXX);
+  }
+
+  void downscaleItems() {
+    items_ = problem_.items();
+    for (Item &item : items_) {
+      downscale(item);
+    }
+  }
+
+  void downscaleDefects() {
+    defects_ = problem_.defects();
+    for (Defect &defect : defects_) {
+      downscale(defect);
+    }
+  }
+
+  void downscale(Rectangle &r) {
+    divideDown(r.minX_);
+    divideDown(r.minY_);
+    divideUp(r.maxX_);
+    divideUp(r.maxY_);
+  }
+
+  void downscale(Item &item) {
+    divideUp(item.width);
+    divideUp(item.height);
+
+    // Fix the case where we can't fit the item anymore
+    int w = params_.widthPlates;
+    int h = params_.heightPlates;
+    if ( (item.width > w || item.height > h)
+      && (item.width > h || item.height > w)) {
+      item.width = w;
+      item.height = h;
+    }
+  }
+
+  void divideUp(int &l) {
+    l = (l + pitch_ - 1) / pitch_;
+  }
+
+  void divideDown(int &l) {
+    l = l / pitch_;
+  }
+
+ private:
+  const Problem &problem_;
+  Params params_;
+  std::vector<Item> items_;
+  std::vector<Defect> defects_;
+  int pitch_;
+};
 
 Problem downscale(const Problem &problem, int pitch) {
-  Params params = problem.params();
-  divideUp(pitch, params.minXX);
-  divideUp(pitch, params.minYY);
-  divideUp(pitch, params.minWaste);
-
-  divideDown(pitch, params.widthPlates);
-  divideDown(pitch, params.heightPlates);
-  divideDown(pitch, params.maxXX);
-
-  std::vector<Item> items = problem.items();
-  for (Item &item : items) {
-    divideUp(pitch, item.width);
-    divideUp(pitch, item.height);
-  }
-
-  std::vector<Defect> defects = problem.defects();
-  for (Defect &defect : defects) {
-    divideDown(pitch, defect.minX_);
-    divideDown(pitch, defect.minY_);
-    divideUp(pitch, defect.maxX_);
-    divideUp(pitch, defect.maxY_);
-  }
-
-  return Problem(params, items, defects);
+  DownScaler downscaler(problem, pitch);
+  return downscaler.run();
 }
 
 class Upscaler {
@@ -50,6 +98,7 @@ class Upscaler {
   }
 
   Solution run() {
+    // TODO: handle limits
     upscaled_ = solution_;
     for (PlateSolution &plate: upscaled_.plates) {
       upscale(plate);
@@ -68,6 +117,17 @@ class Upscaler {
   }
 
  private:
+
+  void upscale(PlateSolution &plate) {
+    plate.maxX_ = problem_.params().widthPlates;
+    plate.maxY_ = problem_.params().heightPlates;
+  }
+
+  void upscale(CutSolution &cut) {
+    cut.minX_ *= pitch_;
+    cut.maxX_ *= pitch_;
+    cut.maxY_ = problem_.params().heightPlates;
+  }
 
   void upscale(Rectangle &r) {
     // Upscale

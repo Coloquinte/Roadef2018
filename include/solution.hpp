@@ -6,6 +6,7 @@
 #include "rectangle.hpp"
 
 #include <vector>
+#include <iosfwd>
 
 struct ItemSolution : Rectangle {
   ItemSolution() {}
@@ -49,6 +50,7 @@ struct Solution {
   std::vector<PlateSolution> plates;
 
   int nItems() const;
+  void write(std::ostream &) const;
 };
 
 #endif

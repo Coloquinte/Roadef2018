@@ -1,6 +1,10 @@
 
 #include "solution.hpp"
 
+#include <ostream>
+
+using namespace std;
+
 ItemSolution::ItemSolution(int x, int y, int w, int h) {
   *(Rectangle*) this = Rectangle::FromDimensions(x, y, w, h);
 }
@@ -42,4 +46,19 @@ int Solution::nItems() const {
   return cnt;
 }
 
+void Solution::write(ostream &s) const {
+  int plateId = 0;
+  for (const PlateSolution &plate : plates) {
+    s << "Plate #" << plateId++ << endl;
+    for (const CutSolution &cut : plate.cuts) {
+      s << "\tCut from " << cut.minX() << " to " << cut.maxX() << endl;
+      for (const RowSolution &row : cut.rows) {
+        s << "\t\tRow from " << row.minY() << " to " << row.maxY() << endl;
+        for (const ItemSolution &item: row.items) {
+          s << "\t\t\tItem #" << item.itemId << " from " << item.minX() << " to " << item.maxX() << endl;
+        }
+      }
+    }
+  }
+}
 
