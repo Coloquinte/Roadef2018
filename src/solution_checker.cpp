@@ -5,6 +5,7 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <iostream>
 
 using namespace std;
 
@@ -25,7 +26,10 @@ long long SolutionChecker::evalAreaUsage(const Problem &problem, const Solution 
 
 SolutionChecker::SolutionChecker(const Problem &problem, const Solution &solution)
 : problem_(problem)
-, solution_(solution) {
+, solution_(solution)
+, plateId_(-1)
+, cutId_(-1)
+, rowId_(-1) {
 }
 
 void SolutionChecker::check() {
@@ -33,12 +37,16 @@ void SolutionChecker::check() {
   checkSequences();
 
   if (problem_.params().nPlates < (int) solution_.plates.size())
-      throw runtime_error("Trop de plates sont présentes dans la solution");
+    topError("Too many plates in the solution");
 
   for (int i = 0; i < (int) solution_.plates.size(); ++i) {
+    plateId_ = i;
     const PlateSolution &plate = solution_.plates[i];
     checkPlate(plate);
   }
+  plateId_ = -1;
+
+  report();
 }
 
 long long SolutionChecker::evalAreaViolation() {
@@ -80,41 +88,48 @@ long long SolutionChecker::evalAreaUsage() {
 
 void SolutionChecker::checkPlate(const PlateSolution &plate) {
   checkPlateDivision(plate);
-  for (const CutSolution &cut : plate.cuts)
+  for (int i = 0; i < (int) plate.cuts.size(); ++i) {
+    cutId_ = i;
+    const CutSolution &cut = plate.cuts[i];
     checkCut(cut);
+  }
+  cutId_ = -1;
 }
 
 void SolutionChecker::checkPlateDivision(const PlateSolution &plate) {
   if (plate.minX() != 0 || plate.minY() != 0)
-      throw runtime_error("Plate coordinate mismatch");
+    topError("Plate #%d: lower left is not at (0,0)", plateId_);
   if (plate.maxX() != problem_.params().widthPlates
       || plate.maxY() != problem_.params().heightPlates)
-      throw runtime_error("Plate coordinate mismatch");
+    topError("Plate #%d: upper right is not at (%d,%d)", plateId_, problem_.params().widthPlates, problem_.params().heightPlates);
 
   if (plate.cuts.empty()) return;
 
   if (plate.cuts.front().minX() != plate.minX())
-      throw runtime_error("Cut coordinate mismatch");
+    topError("Plate #%d: first cut doesn't start at %d", plateId_, plate.minX());
   if (plate.cuts.back().maxX() > plate.maxX())
-      throw runtime_error("Cut coordinate mismatch");
+    topError("Plate #%d: last cut doesn't end at %d", plateId_, plate.maxX());
 
   for (const CutSolution &cut : plate.cuts) {
-    if (cut.minY() != plate.minY())
-      throw runtime_error("Cut coordinate mismatch");
-    if (cut.maxY() != plate.maxY())
-      throw runtime_error("Cut coordinate mismatch");
+    if (cut.minY() != plate.minY() || cut.maxY() != plate.maxY())
+      topError("Plate #%d: cut height from %d to %d doesn't match the plate", plateId_, cut.minY(), cut.maxY());
   }
 
   for (int i = 0; i+1 < (int) plate.cuts.size(); ++i) {
-    if (plate.cuts[i].maxX() != plate.cuts[i].minX())
-      throw runtime_error("Cut coordinate mismatch");
+    if (plate.cuts[i].maxX() != plate.cuts[i+1].minX())
+      topError("Plate #%d: cut %d ends at %d but cut %d starts at %d", plateId_, i, i+1,
+         plate.cuts[i].maxX(), plate.cuts[i+1].minX());
   }
 }
 
 void SolutionChecker::checkCut(const CutSolution &cut) {
   checkCutDivision(cut);
-  for (const RowSolution &row : cut.rows)
+  for (int i = 0; i < (int) cut.rows.size(); ++i) {
+    rowId_ = i;
+    const RowSolution &row = cut.rows[i];
     checkRow(row);
+  }
+  rowId_ = -1;
 }
 
 void SolutionChecker::checkCutDivision(const CutSolution &cut) {
@@ -122,16 +137,17 @@ void SolutionChecker::checkCutDivision(const CutSolution &cut) {
 
   for (const RowSolution &row: cut.rows) {
     if (!cut.contains(row))
-      throw runtime_error("Row not contained in the cut");
+      topError("Plate #%d: row #%d not contained in cut #%d", plateId_, rowId_, cutId_);
     if (row.minX() != cut.minX())
-      throw runtime_error("Row coordinate mismatch");
+      topError("Plate #%d: row #%d in cut #%d starts at %d instead of %d", plateId_, rowId_, cutId_, row.minX(), cut.minX());
     if (row.maxX() != cut.maxX())
-      throw runtime_error("Row coordinate mismatch");
+      topError("Plate #%d: row #%d in cut #%d ends at %d instead of %d", plateId_, rowId_, cutId_, row.maxX(), cut.maxX());
   }
 
   for (int i = 0; i+1 < (int) cut.rows.size(); ++i) {
-    if (cut.rows[i].maxY() != cut.rows[i].minY())
-      throw runtime_error("Row coordinate mismatch");
+    if (cut.rows[i].maxY() != cut.rows[i+1].minY())
+      topError("Plate #%d: row #%d ends at %d but row #%d starts at %d", plateId_, i, i+1,
+         cut.rows[i].maxY(), cut.rows[i+1].minY());
   }
 }
 
@@ -146,35 +162,49 @@ void SolutionChecker::checkRowDivision(const RowSolution &row) {
 
   for (const ItemSolution &item : row.items) {
     if (!row.contains(item))
-      throw runtime_error("Item not contained in the row");
+      topError("Item #%d not contained in the row", item.itemId);
     if (!fitsMinWaste(row.minY(), item.minY()))
-      throw runtime_error("Minimum waste size violation");
+      wasteError("Below item #%d", item.itemId);
     if (!fitsMinWaste(item.maxY(), row.maxY()))
-      throw runtime_error("Minimum waste size violation");
+      wasteError("Above item #%d", item.itemId);
   }
 
   if (!fitsMinWaste(row.minX(), row.items.front().minX()))
-    throw runtime_error("Minimum waste size violation");
+    wasteError("Before item #%d", row.items.front().itemId);
   if (!fitsMinWaste(row.items.back().maxX(), row.maxX()))
-    throw runtime_error("Minimum waste size violation");
+    wasteError("After item #%d", row.items.back().itemId);
 
   for (int i = 0; i+1 < (int) row.items.size(); ++i) {
-    if (row.items[i].maxX() > row.items[i+1].minX())
-      throw runtime_error("Items misordered or overlapped");
-    if (!fitsMinWaste(row.items[i].maxX(), row.items[i+1].minX()))
-      throw runtime_error("Minimum waste size violation");
+    ItemSolution item1 = row.items[i];
+    ItemSolution item2 = row.items[i+1];
+    if (item1.maxX() > item2.minX())
+      topError("Items #%d and #%d overlap",
+          item1.itemId, item2.itemId);
+    else if (!fitsMinWaste(item1.maxX(), item2.minX()))
+      wasteError("Between items #%d and #%d",
+          item1.itemId, item2.itemId);
   }
 }
 
 void SolutionChecker::checkItem(const ItemSolution &sol) {
   if (sol.itemId < 0 || sol.itemId >= (int) problem_.items().size())
-      throw runtime_error("Invalid item ID");
+    topError("On plate #%d, cut #%d, row #%d, the item ID %d is not valid",
+       plateId_, cutId_, rowId_, sol.itemId);
 
   Item item = problem_.items()[sol.itemId];
   bool ok = (sol.width() == item.width && sol.height() == item.height)
          || (sol.width() == item.height && sol.height() == item.width);
   if (!ok)
-      throw runtime_error("Item size mismatch");
+    topError("On plate #%d, expected a size of %dx%d for item #%d, got %dx%d",
+        plateId_, item.width, item.height,
+        sol.itemId, sol.width(), sol.height());
+
+  for (Defect defect : problem_.plateDefects()[plateId_]) {
+    if (sol.intersects(defect))
+      defectError("On plate #%d, item #%d intersects a defect (%d,%d)x(%d,%d)",
+          plateId_, sol.itemId,
+          defect.minX(), defect.maxX(), defect.minY(), defect.maxY());
+  }
 }
 
 void SolutionChecker::checkItemUnicity() {
@@ -184,7 +214,7 @@ void SolutionChecker::checkItemUnicity() {
       for (const RowSolution &row: cut.rows) {
         for (const ItemSolution &item: row.items) {
           if (visitedItems.count(item.itemId) != 0)
-            throw runtime_error("Un item est présent plusieurs fois");
+            topError("Item #%d is mapped multiple times", item.itemId);
           visitedItems.insert(item.itemId);
         }
       }
@@ -209,9 +239,39 @@ void SolutionChecker::checkSequences() {
     for (unsigned i = 0; i + 1 < sequence.size(); ++i) {
       int ida = sequence[i].id;
       int idb = sequence[i+1].id;
+      if (itemPositions.count(idb) == 0)
+        continue;
+      if (itemPositions.count(ida) == 0)
+        orderingError("Item #%d is cut but item #%d is not", idb, ida);
       if (itemPositions[ida] > itemPositions[idb])
-        throw runtime_error("Une séquence n'est pas dans l'ordre");
+        orderingError("Item #%d is been cut before item #%d", idb, ida);
     }
+  }
+}
+
+void SolutionChecker::report() {
+  bool error =
+       !topError.empty()
+    || !orderingError.empty()
+    || !wasteError.empty()
+    || !defectError.empty();
+
+  if (!error)
+    return;
+
+  cout << "The solution contains violations" << endl;
+
+  for (auto m : topError.messages()) {
+    cout << m << endl;
+  }
+  for (auto m : orderingError.messages()) {
+    cout << "Ordering violation: " << m << endl;
+  }
+  for (auto m : wasteError.messages()) {
+    cout << "Minimum waste violation: " << m << endl;
+  }
+  for (auto m : defectError.messages()) {
+    cout << "Defects: " << m << endl;
   }
 }
 

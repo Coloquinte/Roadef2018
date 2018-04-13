@@ -54,14 +54,14 @@ PlateSolution SequencePacker::packPlate(int fromItem, Rectangle plate) {
 
   for (int x_end = minSpacing; x_end <= maxX; ++x_end) {
     int bestPacking = fromItem;
-    int bestPreviousX = 0;
+    int bestPreviousX = max(0, x_end - maxSpacing);
 
-    for (int x_begin = max(1, x_end - maxSpacing); x_begin <= x_end - minSpacing; ++x_begin) {
+    for (int x_begin = max(0, x_end - maxSpacing); x_begin <= x_end - minSpacing; ++x_begin) {
       Rectangle cut = Rectangle::FromCoordinates(x_begin, 0, x_end, plate.maxY());
       auto solution = packCut(packingVec[x_begin], cut);
       int packing = packingVec[x_begin] + solution.nItems();
 
-      if (packing < bestPacking) {
+      if (packing > bestPacking) {
         bestPacking = packing;
         bestPreviousX = x_begin;
       }
@@ -103,12 +103,12 @@ CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
     int bestPacking = fromItem;
     int bestPreviousY = 0;
 
-    for (int y_begin = 1; y_begin <= y_end - minSpacing; ++y_begin) {
+    for (int y_begin = 0; y_begin <= y_end - minSpacing; ++y_begin) {
       Rectangle row = Rectangle::FromCoordinates(cut.minX(), y_begin, cut.maxX(), y_end);
       auto solution = packRow(packingVec[y_begin], row);
       int packing = packingVec[y_begin] + solution.nItems();
 
-      if (packing < bestPacking) {
+      if (packing > bestPacking) {
         bestPacking = packing;
         bestPreviousY = y_begin;
       }
@@ -126,6 +126,7 @@ CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
     int y_begin = previousYVec[y];
 
     Rectangle row = Rectangle::FromCoordinates(cut.minX(), y_begin, cut.maxX(), y_end);
+
     auto solution = packRow(packingVec[y_begin], row);
     cutSolution.rows.push_back(solution);
     y = y_begin;

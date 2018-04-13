@@ -31,7 +31,7 @@ void Problem::buildSequences() {
 void Problem::buildPlates() {
   plateDefects_.resize(params_.nPlates);
   for (Defect d : defects_) {
-    if (d.plate_id < 0 || d.plate_id > params_.nPlates)
+    if (d.plate_id < 0 || d.plate_id >= params_.nPlates)
       continue;
     plateDefects_[d.plate_id].push_back(d);
   }
