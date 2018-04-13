@@ -7,28 +7,7 @@
 
 #include <string>
 #include <memory>
-
-class ErrorLogger {
- public:
-  template<typename ... Args>
-  void operator()( const std::string& format, Args ... args ) {
-    std::size_t size = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1;
-    std::unique_ptr<char[]> buf( new char[ size ] );
-    std::snprintf( buf.get(), size, format.c_str(), args ... );
-    messages_.emplace_back( buf.get(), buf.get() + size - 1 );
-  }
-
-  bool empty() const {
-    return messages_.empty();
-  }
-
-  const std::vector<std::string> &messages() const {
-    return messages_;
-  }
-
- private:
-  std::vector<std::string> messages_;
-};
+#include <unordered_map>
 
 class SolutionChecker {
  public:
@@ -58,18 +37,18 @@ class SolutionChecker {
 
   void report();
 
+  template<typename ... Args>
+  void error(const std::string& type, const std::string& format, Args ... args );
+
  private:
   const Problem &problem_;
   const Solution &solution_;
 
-  ErrorLogger topError;
-  ErrorLogger orderingError;
-  ErrorLogger wasteError;
-  ErrorLogger defectError;
-
   int plateId_;
   int cutId_;
   int rowId_;
+
+  std::unordered_map<std::string, std::vector<std::string> > errors_;
 };
 
 #endif

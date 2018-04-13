@@ -5,9 +5,29 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <sstream>
 #include <iostream>
 
 using namespace std;
+
+template<typename ... Args>
+void SolutionChecker::error(const std::string& type, const std::string& format, Args ... args ) {
+    stringstream header;
+    if (plateId_ >= 0)
+      header << "Plate #" << plateId_;
+    if (cutId_ >= 0)
+      header << ", cut #" << cutId_;
+    if (rowId_ >= 0)
+      header << ", row #" << rowId_;
+    if (plateId_ >= 0)
+      header << ": ";
+
+    std::size_t size = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1;
+    std::unique_ptr<char[]> buf( new char[ size ] );
+    std::snprintf( buf.get(), size, format.c_str(), args ... );
+    string msg(buf.get(), buf.get() + size - 1);
+    errors_.at(type).push_back(header.str() + msg);
+}
 
 void SolutionChecker::check(const Problem &problem, const Solution &solution) {
   SolutionChecker checker(problem, solution);
@@ -30,6 +50,10 @@ SolutionChecker::SolutionChecker(const Problem &problem, const Solution &solutio
 , plateId_(-1)
 , cutId_(-1)
 , rowId_(-1) {
+  errors_["Critical"].clear();
+  errors_["Ordering"].clear();
+  errors_["MinWaste"].clear();
+  errors_["Defects"].clear();
 }
 
 void SolutionChecker::check() {
@@ -37,7 +61,7 @@ void SolutionChecker::check() {
   checkSequences();
 
   if (problem_.params().nPlates < (int) solution_.plates.size())
-    topError("Too many plates in the solution");
+    error("Critical", "Too many plates in the solution");
 
   for (int i = 0; i < (int) solution_.plates.size(); ++i) {
     plateId_ = i;
@@ -98,26 +122,26 @@ void SolutionChecker::checkPlate(const PlateSolution &plate) {
 
 void SolutionChecker::checkPlateDivision(const PlateSolution &plate) {
   if (plate.minX() != 0 || plate.minY() != 0)
-    topError("Plate #%d: lower left is not at (0,0)", plateId_);
+    error("Critical", "Lower left is not at (0,0)");
   if (plate.maxX() != problem_.params().widthPlates
       || plate.maxY() != problem_.params().heightPlates)
-    topError("Plate #%d: upper right is not at (%d,%d)", plateId_, problem_.params().widthPlates, problem_.params().heightPlates);
+    error("Critical", "Upper right is not at (%d,%d)", problem_.params().widthPlates, problem_.params().heightPlates);
 
   if (plate.cuts.empty()) return;
 
   if (plate.cuts.front().minX() != plate.minX())
-    topError("Plate #%d: first cut doesn't start at %d", plateId_, plate.minX());
+    error("Critical", "First cut doesn't start at %d", plate.minX());
   if (plate.cuts.back().maxX() > plate.maxX())
-    topError("Plate #%d: last cut doesn't end at %d", plateId_, plate.maxX());
+    error("Critical", "Last cut doesn't end at %d", plate.maxX());
 
   for (const CutSolution &cut : plate.cuts) {
     if (cut.minY() != plate.minY() || cut.maxY() != plate.maxY())
-      topError("Plate #%d: cut height from %d to %d doesn't match the plate", plateId_, cut.minY(), cut.maxY());
+      error("Critical", "Cut height from %d to %d doesn't match the plate", cut.minY(), cut.maxY());
   }
 
   for (int i = 0; i+1 < (int) plate.cuts.size(); ++i) {
     if (plate.cuts[i].maxX() != plate.cuts[i+1].minX())
-      topError("Plate #%d: cut %d ends at %d but cut %d starts at %d", plateId_, i, i+1,
+      error("Critical", "Cut %d ends at %d but cut %d starts at %d", i, i+1,
          plate.cuts[i].maxX(), plate.cuts[i+1].minX());
   }
 }
@@ -137,16 +161,16 @@ void SolutionChecker::checkCutDivision(const CutSolution &cut) {
 
   for (const RowSolution &row: cut.rows) {
     if (!cut.contains(row))
-      topError("Plate #%d: row #%d not contained in cut #%d", plateId_, rowId_, cutId_);
+      error("Critical", "Row #%d not contained in cut", rowId_);
     if (row.minX() != cut.minX())
-      topError("Plate #%d: row #%d in cut #%d starts at %d instead of %d", plateId_, rowId_, cutId_, row.minX(), cut.minX());
+      error("Critical", "Row #%d starts at %d instead of %d", rowId_, row.minX(), cut.minX());
     if (row.maxX() != cut.maxX())
-      topError("Plate #%d: row #%d in cut #%d ends at %d instead of %d", plateId_, rowId_, cutId_, row.maxX(), cut.maxX());
+      error("Critical", "Row #%d ends at %d instead of %d", rowId_, row.maxX(), cut.maxX());
   }
 
   for (int i = 0; i+1 < (int) cut.rows.size(); ++i) {
     if (cut.rows[i].maxY() != cut.rows[i+1].minY())
-      topError("Plate #%d: row #%d ends at %d but row #%d starts at %d", plateId_, i, i+1,
+      error("Critical", "Row #%d ends at %d but row #%d starts at %d", i, i+1,
          cut.rows[i].maxY(), cut.rows[i+1].minY());
   }
 }
@@ -162,47 +186,45 @@ void SolutionChecker::checkRowDivision(const RowSolution &row) {
 
   for (const ItemSolution &item : row.items) {
     if (!row.contains(item))
-      topError("Item #%d not contained in the row", item.itemId);
+      error("Critical", "Item #%d not contained in the row", item.itemId);
     if (!fitsMinWaste(row.minY(), item.minY()))
-      wasteError("Below item #%d", item.itemId);
+      error("MinWaste", "Below item #%d", item.itemId);
     if (!fitsMinWaste(item.maxY(), row.maxY()))
-      wasteError("Above item #%d", item.itemId);
+      error("MinWaste", "Above item #%d", item.itemId);
   }
 
   if (!fitsMinWaste(row.minX(), row.items.front().minX()))
-    wasteError("Before item #%d", row.items.front().itemId);
+    error("MinWaste", "Before item #%d", row.items.front().itemId);
   if (!fitsMinWaste(row.items.back().maxX(), row.maxX()))
-    wasteError("After item #%d", row.items.back().itemId);
+    error("MinWaste", "After item #%d", row.items.back().itemId);
 
   for (int i = 0; i+1 < (int) row.items.size(); ++i) {
     ItemSolution item1 = row.items[i];
     ItemSolution item2 = row.items[i+1];
     if (item1.maxX() > item2.minX())
-      topError("Items #%d and #%d overlap",
+      error("Critical", "Items #%d and #%d overlap",
           item1.itemId, item2.itemId);
     else if (!fitsMinWaste(item1.maxX(), item2.minX()))
-      wasteError("Between items #%d and #%d",
+      error("MinWaste", "Between items #%d and #%d",
           item1.itemId, item2.itemId);
   }
 }
 
 void SolutionChecker::checkItem(const ItemSolution &sol) {
   if (sol.itemId < 0 || sol.itemId >= (int) problem_.items().size())
-    topError("On plate #%d, cut #%d, row #%d, the item ID %d is not valid",
-       plateId_, cutId_, rowId_, sol.itemId);
+    error("Critical", "Item ID %d is not valid", sol.itemId);
 
   Item item = problem_.items()[sol.itemId];
   bool ok = (sol.width() == item.width && sol.height() == item.height)
          || (sol.width() == item.height && sol.height() == item.width);
   if (!ok)
-    topError("On plate #%d, expected a size of %dx%d for item #%d, got %dx%d",
-        plateId_, item.width, item.height,
+    error("Critical", "Expected a size of %dx%d for item #%d, got %dx%d",
+        item.width, item.height,
         sol.itemId, sol.width(), sol.height());
 
   for (Defect defect : problem_.plateDefects()[plateId_]) {
     if (sol.intersects(defect))
-      defectError("On plate #%d, item #%d intersects a defect (%d,%d)x(%d,%d)",
-          plateId_, sol.itemId,
+      error("Defects", "Item #%d intersects a defect (%d,%d)x(%d,%d)", sol.itemId,
           defect.minX(), defect.maxX(), defect.minY(), defect.maxY());
   }
 }
@@ -214,7 +236,7 @@ void SolutionChecker::checkItemUnicity() {
       for (const RowSolution &row: cut.rows) {
         for (const ItemSolution &item: row.items) {
           if (visitedItems.count(item.itemId) != 0)
-            topError("Item #%d is mapped multiple times", item.itemId);
+            error("Critical", "Item #%d is mapped multiple times", item.itemId);
           visitedItems.insert(item.itemId);
         }
       }
@@ -242,36 +264,36 @@ void SolutionChecker::checkSequences() {
       if (itemPositions.count(idb) == 0)
         continue;
       if (itemPositions.count(ida) == 0)
-        orderingError("Item #%d is cut but item #%d is not", idb, ida);
+        error("Ordering", "Item #%d is cut but item #%d is not", idb, ida);
       if (itemPositions[ida] > itemPositions[idb])
-        orderingError("Item #%d is been cut before item #%d", idb, ida);
+        error("Ordering", "Item #%d is cut before item #%d", idb, ida);
     }
   }
 }
 
 void SolutionChecker::report() {
-  bool error =
-       !topError.empty()
-    || !orderingError.empty()
-    || !wasteError.empty()
-    || !defectError.empty();
-
-  if (!error)
-    return;
-
-  cout << "The solution contains violations" << endl;
-
-  for (auto m : topError.messages()) {
-    cout << m << endl;
+  if (!errors_.at("Critical").empty())
+    cout << endl << "Critical violations:" << endl;
+  for (auto m : errors_.at("Critical")) {
+    cout << "\t" << m << endl;
   }
-  for (auto m : orderingError.messages()) {
-    cout << "Ordering violation: " << m << endl;
+
+  if (!errors_.at("Ordering").empty())
+    cout << endl << "Ordering violations:" << endl;
+  for (auto m : errors_.at("Ordering")) {
+    cout << "\t" << m << endl;
   }
-  for (auto m : wasteError.messages()) {
-    cout << "Minimum waste violation: " << m << endl;
+
+  if (!errors_.at("MinWaste").empty())
+    cout << endl << "Minimum waste violations:" << endl;
+  for (auto m : errors_.at("MinWaste")) {
+    cout << "\t" << m << endl;
   }
-  for (auto m : defectError.messages()) {
-    cout << "Defects: " << m << endl;
+
+  if (!errors_.at("Defects").empty())
+    cout << endl << "Defect violations:" << endl;
+  for (auto m : errors_.at("Defects")) {
+    cout << "\t" << m << endl;
   }
 }
 
