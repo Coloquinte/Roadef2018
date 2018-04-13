@@ -59,7 +59,7 @@ class DownScaler {
     divideUp(item.height);
 
     // Fix the case where we can't fit the item anymore
-    int w = params_.widthPlates;
+    int w = min(params_.widthPlates, params_.maxXX);
     int h = params_.heightPlates;
     if ( (item.width > w || item.height > h)
       && (item.width > h || item.height > w)) {

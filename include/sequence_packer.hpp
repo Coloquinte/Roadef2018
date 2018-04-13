@@ -16,6 +16,8 @@ class SequencePacker {
   PlateSolution packPlate(int fromItem, Rectangle plate);
   CutSolution packCut(int fromItem, Rectangle cut);
   RowSolution packRow(int fromItem, Rectangle row);
+  int countPackCut(int fromItem, Rectangle cut);
+  int countPackRow(int fromItem, Rectangle row);
 
   // TODO: handle defects
 

@@ -58,8 +58,9 @@ PlateSolution SequencePacker::packPlate(int fromItem, Rectangle plate) {
 
     for (int x_begin = max(0, x_end - maxSpacing); x_begin <= x_end - minSpacing; ++x_begin) {
       Rectangle cut = Rectangle::FromCoordinates(x_begin, 0, x_end, plate.maxY());
-      auto solution = packCut(packingVec[x_begin], cut);
-      int packing = packingVec[x_begin] + solution.nItems();
+      int cutCount = countPackCut(packingVec[x_begin], cut);
+      if (cutCount == 0) break;
+      int packing = packingVec[x_begin] + cutCount;
 
       if (packing > bestPacking) {
         bestPacking = packing;
@@ -88,6 +89,11 @@ PlateSolution SequencePacker::packPlate(int fromItem, Rectangle plate) {
   return plateSolution;
 }
 
+int SequencePacker::countPackCut(int fromItem, Rectangle cut) {
+  auto solution = packCut(fromItem, cut);
+  return solution.nItems();
+}
+
 CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
   // Dynamic programming on the rows i.e. second-level cuts
   assert (cut.minY() == 0);
@@ -105,8 +111,9 @@ CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
 
     for (int y_begin = 0; y_begin <= y_end - minSpacing; ++y_begin) {
       Rectangle row = Rectangle::FromCoordinates(cut.minX(), y_begin, cut.maxX(), y_end);
-      auto solution = packRow(packingVec[y_begin], row);
-      int packing = packingVec[y_begin] + solution.nItems();
+      auto rowCount = countPackRow(packingVec[y_begin], row);
+      if (rowCount == 0) break;
+      int packing = packingVec[y_begin] + rowCount;
 
       if (packing > bestPacking) {
         bestPacking = packing;
@@ -136,6 +143,37 @@ CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
   return cutSolution;
 }
 
+int SequencePacker::countPackRow(int fromItem, Rectangle row) {
+  int cnt = 0;
+  int currentX = row.minX();
+  int rowHeight = row.height();
+  int maxX = row.maxX();
+  for (int i = fromItem; i < nItems(); ++i) {
+    // Attempt to place the item with the best possible size
+    Item item = sequence_[i];
+    int height = max(item.width, item.height);
+    int width = min(item.width, item.height);
+
+    // Doesn't fit vertically; try rotating
+    if (!fitsMinWaste(height, rowHeight))
+      swap(width, height);
+    // Still doesn't fit
+    if (!fitsMinWaste(height, rowHeight))
+      break;
+    
+    // Not actually 100% correct due to the minWaste parameter
+    // The optimal solution involves the orientation of all items
+    // And we'd need dynamic programming or brute-force for that
+    int newX = currentX + width;
+    if (!fitsMinWaste(newX, maxX))
+      break;
+
+    ++cnt;
+  }
+
+  return cnt;
+}
+
 RowSolution SequencePacker::packRow(int fromItem, Rectangle row) {
   // Greedy placement
   RowSolution solution(row);
@@ -152,7 +190,7 @@ RowSolution SequencePacker::packRow(int fromItem, Rectangle row) {
     // Still doesn't fit
     if (!fitsMinWaste(height, row.height()))
       break;
-    
+
     // Not actually 100% correct due to the minWaste parameter
     // The optimal solution involves the orientation of all items
     // And we'd need dynamic programming or brute-force for that
