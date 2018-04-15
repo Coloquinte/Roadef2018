@@ -58,9 +58,9 @@ PlateSolution SequencePacker::packPlate(int fromItem, Rectangle plate) {
 
     for (int x_begin = max(0, x_end - maxSpacing); x_begin <= x_end - minSpacing; ++x_begin) {
       Rectangle cut = Rectangle::FromCoordinates(x_begin, 0, x_end, plate.maxY());
-      int cutCount = countPackCut(packingVec[x_begin], cut);
-      if (cutCount == 0) break;
-      int packing = packingVec[x_begin] + cutCount;
+      int previousItems = packingVec[x_begin];
+      int cutCount = countPackCut(previousItems, cut);
+      int packing = previousItems + cutCount;
 
       if (packing > bestPacking) {
         bestPacking = packing;
@@ -77,14 +77,19 @@ PlateSolution SequencePacker::packPlate(int fromItem, Rectangle plate) {
   int x = maxX;
   while (x != 0) {
     int x_end = x;
-    int x_begin = previousXVec[x];
+    int x_begin = previousXVec[x_end];
 
     Rectangle cut = Rectangle::FromCoordinates(x_begin, 0, x_end, plate.maxY());
     auto solution = packCut(packingVec[x_begin], cut);
+    assert (packingVec[x_begin] + solution.nItems() == packingVec[x_end]);
     plateSolution.cuts.push_back(solution);
     x = x_begin;
   }
   reverse(plateSolution.cuts.begin(), plateSolution.cuts.end());
+
+  // Remove empty cuts at the back
+  while (!plateSolution.cuts.empty() && plateSolution.cuts.back().nItems() == 0)
+    plateSolution.cuts.pop_back();
 
   return plateSolution;
 }
@@ -111,9 +116,9 @@ CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
 
     for (int y_begin = 0; y_begin <= y_end - minSpacing; ++y_begin) {
       Rectangle row = Rectangle::FromCoordinates(cut.minX(), y_begin, cut.maxX(), y_end);
-      auto rowCount = countPackRow(packingVec[y_begin], row);
-      if (rowCount == 0) break;
-      int packing = packingVec[y_begin] + rowCount;
+      int previousItems = packingVec[y_begin];
+      int rowCount = countPackRow(previousItems, row);
+      int packing = previousItems + rowCount;
 
       if (packing > bestPacking) {
         bestPacking = packing;
@@ -130,16 +135,16 @@ CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
   int y = maxY;
   while (y != 0) {
     int y_end = y;
-    int y_begin = previousYVec[y];
+    int y_begin = previousYVec[y_end];
 
     Rectangle row = Rectangle::FromCoordinates(cut.minX(), y_begin, cut.maxX(), y_end);
-
     auto solution = packRow(packingVec[y_begin], row);
+    assert (packingVec[y_begin] + solution.nItems() == packingVec[y_end]);
     cutSolution.rows.push_back(solution);
     y = y_begin;
   }
   reverse(cutSolution.rows.begin(), cutSolution.rows.end());
-  
+
   return cutSolution;
 }
 
@@ -164,10 +169,9 @@ int SequencePacker::countPackRow(int fromItem, Rectangle row) {
     // Not actually 100% correct due to the minWaste parameter
     // The optimal solution involves the orientation of all items
     // And we'd need dynamic programming or brute-force for that
-    int newX = currentX + width;
-    if (!fitsMinWaste(newX, maxX))
+    currentX += width;
+    if (!fitsMinWaste(currentX, maxX))
       break;
-
     ++cnt;
   }
 

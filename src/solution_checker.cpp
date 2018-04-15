@@ -29,9 +29,16 @@ void SolutionChecker::error(const std::string& type, const std::string& format, 
     errors_.at(type).push_back(header.str() + msg);
 }
 
-void SolutionChecker::check(const Problem &problem, const Solution &solution) {
+void SolutionChecker::report(const Problem &problem, const Solution &solution) {
   SolutionChecker checker(problem, solution);
   checker.check();
+  checker.reportErrors();
+  checker.reportQuality();
+}
+
+bool SolutionChecker::check(const Problem &problem, const Solution &solution) {
+  SolutionChecker checker(problem, solution);
+  return checker.check();
 }
 
 long long SolutionChecker::evalAreaViolation(const Problem &problem, const Solution &solution) {
@@ -56,7 +63,7 @@ SolutionChecker::SolutionChecker(const Problem &problem, const Solution &solutio
   errors_["Defects"].clear();
 }
 
-void SolutionChecker::check() {
+bool SolutionChecker::check() {
   checkItemUnicity();
   checkSequences();
 
@@ -70,28 +77,16 @@ void SolutionChecker::check() {
   }
   plateId_ = -1;
 
-  report();
+  bool hasError = false;
+  for (const auto& err : errors_) {
+    if (!err.second.empty())
+      hasError = true;
+  }
+  return hasError;
 }
 
 long long SolutionChecker::evalAreaViolation() {
-  long long areaMapped = 0;
-  long long areaTotal = 0;
-  for (const PlateSolution &plate : solution_.plates) {
-    for (const CutSolution &cut: plate.cuts) {
-      for (const RowSolution &row: cut.rows) {
-        for (const ItemSolution &sol: row.items) {
-          Item item = problem_.items()[sol.itemId];
-          areaMapped += item.area();
-        }
-      }
-    }
-  }
-
-  for (Item item : problem_.items()) {
-    areaTotal += item.area();
-  }
-
-  return areaTotal - areaMapped;
+  return evalTotalArea() - evalAreaMapped();
 }
 
 long long SolutionChecker::evalAreaUsage() {
@@ -108,6 +103,47 @@ long long SolutionChecker::evalAreaUsage() {
     return areaPlates * nbFull + usedOnPlate;
   }
   return 0;
+}
+
+long long SolutionChecker::evalAreaMapped() {
+  long long areaMapped = 0;
+  for (const PlateSolution &plate : solution_.plates) {
+    for (const CutSolution &cut: plate.cuts) {
+      for (const RowSolution &row: cut.rows) {
+        for (const ItemSolution &sol: row.items) {
+          Item item = problem_.items()[sol.itemId];
+          areaMapped += item.area();
+        }
+      }
+    }
+  }
+  return areaMapped;
+}
+
+long long SolutionChecker::evalTotalArea() {
+  long long areaTotal = 0;
+  for (Item item : problem_.items()) {
+    areaTotal += item.area();
+  }
+  return areaTotal;
+}
+
+int SolutionChecker::nItems() {
+  return problem_.items().size();
+}
+
+int SolutionChecker::nMappedItems() {
+  unordered_set<int> visitedItems;
+  for (const PlateSolution &plate : solution_.plates) {
+    for (const CutSolution &cut: plate.cuts) {
+      for (const RowSolution &row: cut.rows) {
+        for (const ItemSolution &item: row.items) {
+          visitedItems.insert(item.itemId);
+        }
+      }
+    }
+  }
+  return visitedItems.size();
 }
 
 void SolutionChecker::checkPlate(const PlateSolution &plate) {
@@ -144,6 +180,8 @@ void SolutionChecker::checkPlateDivision(const PlateSolution &plate) {
       error("Critical", "Cut %d ends at %d but cut %d starts at %d", i, i+1,
          plate.cuts[i].maxX(), plate.cuts[i+1].minX());
   }
+
+  // TODO: check that no defect is cut
 }
 
 void SolutionChecker::checkCut(const CutSolution &cut) {
@@ -173,6 +211,8 @@ void SolutionChecker::checkCutDivision(const CutSolution &cut) {
       error("Critical", "Row #%d ends at %d but row #%d starts at %d", i, i+1,
          cut.rows[i].maxY(), cut.rows[i+1].minY());
   }
+
+  // TODO: check that no defect is cut
 }
 
 void SolutionChecker::checkRow(const RowSolution &row) {
@@ -271,7 +311,7 @@ void SolutionChecker::checkSequences() {
   }
 }
 
-void SolutionChecker::report() {
+void SolutionChecker::reportErrors() {
   if (!errors_.at("Critical").empty())
     cout << endl << "Critical violations:" << endl;
   for (auto m : errors_.at("Critical")) {
@@ -295,6 +335,19 @@ void SolutionChecker::report() {
   for (auto m : errors_.at("Defects")) {
     cout << "\t" << m << endl;
   }
+}
+
+void SolutionChecker::reportQuality() {
+  if (nMappedItems() != nItems()) {
+    cout << "Only " << nMappedItems() << " out of " << nItems() << " are cut" << endl;
+    cout << "That is " << 100.0 * evalAreaMapped() / evalTotalArea() << "% of the area" << endl;
+  }
+  else
+    cout << "Every item has been cut" << endl;
+
+  cout << "An area of " << evalAreaMapped() << " is mapped while using an area of " << evalAreaUsage() << endl;
+  cout << "That is " << 100.0 * evalAreaMapped() / evalAreaUsage() << "% density" << endl;
+
 }
 
 bool SolutionChecker::fitsMinWaste(int a, int b) const {

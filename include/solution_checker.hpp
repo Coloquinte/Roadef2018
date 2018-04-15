@@ -11,15 +11,23 @@
 
 class SolutionChecker {
  public:
-  static void check(const Problem &problem, const Solution &solution);
+  static void report(const Problem &problem, const Solution &solution);
+  static bool check(const Problem &problem, const Solution &solution);
+
   static long long evalAreaViolation(const Problem &problem, const Solution &solution);
   static long long evalAreaUsage(const Problem &problem, const Solution &solution);
 
  private:
   SolutionChecker(const Problem &problem, const Solution &solution);
-  void check();
+  bool check();
+
   long long evalAreaViolation();
   long long evalAreaUsage();
+  long long evalAreaMapped();
+  long long evalTotalArea();
+
+  int nItems();
+  int nMappedItems();
 
   void checkPlate(const PlateSolution &plate);
   void checkCut(const CutSolution &cut);
@@ -35,7 +43,8 @@ class SolutionChecker {
 
   bool fitsMinWaste(int a, int b) const;
 
-  void report();
+  void reportErrors();
+  void reportQuality();
 
   template<typename ... Args>
   void error(const std::string& type, const std::string& format, Args ... args );
