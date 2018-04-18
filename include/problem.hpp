@@ -19,7 +19,7 @@ class Problem {
   void write(std::string prefix) const;
 
   const std::vector<Item>& items() const{ return items_; }
-  const std::vector<std::vector<Item> >& sequenceItems() const { return sequenceItems_; }
+  const std::vector<std::vector<Item> >& stackItems() const { return stackItems_; }
 
   const std::vector<Defect>& defects() const { return defects_; }
   const std::vector<std::vector<Defect> >& plateDefects() const { return plateDefects_; }
@@ -32,7 +32,7 @@ class Problem {
 
  private:
   std::vector<Item> items_;
-  std::vector<std::vector<Item> > sequenceItems_;
+  std::vector<std::vector<Item> > stackItems_;
 
   std::vector<Defect> defects_;
   std::vector<std::vector<Defect> > plateDefects_;

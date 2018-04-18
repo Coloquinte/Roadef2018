@@ -50,10 +50,12 @@ void Solution::write(ostream &s) const {
   int plateId = 0;
   for (const PlateSolution &plate : plates) {
     s << "Plate #" << plateId++ << endl;
+    int cutId = 0;
     for (const CutSolution &cut : plate.cuts) {
-      s << "\tCut from " << cut.minX() << " to " << cut.maxX() << "  (" << cut.width() << ")" << endl;
+      s << "\tCut #" << cutId++ << " from " << cut.minX() << " to " << cut.maxX() << "  (" << cut.width() << "x" << cut.height() << ")" << endl;
+      int rowId = 0;
       for (const RowSolution &row : cut.rows) {
-        s << "\t\tRow from " << row.minY() << " to " << row.maxY() << "  (" << row.height() << ")" << endl;
+        s << "\t\tRow #" << rowId++ << " from " << row.minY() << " to " << row.maxY() << "  (" << row.width() << "x" << row.height() << ")" << endl;
         for (const ItemSolution &item: row.items) {
           s << "\t\t\tItem #" << item.itemId << " from " << item.minX() << " to " << item.maxX() << "  (" << item.width() << "x" << item.height() << ")" << endl;
           //s << "\t\t\tItem #" << item.itemId << " at (" << item.minX() << ", " << item.maxX() << ")x(" << item.minY() << ", " << item.maxY() << ")" << endl;

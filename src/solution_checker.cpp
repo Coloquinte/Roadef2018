@@ -297,7 +297,7 @@ void SolutionChecker::checkSequences() {
     }
   }
 
-  for (const std::vector<Item> &sequence : problem_.sequenceItems()) {
+  for (const std::vector<Item> &sequence : problem_.stackItems()) {
     for (unsigned i = 0; i + 1 < sequence.size(); ++i) {
       int ida = sequence[i].id;
       int idb = sequence[i+1].id;
@@ -338,16 +338,16 @@ void SolutionChecker::reportErrors() {
 }
 
 void SolutionChecker::reportQuality() {
+  cout.precision(4);
+  cout << endl << "Quality:" << endl;
   if (nMappedItems() != nItems()) {
-    cout << "Only " << nMappedItems() << " out of " << nItems() << " are cut" << endl;
-    cout << "That is " << 100.0 * evalAreaMapped() / evalTotalArea() << "% of the area" << endl;
+    cout << "\tOnly " << nMappedItems() << " out of " << nItems() << " items are cut" << endl;
+    cout << "\tThat is " << 100.0 * evalAreaMapped() / evalTotalArea() << "% of the area" << endl;
   }
   else
-    cout << "Every item has been cut" << endl;
+    cout << "\tEvery item has been cut" << endl;
 
-  cout << "An area of " << evalAreaMapped() << " is mapped while using an area of " << evalAreaUsage() << endl;
-  cout << "That is " << 100.0 * evalAreaMapped() / evalAreaUsage() << "% density" << endl;
-
+  cout << 100.0 * evalAreaMapped() / evalAreaUsage() << "% density (" << (double) evalAreaMapped() << " / " << (double) evalAreaUsage() << ")" << endl;
 }
 
 bool SolutionChecker::fitsMinWaste(int a, int b) const {

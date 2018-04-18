@@ -2,7 +2,7 @@
 #include "problem.hpp"
 #include "io_problem.hpp"
 
-#include <unordered_map>
+#include <map>
 #include <algorithm>
 
 using namespace std;
@@ -17,14 +17,14 @@ Problem::Problem(Params params, std::vector<Item> items, std::vector<Defect> def
 }
 
 void Problem::buildSequences() {
-  unordered_map<int, vector<Item> > sequenceToItems;
+  map<int, vector<Item> > stackToItems;
   for (Item i : items_) {
-    sequenceToItems[i.sequence].push_back(i);
+    stackToItems[i.stack].push_back(i);
   }
-  for (auto p : sequenceToItems) {
-    std::vector<Item> sequence = p.second;
-    sort(sequence.begin(), sequence.end(), [](Item a, Item b) { return a.sequence < b.sequence; });
-    sequenceItems_.push_back(sequence);
+  for (auto p : stackToItems) {
+    std::vector<Item> stack = p.second;
+    sort(stack.begin(), stack.end(), [](Item a, Item b) { return a.sequence < b.sequence; });
+    stackItems_.push_back(stack);
   }
 }
 

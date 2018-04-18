@@ -1,5 +1,6 @@
 
 #include "sequence_packer.hpp"
+#include "utils.hpp"
 
 #include <cassert>
 #include <algorithm>
@@ -17,15 +18,17 @@
 
 using namespace std;
 
-Solution SequencePacker::run(const Problem &problem, const std::vector<Item> &sequence) {
-  SequencePacker packer(problem, sequence);
+Solution SequencePacker::run(const Problem &problem, const std::vector<Item> &sequence, int pitchX, int pitchY) {
+  SequencePacker packer(problem, sequence, pitchX, pitchY);
   packer.run();
   return packer.solution_;
 }
 
-SequencePacker::SequencePacker(const Problem &problem, const std::vector<Item> &sequence)
+SequencePacker::SequencePacker(const Problem &problem, const std::vector<Item> &sequence, int pitchX, int pitchY)
 : problem_(problem)
-, sequence_(sequence) {
+, sequence_(sequence)
+, pitchX_(pitchX)
+, pitchY_(pitchY) {
   packedItems_ = 0;
 }
 
@@ -45,45 +48,50 @@ PlateSolution SequencePacker::packPlate(int fromItem, Rectangle plate) {
   assert (plate.minX() == 0);
   assert (plate.minY() == 0);
 
-  int maxX = plate.maxX();
-  int minSpacing = problem_.params().minXX;
-  int maxSpacing = problem_.params().maxXX;
+  int maxCoord = plate.maxX();
+  int maxIndex = divRoundUp(maxCoord, pitchX_);
+  int minSpacing = divRoundUp(problem_.params().minXX, pitchX_);
+  int maxSpacing = divRoundDown(problem_.params().maxXX, pitchX_);
 
-  std::vector<int> packingVec(maxX + 1, fromItem);
-  std::vector<int> previousXVec(maxX + 1, 0);
+  std::vector<int> packingVec(maxIndex + 1, fromItem);
+  std::vector<int> previousVec(maxIndex + 1, 0);
 
-  for (int x_end = minSpacing; x_end <= maxX; ++x_end) {
+  for (int end = minSpacing; end <= maxIndex; ++end) {
     int bestPacking = fromItem;
-    int bestPreviousX = max(0, x_end - maxSpacing);
+    int bestPrevious = max(0, end - maxSpacing);
 
-    for (int x_begin = max(0, x_end - maxSpacing); x_begin <= x_end - minSpacing; ++x_begin) {
-      Rectangle cut = Rectangle::FromCoordinates(x_begin, 0, x_end, plate.maxY());
-      int previousItems = packingVec[x_begin];
+    for (int begin = max(0, end - maxSpacing); begin <= end - minSpacing; ++begin) {
+      int beginCoord = begin * pitchX_;
+      int endCoord = min(end * pitchX_, maxCoord);
+      Rectangle cut = Rectangle::FromCoordinates(beginCoord, 0, endCoord, plate.maxY());
+      int previousItems = packingVec[begin];
       int cutCount = countPackCut(previousItems, cut);
       int packing = previousItems + cutCount;
 
       if (packing > bestPacking) {
         bestPacking = packing;
-        bestPreviousX = x_begin;
+        bestPrevious = begin;
       }
     }
 
-    packingVec[x_end] = bestPacking;
-    previousXVec[x_end] = bestPreviousX;
+    packingVec[end] = bestPacking;
+    previousVec[end] = bestPrevious;
   }
 
   // Backtrack for the best solution
   PlateSolution plateSolution(plate);
-  int x = maxX;
-  while (x != 0) {
-    int x_end = x;
-    int x_begin = previousXVec[x_end];
+  int cur = maxIndex;
+  while (cur != 0) {
+    int end = cur;
+    int begin = previousVec[end];
+    int beginCoord = begin * pitchX_;
+    int endCoord = min(end * pitchX_, maxCoord);
 
-    Rectangle cut = Rectangle::FromCoordinates(x_begin, 0, x_end, plate.maxY());
-    auto solution = packCut(packingVec[x_begin], cut);
-    assert (packingVec[x_begin] + solution.nItems() == packingVec[x_end]);
+    Rectangle cut = Rectangle::FromCoordinates(beginCoord, 0, endCoord, plate.maxY());
+    auto solution = packCut(packingVec[begin], cut);
+    assert (packingVec[begin] + solution.nItems() == packingVec[end]);
     plateSolution.cuts.push_back(solution);
-    x = x_begin;
+    cur = begin;
   }
   reverse(plateSolution.cuts.begin(), plateSolution.cuts.end());
 
@@ -103,45 +111,50 @@ CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
   // Dynamic programming on the rows i.e. second-level cuts
   assert (cut.minY() == 0);
 
-  int maxY = cut.maxY();
-  int minSpacing = problem_.params().minYY;
+  int maxCoord = cut.maxY();
+  int maxIndex = divRoundUp(maxCoord, pitchY_);
+  int minSpacing = divRoundUp(problem_.params().minYY, pitchY_);
 
-  std::vector<int> packingVec(maxY + 1, fromItem);
-  std::vector<int> previousYVec(maxY + 1, 0);
+  std::vector<int> packingVec(maxIndex + 1, fromItem);
+  std::vector<int> previousVec(maxIndex + 1, 0);
 
   // TODO: early exit for the last plate
-  for (int y_end = minSpacing; y_end <= maxY; ++y_end) {
+  for (int end = minSpacing; end <= maxIndex; ++end) {
     int bestPacking = fromItem;
-    int bestPreviousY = 0;
+    int bestPrevious = 0;
 
-    for (int y_begin = 0; y_begin <= y_end - minSpacing; ++y_begin) {
-      Rectangle row = Rectangle::FromCoordinates(cut.minX(), y_begin, cut.maxX(), y_end);
-      int previousItems = packingVec[y_begin];
+    for (int begin = 0; begin <= end - minSpacing; ++begin) {
+      int beginCoord = begin * pitchY_;
+      int endCoord = min(end * pitchY_, maxCoord);
+      Rectangle row = Rectangle::FromCoordinates(cut.minX(), beginCoord, cut.maxX(), endCoord);
+      int previousItems = packingVec[begin];
       int rowCount = countPackRow(previousItems, row);
       int packing = previousItems + rowCount;
 
       if (packing > bestPacking) {
         bestPacking = packing;
-        bestPreviousY = y_begin;
+        bestPrevious = begin;
       }
     }
 
-    packingVec[y_end] = bestPacking;
-    previousYVec[y_end] = bestPreviousY;
+    packingVec[end] = bestPacking;
+    previousVec[end] = bestPrevious;
   }
 
   // Backtrack for the best solution
   CutSolution cutSolution(cut);
-  int y = maxY;
-  while (y != 0) {
-    int y_end = y;
-    int y_begin = previousYVec[y_end];
+  int cur = maxIndex;
+  while (cur != 0) {
+    int end = cur;
+    int begin = previousVec[end];
+    int beginCoord = begin * pitchY_;
+    int endCoord = min(end * pitchY_, maxCoord);
 
-    Rectangle row = Rectangle::FromCoordinates(cut.minX(), y_begin, cut.maxX(), y_end);
-    auto solution = packRow(packingVec[y_begin], row);
-    assert (packingVec[y_begin] + solution.nItems() == packingVec[y_end]);
+    Rectangle row = Rectangle::FromCoordinates(cut.minX(), beginCoord, cut.maxX(), endCoord);
+    auto solution = packRow(packingVec[begin], row);
+    assert (packingVec[begin] + solution.nItems() == packingVec[end]);
     cutSolution.rows.push_back(solution);
-    y = y_begin;
+    cur = begin;
   }
   reverse(cutSolution.rows.begin(), cutSolution.rows.end());
 
