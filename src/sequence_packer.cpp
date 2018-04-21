@@ -81,6 +81,9 @@ PlateSolution SequencePacker::packPlate(int fromItem, Rectangle plate) {
   // Backtrack for the best solution
   PlateSolution plateSolution(plate);
   int cur = maxIndex;
+  // For the last plate, cut as soon as possible
+  while (cur != 0 && packingVec[cur-1] == (int) sequence_.size())
+    --cur;
   while (cur != 0) {
     int end = cur;
     int begin = previousVec[end];
@@ -94,10 +97,6 @@ PlateSolution SequencePacker::packPlate(int fromItem, Rectangle plate) {
     cur = begin;
   }
   reverse(plateSolution.cuts.begin(), plateSolution.cuts.end());
-
-  // Remove empty cuts at the back
-  while (!plateSolution.cuts.empty() && plateSolution.cuts.back().nItems() == 0)
-    plateSolution.cuts.pop_back();
 
   return plateSolution;
 }
@@ -118,7 +117,6 @@ CutSolution SequencePacker::packCut(int fromItem, Rectangle cut) {
   std::vector<int> packingVec(maxIndex + 1, fromItem);
   std::vector<int> previousVec(maxIndex + 1, 0);
 
-  // TODO: early exit for the last plate
   for (int end = minSpacing; end <= maxIndex; ++end) {
     int bestPacking = fromItem;
     int bestPrevious = 0;

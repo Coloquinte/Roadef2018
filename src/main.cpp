@@ -21,8 +21,15 @@ int main(int argc, char** argv) {
     pb.write(argv[2]);
   }
 
-  Solution solution = Solver::run(pb);
+  //int nRuns = 100;
+  //for (int i = 0; i < nRuns; ++i) {
+  //  Solution solution = Solver::run(pb, i);
+  //  double mapped = SolutionChecker::evalPercentMapped(pb, solution);
+  //  double density = SolutionChecker::evalPercentDensity(pb, solution);
+  //  cout << "Mapped " << mapped << "%, " << density << "% density" << endl;
+  //}
 
+  Solution solution = Solver::run(pb);
   solution.write(cout);
   SolutionChecker::report(pb, solution);
 

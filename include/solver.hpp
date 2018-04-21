@@ -7,10 +7,10 @@
 
 class Solver {
  public:
-  static Solution run(const Problem &problem);
+  static Solution run(const Problem &problem, int seed=1);
  
  private: 
-  Solver(const Problem &problem);
+  Solver(const Problem &problem, int seed);
   void run();
 
   std::vector<Item> createPlacementOrder() const;
@@ -18,6 +18,7 @@ class Solver {
  private:
   const Problem &problem_;
   Solution solution_;
+  int seed_;
 };
 
 #endif

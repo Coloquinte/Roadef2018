@@ -41,14 +41,14 @@ bool SolutionChecker::check(const Problem &problem, const Solution &solution) {
   return checker.check();
 }
 
-long long SolutionChecker::evalAreaViolation(const Problem &problem, const Solution &solution) {
+double SolutionChecker::evalPercentMapped(const Problem &problem, const Solution &solution) {
   SolutionChecker checker(problem, solution);
-  return checker.evalAreaViolation();
+  return 100.0 * checker.evalAreaMapped() / checker.evalTotalArea();
 }
 
-long long SolutionChecker::evalAreaUsage(const Problem &problem, const Solution &solution) {
+double SolutionChecker::evalPercentDensity(const Problem &problem, const Solution &solution) {
   SolutionChecker checker(problem, solution);
-  return checker.evalAreaUsage();
+  return 100.0 * checker.evalAreaMapped() / checker.evalAreaUsage();
 }
 
 SolutionChecker::SolutionChecker(const Problem &problem, const Solution &solution)

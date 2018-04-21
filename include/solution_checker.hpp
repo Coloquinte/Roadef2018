@@ -14,8 +14,8 @@ class SolutionChecker {
   static void report(const Problem &problem, const Solution &solution);
   static bool check(const Problem &problem, const Solution &solution);
 
-  static long long evalAreaViolation(const Problem &problem, const Solution &solution);
-  static long long evalAreaUsage(const Problem &problem, const Solution &solution);
+  static double evalPercentMapped(const Problem &problem, const Solution &solution);
+  static double evalPercentDensity(const Problem &problem, const Solution &solution);
 
  private:
   SolutionChecker(const Problem &problem, const Solution &solution);
