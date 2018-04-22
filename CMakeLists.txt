@@ -18,6 +18,7 @@ SET (SOURCES
   src/io_problem.cpp
   src/solution_checker.cpp
   src/sequence_packer.cpp
+  src/row_packer.cpp
   src/ordering_heuristic.cpp
   src/solver.cpp
   src/utils.cpp
