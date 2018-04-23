@@ -7,22 +7,13 @@
 
 class SequencePacker {
  public:
-  static Solution run(const Problem &problem, const std::vector<Item> &sequence, int pitchX=1, int pitchY=1);
+  static Solution run(const Problem &problem, const std::vector<Item> &sequence);
 
  private:
-  SequencePacker(const Problem &problem, const std::vector<Item> &sequence, int pitchX, int pitchY);
+  SequencePacker(const Problem &problem, const std::vector<Item> &sequence);
   void run();
 
-  PlateSolution packPlate(int fromItem, Rectangle plate);
-  CutSolution packCut(int fromItem, Rectangle cut);
-  RowSolution packRow(int fromItem, Rectangle row);
-  int countPackCut(int fromItem, Rectangle cut);
-  int countPackRow(int fromItem, Rectangle row);
-
-  // TODO: handle defects
   int nItems() const { return sequence_.size(); }
-
-  bool fitsMinWaste(int a, int b) const;
 
  private:
   const Problem &problem_;
@@ -30,9 +21,6 @@ class SequencePacker {
 
   Solution solution_;
   int packedItems_;
-
-  int pitchX_;
-  int pitchY_;
 };
 
 #endif

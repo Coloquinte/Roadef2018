@@ -18,6 +18,6 @@ Solution Solver::run(const Problem &problem, int seed) {
 
 void Solver::run() {
   std::vector<Item> sequence = OrderingHeuristic::orderShuffleStacks(problem_, seed_);
-  solution_ = SequencePacker::run(problem_, sequence, 50, 50);
+  solution_ = SequencePacker::run(problem_, sequence);
 }
 
