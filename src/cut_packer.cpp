@@ -1,6 +1,7 @@
 
 #include "cut_packer.hpp"
 #include "row_packer.hpp"
+#include "pareto_front.hpp"
 #include "utils.hpp"
 
 #include <cassert>
@@ -27,50 +28,46 @@ CutPacker::CutPacker(const Packer &parent, Rectangle cut, int start)
 CutSolution CutPacker::run() {
   // Dynamic programming on the rows i.e. second-level cuts
   assert (region_.minY() == 0);
-
   int maxCoord = region_.maxY();
-  int maxIndex = divRoundUp(maxCoord, pitchY_);
-  int minSpacing = divRoundUp(minYY_, pitchY_);
 
-  std::vector<int> packingVec(maxIndex + 1, start_);
-  std::vector<int> previousVec(maxIndex + 1, 0);
-
-  for (int end = minSpacing; end <= maxIndex; ++end) {
-    int bestPacking = start_;
-    int bestPrevious = 0;
-
-    for (int begin = 0; begin <= end - minSpacing; ++begin) {
-      int beginCoord = begin * pitchY_;
-      int endCoord = min(end * pitchY_, maxCoord);
+  ParetoFront front;
+  front.insert(region_.minY(), start_, -1);
+  for (int i = 0; i < front.size(); ++i) {
+    auto elt = front[i];
+    int beginCoord = elt.coord;
+    int previousItems = elt.valeur;
+    for (int endCoord = maxCoord; endCoord >= beginCoord + minYY_; --endCoord) {
       Rectangle row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
-      int previousItems = packingVec[begin];
-      int rowCount = RowPacker::count(*this, row, previousItems);
-      int packing = previousItems + rowCount;
+      RowSolution rowSolution = RowPacker::run(*this, row, previousItems);
 
-      if (packing > bestPacking) {
-        bestPacking = packing;
-        bestPrevious = begin;
+      // Shortcut from the current solution: no need to try all the next ones
+      // FIXME: actually not correct if we didn't start a little bit further
+      // We need to ensure that no solution fits perfectly between endCoord - minWaste_ and endCoord
+      int maxUsed = rowSolution.maxUsedY() + minWaste_;
+      if (maxUsed < endCoord) {
+        endCoord = maxUsed;
+        // There is potentially an even better solution here
+        row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
+        rowSolution = RowPacker::run(*this, row, previousItems);
       }
+      front.insert(endCoord, previousItems + rowSolution.nItems(), i);
     }
-
-    packingVec[end] = bestPacking;
-    previousVec[end] = bestPrevious;
   }
+  front.checkConsistency();
 
   // Backtrack for the best solution
   CutSolution cutSolution(region_);
-  int cur = maxIndex;
+  int cur = front.size() - 1;
   while (cur != 0) {
-    int end = cur;
-    int begin = previousVec[end];
-    int beginCoord = begin * pitchY_;
-    int endCoord = min(end * pitchY_, maxCoord);
+    auto eltEnd = front[cur];
+    int next = eltEnd.previous;
+    auto eltBegin = front[next];
 
-    Rectangle row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
-    auto solution = RowPacker::run(*this, row, packingVec[begin]);
-    assert (packingVec[begin] + solution.nItems() == packingVec[end]);
+    Rectangle row = Rectangle::FromCoordinates(region_.minX(), eltBegin.coord, region_.maxX(), eltEnd.coord);
+    auto solution = RowPacker::run(*this, row, eltBegin.valeur);
+    assert (eltBegin.valeur + solution.nItems() == eltEnd.valeur);
     cutSolution.rows.push_back(solution);
-    cur = begin;
+    cur = next;
   }
   reverse(cutSolution.rows.begin(), cutSolution.rows.end());
 

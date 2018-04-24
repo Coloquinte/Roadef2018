@@ -25,6 +25,14 @@ int RowSolution::nItems() const {
   return items.size();
 }
 
+int RowSolution::maxUsedY() const {
+  int maxUsed = minY();
+  for (ItemSolution item : items) {
+    maxUsed = max(item.maxY(), maxUsed);
+  }
+  return maxUsed;
+}
+
 int CutSolution::nItems() const {
   int cnt = 0;
   for (const RowSolution &row : rows)
