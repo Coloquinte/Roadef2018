@@ -4,36 +4,17 @@
 
 #include "problem.hpp"
 #include "solution.hpp"
+#include "packer.hpp"
 
-class RowPacker {
+class RowPacker : Packer {
  public:
-  struct Quality {
-    int nItems;
-    int maxX;
-  };
-
- public:
-  // + pass defects
-  static RowSolution run(Rectangle row, const std::vector<Item> &sequence, int start, int minWaste);
-  static Quality count(Rectangle row, const std::vector<Item> &sequence, int start, int minWaste);
+  static RowSolution run(const Packer &parent, Rectangle row, int start);
+  static int count(const Packer &parent, Rectangle row, int start);
 
  private:
-  RowPacker(Rectangle row, const std::vector<Item> &sequence, int start, int minWaste);
+  RowPacker(const Packer &parent, Rectangle row, int start);
   RowSolution run();
-  Quality count();
-
-  int nItems() const {
-    return sequence_.size();
-  }
-  bool fitsMinWaste(int a, int b) const {
-      return a == b || a <= b - minWaste_;
-  }
-
- private:
-  const Rectangle row_;
-  const std::vector<Item> &sequence_;
-  const int start_;
-  const int minWaste_;
+  int count();
 };
 
 #endif

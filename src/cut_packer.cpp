@@ -13,7 +13,7 @@ CutSolution CutPacker::run(const Packer &parent, Rectangle cut, int start) {
   return packer.run();
 }
 
-CutPacker::Quality CutPacker::count(const Packer &parent, Rectangle cut, int start) {
+int CutPacker::count(const Packer &parent, Rectangle cut, int start) {
   CutPacker packer(parent, cut, start);
   return packer.count();
 }
@@ -43,8 +43,9 @@ CutSolution CutPacker::run() {
       int beginCoord = begin * pitchY_;
       int endCoord = min(end * pitchY_, maxCoord);
       Rectangle row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
-      int packing = RowPacker::count(row, sequence_, packingVec[begin], minWaste_).nItems;
-      assert (packing >= packingVec[begin]);
+      int previousItems = packingVec[begin];
+      int rowCount = RowPacker::count(*this, row, previousItems);
+      int packing = previousItems + rowCount;
 
       if (packing > bestPacking) {
         bestPacking = packing;
@@ -66,7 +67,7 @@ CutSolution CutPacker::run() {
     int endCoord = min(end * pitchY_, maxCoord);
 
     Rectangle row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
-    auto solution = RowPacker::run(row, sequence_, packingVec[begin], minWaste_);
+    auto solution = RowPacker::run(*this, row, packingVec[begin]);
     assert (packingVec[begin] + solution.nItems() == packingVec[end]);
     cutSolution.rows.push_back(solution);
     cur = begin;
@@ -76,15 +77,7 @@ CutSolution CutPacker::run() {
   return cutSolution;
 }
 
-CutPacker::Quality CutPacker::count() {
-  CutSolution solution = run();
-  int nItems = solution.nItems();
-  int maxX = region_.minX();
-  for (const RowSolution row : solution.rows) {
-    for (ItemSolution item : row.items) {
-      maxX = max(maxX, item.maxX());
-    }
-  }
-  return CutPacker::Quality { nItems, maxX };
+int CutPacker::count() {
+  return run().nItems();
 }
 

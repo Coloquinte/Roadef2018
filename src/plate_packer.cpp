@@ -53,7 +53,7 @@ PlateSolution PlatePacker::run() {
       int endCoord = min(end * pitchX_, maxCoord);
       Rectangle cut = Rectangle::FromCoordinates(beginCoord, 0, endCoord, region_.maxY());
       int previousItems = packingVec[begin];
-      int cutCount = CutPacker::count(*this, cut, previousItems).nItems;
+      int cutCount = CutPacker::count(*this, cut, previousItems);
       int packing = previousItems + cutCount;
 
       if (packing > bestPacking) {
