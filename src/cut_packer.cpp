@@ -38,19 +38,19 @@ CutSolution CutPacker::run() {
     int previousItems = elt.valeur;
     for (int endCoord = maxCoord; endCoord >= beginCoord + minYY_; --endCoord) {
       Rectangle row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
-      RowSolution rowSolution = RowPacker::run(*this, row, previousItems);
+      RowPacker::Quality result = RowPacker::count(*this, row, previousItems);
 
       // Shortcut from the current solution: no need to try all the next ones
       // FIXME: actually not correct if we didn't start a little bit further
       // We need to ensure that no solution fits perfectly between endCoord - minWaste_ and endCoord
-      int maxUsed = rowSolution.maxUsedY() + minWaste_;
+      int maxUsed = result.maxUsedY + minWaste_;
       if (maxUsed < endCoord) {
         endCoord = maxUsed;
         // There is potentially an even better solution here
         row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
-        rowSolution = RowPacker::run(*this, row, previousItems);
+        result = RowPacker::count(*this, row, previousItems);
       }
-      front.insert(endCoord, previousItems + rowSolution.nItems(), i);
+      front.insert(endCoord, previousItems + result.nItems, i);
     }
   }
   front.checkConsistency();

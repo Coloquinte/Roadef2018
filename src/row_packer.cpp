@@ -1,6 +1,8 @@
 
 #include "row_packer.hpp"
 
+#include <cassert>
+
 using namespace std;
 
 RowSolution RowPacker::run(const Packer &parent, Rectangle row, int start) {
@@ -8,7 +10,7 @@ RowSolution RowPacker::run(const Packer &parent, Rectangle row, int start) {
   return packer.run();
 }
 
-int RowPacker::count(const Packer &parent, Rectangle row, int start) {
+RowPacker::Quality RowPacker::count(const Packer &parent, Rectangle row, int start) {
   RowPacker packer(parent, row, start);
   return packer.count();
 }
@@ -53,12 +55,10 @@ RowSolution RowPacker::run() {
   return solution;
 }
 
-int RowPacker::count() {
+RowPacker::Quality RowPacker::count() {
   int currentX = region_.minX();
-  int rowHeight = region_.height();
-  int maxX = region_.maxX();
-
   int i = start_;
+  int maxUsedY = region_.minY();
   for (; i < nItems(); ++i) {
     //   Attempt to place the item with the best possible size
     //   Not actually 100% correct: due to the minimum waste
@@ -69,23 +69,30 @@ int RowPacker::count() {
     int height = max(item.width, item.height);
     int width  = min(item.width, item.height);
 
-    if (fitsMinWaste(height, rowHeight)) {
-      if (fitsMinWaste(currentX + width, maxX))
-        currentX += width;
-      else
-        break;
-    }
     // Doesn't fit vertically; try rotating
-    else if (fitsMinWaste(width, rowHeight)) {
-      if (fitsMinWaste(currentX + height, maxX))
-        currentX += height;
-      else
-        break;
-    }
-    else
+    if (!fitsMinWaste(height, region_.height()))
+      swap(width, height);
+    // Still doesn't fit
+    if (!fitsMinWaste(height, region_.height()))
       break;
+
+    // Not actually 100% correct due to the minWaste parameter
+    // The optimal solution involves the orientation of all items
+    // And we'd need dynamic programming or brute-force for that
+    int newX = currentX + width;
+    if (!fitsMinWaste(newX, region_.maxX()))
+      break;
+
+    maxUsedY = max(region_.minY() + height, maxUsedY);
+    currentX = newX;
   }
 
-  return i - start_;
+  assert (run().nItems() == i - start_);
+  assert (run().maxUsedY() == maxUsedY);
+
+  return Quality {
+    i - start_,
+    maxUsedY
+  };
 }
 
