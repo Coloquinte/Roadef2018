@@ -1,6 +1,7 @@
 
 #include "cut_packer.hpp"
 #include "plate_packer.hpp"
+#include "pareto_front.hpp"
 #include "utils.hpp"
 
 #include <cassert>
@@ -37,52 +38,46 @@ PlateSolution PlatePacker::run() {
   assert (region_.minY() == 0);
 
   int maxCoord = region_.maxX();
-  int maxIndex = divRoundUp(maxCoord, pitchX_);
-  int minSpacing = divRoundUp(minXX_, pitchX_);
-  int maxSpacing = divRoundDown(maxXX_, pitchX_);
 
-  std::vector<int> packingVec(maxIndex + 1, start_);
-  std::vector<int> previousVec(maxIndex + 1, 0);
+  ParetoFront front;
+  front.insert(region_.minX(), start_, -1);
+  for (int i = 0; i < front.size(); ++i) {
+    auto elt = front[i];
+    int beginCoord = elt.coord;
+    int previousItems = elt.valeur;
+    for (int endCoord = min(maxCoord, beginCoord + maxXX_); endCoord >= beginCoord + minXX_; --endCoord) {
+      Rectangle cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
+      CutSolution cutSolution = CutPacker::run(*this, cut, previousItems);
 
-  for (int end = minSpacing; end <= maxIndex; ++end) {
-    int bestPacking = start_;
-    int bestPrevious = max(0, end - maxSpacing);
-
-    for (int begin = max(0, end - maxSpacing); begin <= end - minSpacing; ++begin) {
-      int beginCoord = begin * pitchX_;
-      int endCoord = min(end * pitchX_, maxCoord);
-      Rectangle cut = Rectangle::FromCoordinates(beginCoord, 0, endCoord, region_.maxY());
-      int previousItems = packingVec[begin];
-      int cutCount = CutPacker::count(*this, cut, previousItems);
-      int packing = previousItems + cutCount;
-
-      if (packing > bestPacking) {
-        bestPacking = packing;
-        bestPrevious = begin;
+      // Shortcut from the current solution: no need to try all the next ones
+      // FIXME: actually not correct if we didn't start a little bit further
+      // We need to ensure that no solution fits perfectly between endCoord - minWaste_ and endCoord
+      int maxUsed = cutSolution.maxUsedX() + minWaste_;
+      if (maxUsed < endCoord) {
+        endCoord = maxUsed;
+        // There is potentially an even better solution here
+        cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
+        cutSolution = CutPacker::run(*this, cut, previousItems);
       }
+      front.insert(endCoord, previousItems + cutSolution.nItems(), i);
     }
-
-    packingVec[end] = bestPacking;
-    previousVec[end] = bestPrevious;
   }
+  front.checkConsistency();
 
   // Backtrack for the best solution
+  // FIXME: get to the first element of the Pareto front that fits
   PlateSolution plateSolution(region_);
-  int cur = maxIndex;
-  // For the last plate, cut as soon as possible
-  while (cur != 0 && packingVec[cur-1] == (int) sequence_.size())
-    --cur;
+  int cur = front.size() - 1;
   while (cur != 0) {
-    int end = cur;
-    int begin = previousVec[end];
-    int beginCoord = begin * pitchX_;
-    int endCoord = min(end * pitchX_, maxCoord);
+    auto eltEnd = front[cur];
+    int next = eltEnd.previous;
+    auto eltBegin = front[next];
 
-    Rectangle cut = Rectangle::FromCoordinates(beginCoord, 0, endCoord, region_.maxY());
-    auto solution = CutPacker::run(*this, cut, packingVec[begin]);
-    assert (packingVec[begin] + solution.nItems() == packingVec[end]);
+    Rectangle cut = Rectangle::FromCoordinates(eltBegin.coord, region_.minY(), eltEnd.coord, region_.maxY());
+    auto solution = CutPacker::run(*this, cut, eltBegin.valeur);
+    assert (eltBegin.valeur + solution.nItems() == eltEnd.valeur);
     plateSolution.cuts.push_back(solution);
-    cur = begin;
+    cur = next;
   }
   reverse(plateSolution.cuts.begin(), plateSolution.cuts.end());
 

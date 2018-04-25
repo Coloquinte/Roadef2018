@@ -185,6 +185,7 @@ void SolutionChecker::checkPlateDivision(const PlateSolution &plate) {
 }
 
 void SolutionChecker::checkCut(const CutSolution &cut) {
+  checkCutSize(cut);
   checkCutDivision(cut);
   for (int i = 0; i < (int) cut.rows.size(); ++i) {
     rowId_ = i;
@@ -192,6 +193,14 @@ void SolutionChecker::checkCut(const CutSolution &cut) {
     checkRow(row);
   }
   rowId_ = -1;
+}
+
+void SolutionChecker::checkCutSize(const CutSolution &cut) {
+  Params p = problem_.params();
+  if (cut.width() > p.maxXX)
+      error("Critical", "Cut is larger than the maximum allowed value %d", p.maxXX);
+  if (cut.width() < p.minXX)
+      error("Critical", "Cut is smaller than the minimum allowed value %d", p.minXX);
 }
 
 void SolutionChecker::checkCutDivision(const CutSolution &cut) {
@@ -216,9 +225,16 @@ void SolutionChecker::checkCutDivision(const CutSolution &cut) {
 }
 
 void SolutionChecker::checkRow(const RowSolution &row) {
+  checkRowSize(row);
   checkRowDivision(row);
   for (const ItemSolution &item : row.items)
     checkItem(item);
+}
+
+void SolutionChecker::checkRowSize(const RowSolution &row) {
+  Params p = problem_.params();
+  if (row.height() < p.minYY)
+      error("Critical", "Row is smaller than the minimum allowed value %d", p.minYY);
 }
 
 void SolutionChecker::checkRowDivision(const RowSolution &row) {

@@ -38,6 +38,9 @@ class SolutionChecker {
   void checkCutDivision(const CutSolution &cut);
   void checkRowDivision(const RowSolution &row);
 
+  void checkCutSize(const CutSolution &cut);
+  void checkRowSize(const RowSolution &row);
+
   void checkItemUnicity();
   void checkSequences();
 

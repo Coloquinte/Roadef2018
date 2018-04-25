@@ -33,11 +33,26 @@ int RowSolution::maxUsedY() const {
   return maxUsed;
 }
 
+int RowSolution::maxUsedX() const {
+  if (items.empty())
+    return minX();
+  else
+    return items.back().maxX();
+}
+
 int CutSolution::nItems() const {
   int cnt = 0;
   for (const RowSolution &row : rows)
     cnt += row.nItems();
   return cnt;
+}
+
+int CutSolution::maxUsedX() const {
+  int maxUsed = minX();
+  for (const RowSolution &row : rows) {
+    maxUsed = max(row.maxUsedX(), maxUsed);
+  }
+  return maxUsed;
 }
 
 int PlateSolution::nItems() const {

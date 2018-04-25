@@ -25,6 +25,7 @@ struct RowSolution : Rectangle {
 
   int nItems() const;
   int maxUsedY() const;
+  int maxUsedX() const;
 };
 
 struct CutSolution : Rectangle {
@@ -35,6 +36,7 @@ struct CutSolution : Rectangle {
   std::vector<RowSolution> rows;
 
   int nItems() const;
+  int maxUsedX() const;
 };
 
 struct PlateSolution : Rectangle {

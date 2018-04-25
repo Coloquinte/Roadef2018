@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 
   Solution solution = Solver::run(pb);
   solution.write(cout);
-  //SolutionChecker::report(pb, solution);
+  SolutionChecker::report(pb, solution);
   double mapped = SolutionChecker::evalPercentMapped(pb, solution);
   double density = SolutionChecker::evalPercentDensity(pb, solution);
   cout << "Mapped " << mapped << "%, " << density << "% density" << endl;

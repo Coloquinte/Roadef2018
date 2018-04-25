@@ -56,6 +56,7 @@ CutSolution CutPacker::run() {
   front.checkConsistency();
 
   // Backtrack for the best solution
+  // FIXME: get to the first element of the Pareto front that fits
   CutSolution cutSolution(region_);
   int cur = front.size() - 1;
   while (cur != 0) {
