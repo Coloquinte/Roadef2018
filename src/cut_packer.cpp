@@ -40,17 +40,21 @@ CutSolution CutPacker::run() {
       Rectangle row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
       RowPacker::Quality result = RowPacker::count(*this, row, previousItems);
 
-      // Shortcut from the current solution: no need to try all the next ones
-      // FIXME: actually not correct if we didn't start a little bit further
-      // We need to ensure that no solution fits perfectly between endCoord - minWaste_ and endCoord
-      int maxUsed = result.maxUsedY + minWaste_;
-      if (maxUsed < endCoord) {
-        endCoord = maxUsed;
-        // There is potentially an even better solution here
+      int maxUsed = result.maxUsedY;
+      if (maxUsed + minWaste_ < endCoord) {
+        // Shortcut from the current solution: no need to try all the next ones
+        endCoord = maxUsed + minWaste_;
         row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
         result = RowPacker::count(*this, row, previousItems);
       }
       front.insert(endCoord, previousItems + result.nItems, i);
+
+      if (maxUsed < endCoord) {
+        // Fully packed case
+        row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), maxUsed);
+        result = RowPacker::count(*this, row, previousItems);
+        front.insert(maxUsed, previousItems + result.nItems, i);
+      }
     }
   }
   front.checkConsistency();

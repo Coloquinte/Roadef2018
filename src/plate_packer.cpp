@@ -49,17 +49,21 @@ PlateSolution PlatePacker::run() {
       Rectangle cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
       CutSolution cutSolution = CutPacker::run(*this, cut, previousItems);
 
-      // Shortcut from the current solution: no need to try all the next ones
-      // FIXME: actually not correct if we didn't start a little bit further
-      // We need to ensure that no solution fits perfectly between endCoord - minWaste_ and endCoord
-      int maxUsed = cutSolution.maxUsedX() + minWaste_;
-      if (maxUsed < endCoord) {
-        endCoord = maxUsed;
-        // There is potentially an even better solution here
+      int maxUsed = cutSolution.maxUsedX();
+      if (maxUsed + minWaste_ < endCoord) {
+        // Shortcut from the current solution: no need to try all the next ones
+        endCoord = maxUsed + minWaste_;
         cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
         cutSolution = CutPacker::run(*this, cut, previousItems);
       }
       front.insert(endCoord, previousItems + cutSolution.nItems(), i);
+
+      if (maxUsed < endCoord) {
+        // Fully packed case
+        cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), maxUsed, region_.maxY());
+        cutSolution = CutPacker::run(*this, cut, previousItems);
+        front.insert(maxUsed, previousItems + cutSolution.nItems(), i);
+      }
     }
   }
   front.checkConsistency();
