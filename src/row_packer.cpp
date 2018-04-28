@@ -87,8 +87,8 @@ RowPacker::Quality RowPacker::count() {
     currentX = newX;
   }
 
-  assert (run().nItems() == i - start_);
-  assert (run().maxUsedY() == maxUsedY);
+  //assert (run().nItems() == i - start_);
+  //assert (run().maxUsedY() == maxUsedY);
 
   return Quality {
     i - start_,

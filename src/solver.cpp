@@ -18,6 +18,7 @@ Solution Solver::run(const Problem &problem, int seed) {
 
 void Solver::run() {
   std::vector<Item> sequence = OrderingHeuristic::orderShuffleStacks(problem_, seed_);
+  //std::vector<Item> sequence = OrderingHeuristic::orderKeepStacks(problem_, seed_);
   solution_ = SequencePacker::run(problem_, sequence);
 }
 

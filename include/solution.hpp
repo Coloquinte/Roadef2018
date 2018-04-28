@@ -36,6 +36,7 @@ struct CutSolution : Rectangle {
   std::vector<RowSolution> rows;
 
   int nItems() const;
+  int nRows() const { return rows.size(); }
   int maxUsedX() const;
 };
 
@@ -47,13 +48,17 @@ struct PlateSolution : Rectangle {
   std::vector<CutSolution> cuts;
 
   int nItems() const;
+  int nCuts() const { return cuts.size(); }
 };
 
 struct Solution {
   std::vector<PlateSolution> plates;
 
   int nItems() const;
-  void write(std::ostream &) const;
+  int nPlates() const { return plates.size(); }
+
+  void report(std::ostream &) const;
+  void write(std::string prefix) const;
 };
 
 #endif

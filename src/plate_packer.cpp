@@ -69,19 +69,41 @@ PlateSolution PlatePacker::run() {
   front.checkConsistency();
 
   // Backtrack for the best solution
-  // FIXME: get to the first element of the Pareto front that fits
   PlateSolution plateSolution(region_);
   int cur = front.size() - 1;
+  bool lastCut = true;
   while (cur != 0) {
     auto eltEnd = front[cur];
     int next = eltEnd.previous;
     auto eltBegin = front[next];
 
-    Rectangle cut = Rectangle::FromCoordinates(eltBegin.coord, region_.minY(), eltEnd.coord, region_.maxY());
+    int beginCoord = eltBegin.coord;
+    int endCoord = eltEnd.coord;
+    if (lastCut && eltEnd.valeur != nItems()) {
+      // End but not the residual
+      if (maxCoord - beginCoord <= maxXX_) {
+        // Extend the last cut to the full plate
+        endCoord = maxCoord;
+      }
+      else if (maxCoord - beginCoord >= minXX_) {
+        // Not possible to extend, add another cut instead
+        // FIXME: when we need to add several new cuts
+        Rectangle emptyCut = Rectangle::FromCoordinates(endCoord, region_.minY(), maxCoord, region_.maxY());
+        plateSolution.cuts.emplace_back(emptyCut);
+      }
+      else {
+        // Not possible to add a cut; try again
+        --cur;
+        continue;
+      }
+    }
+
+    Rectangle cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
     auto solution = CutPacker::run(*this, cut, eltBegin.valeur);
     assert (eltBegin.valeur + solution.nItems() == eltEnd.valeur);
     plateSolution.cuts.push_back(solution);
     cur = next;
+    lastCut = false;
   }
   reverse(plateSolution.cuts.begin(), plateSolution.cuts.end());
 

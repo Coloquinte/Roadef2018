@@ -22,19 +22,30 @@ int main(int argc, char** argv) {
   }
 
   //int nRuns = 100;
+  //double sumMapped = 0.0;
+  //double sumDensity = 0.0;
+  //double bestDensity = 0.0;
   //for (int i = 0; i < nRuns; ++i) {
   //  Solution solution = Solver::run(pb, i);
   //  double mapped = SolutionChecker::evalPercentMapped(pb, solution);
   //  double density = SolutionChecker::evalPercentDensity(pb, solution);
-  //  cout << "Mapped " << mapped << "%, " << density << "% density" << endl;
+  //  sumMapped += mapped;
+  //  sumDensity += density;
+  //  if (mapped > 99 && density > bestDensity)
+  //    bestDensity = density;
   //}
+  //cout << "Average " << sumMapped / nRuns << "% mapped" << endl;
+  //cout << "Average " << sumDensity / nRuns << "% density" << endl;
+  //cout << "Best density is " << bestDensity << "%" << endl;
+  //cout << endl;
 
   Solution solution = Solver::run(pb);
-  solution.write(cout);
+  solution.report(cout);
   SolutionChecker::report(pb, solution);
   double mapped = SolutionChecker::evalPercentMapped(pb, solution);
   double density = SolutionChecker::evalPercentDensity(pb, solution);
   cout << "Mapped " << mapped << "%, " << density << "% density" << endl;
+  solution.write(argv[1]);
 
   return 0;
 }

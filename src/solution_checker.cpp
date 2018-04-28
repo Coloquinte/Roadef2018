@@ -169,6 +169,8 @@ void SolutionChecker::checkPlateDivision(const PlateSolution &plate) {
     error("Critical", "First cut doesn't start at %d", plate.minX());
   if (plate.cuts.back().maxX() > plate.maxX())
     error("Critical", "Last cut doesn't end at %d", plate.maxX());
+  if (plateId_ != solution_.nPlates() - 1 && plate.cuts.back().maxX() != plate.maxX())
+    error("Critical", "Last cut doesn't end at %d", plate.maxX());
 
   for (const CutSolution &cut : plate.cuts) {
     if (cut.minY() != plate.minY() || cut.maxY() != plate.maxY())
@@ -214,6 +216,11 @@ void SolutionChecker::checkCutDivision(const CutSolution &cut) {
     if (row.maxX() != cut.maxX())
       error("Critical", "Row #%d ends at %d instead of %d", rowId_, row.maxX(), cut.maxX());
   }
+
+  if (cut.rows.front().minY() != cut.minY())
+    error("Critical", "First row doesn't start at %d", cut.minY());
+  if (cut.rows.back().maxY() != cut.maxY())
+    error("Critical", "Last row doesn't end at %d", cut.maxY());
 
   for (int i = 0; i+1 < (int) cut.rows.size(); ++i) {
     if (cut.rows[i].maxY() != cut.rows[i+1].minY())
