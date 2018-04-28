@@ -44,8 +44,9 @@ PlateSolution PlatePacker::run() {
   for (int i = 0; i < front.size(); ++i) {
     auto elt = front[i];
     int beginCoord = elt.coord;
+    int maxEndCoord = min(maxCoord, beginCoord + maxXX_);
     int previousItems = elt.valeur;
-    for (int endCoord = min(maxCoord, beginCoord + maxXX_); endCoord >= beginCoord + minXX_; --endCoord) {
+    for (int endCoord = maxEndCoord + minWaste_; endCoord >= beginCoord + minXX_; --endCoord) {
       Rectangle cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
       CutSolution cutSolution = CutPacker::run(*this, cut, previousItems);
 
@@ -56,7 +57,8 @@ PlateSolution PlatePacker::run() {
         cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
         cutSolution = CutPacker::run(*this, cut, previousItems);
       }
-      front.insert(endCoord, previousItems + cutSolution.nItems(), i);
+      if (endCoord <= maxEndCoord)
+        front.insert(endCoord, previousItems + cutSolution.nItems(), i);
 
       if (maxUsed < endCoord) {
         // Fully packed case

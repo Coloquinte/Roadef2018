@@ -41,7 +41,7 @@ CutSolution CutPacker::run() {
       RowPacker::Quality result = RowPacker::count(*this, row, previousItems);
 
       // We cut all solutions with maxUsed + minWaste_ <= coord
-      // But technically the may be non-dominated solutions within minWaste_ of the current one
+      // Technically there may be non-dominated solutions within minWaste_ of the current one
       int maxUsed = result.maxUsedY;
       if (maxUsed + minWaste_ < endCoord) {
         // Shortcut from the current solution: no need to try all the next ones
