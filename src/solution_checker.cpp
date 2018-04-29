@@ -200,9 +200,9 @@ void SolutionChecker::checkCut(const CutSolution &cut) {
 void SolutionChecker::checkCutSize(const CutSolution &cut) {
   Params p = problem_.params();
   if (cut.width() > p.maxXX)
-      error("Critical", "Cut is larger than the maximum allowed value %d", p.maxXX);
+      error("Critical", "Cut is %d-wide, which is larger than the maximum allowed value %d", cut.width(), p.maxXX);
   if (cut.width() < p.minXX)
-      error("Critical", "Cut is smaller than the minimum allowed value %d", p.minXX);
+      error("Critical", "Cut is %d-wide, which is smaller than the minimum allowed value %d", cut.width(), p.minXX);
 }
 
 void SolutionChecker::checkCutDivision(const CutSolution &cut) {
@@ -241,7 +241,7 @@ void SolutionChecker::checkRow(const RowSolution &row) {
 void SolutionChecker::checkRowSize(const RowSolution &row) {
   Params p = problem_.params();
   if (row.height() < p.minYY)
-      error("Critical", "Row is smaller than the minimum allowed value %d", p.minYY);
+      error("Critical", "Row is %d-high, which is smaller than the minimum allowed value %d", row.height(), p.minYY);
 }
 
 void SolutionChecker::checkRowDivision(const RowSolution &row) {

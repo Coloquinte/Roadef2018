@@ -21,6 +21,15 @@ class RowPacker : Packer {
   RowPacker(const Packer &parent, Rectangle row, int start);
   RowSolution run();
   Quality count();
+
+  bool fitsDefects(int from, int width, int height) const;
+  int earliestFit(int from, int width, int height) const;
+
+ private:
+  int currentX_;
+  int packed_;
+  int rowH_;
+  int rowW_;
 };
 
 #endif

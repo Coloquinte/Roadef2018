@@ -145,7 +145,8 @@ void SolutionWriter::writeHeader() {
 }
 
 void SolutionWriter::writePlate(const PlateSolution &plate) {
-  int id = writeRectangle(plate, PATTERN, 0);
+  int type = plate.cuts.empty() ? WASTE : PATTERN;
+  int id = writeRectangle(plate, type, 0);
   for (const CutSolution &cut : plate.cuts) {
     writeCut(cut, id);
   }

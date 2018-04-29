@@ -29,8 +29,11 @@ RowSolution RowPacker::run() {
   for (int i = start_; i < nItems(); ++i) {
     // Attempt to place the item with the best possible size
     Item item = sequence_[i];
-    int height = max(item.width, item.height);
-    int width = min(item.width, item.height);
+    int height = item.height;
+    int width = item.width;
+    int placement = currentX;
+    assert (width <= height);
+
     // Doesn't fit vertically; try rotating
     if (!fitsMinWaste(height, region_.height()))
       swap(width, height);
@@ -38,14 +41,30 @@ RowSolution RowPacker::run() {
     if (!fitsMinWaste(height, region_.height()))
       break;
 
+    if (!fitsDefects(currentX, width, height)) {
+      int straightX = earliestFit(currentX, width, height);
+      int rotatedX  = earliestFit(currentX, height, width);
+      bool fitsStraight = fitsMinWaste(height, region_.height());
+      bool fitsRotated = fitsMinWaste(width, region_.height());
+      bool useStraight = !fitsRotated || (fitsStraight && straightX <= rotatedX);
+      if (useStraight) {
+        placement = straightX;
+      }
+      else {
+        assert (fitsRotated);
+        placement = rotatedX;
+        swap(width, height);
+      }
+    }
+
+    int newX = placement + width;
     // Not actually 100% correct due to the minWaste parameter
     // The optimal solution involves the orientation of all items
     // And we'd need dynamic programming or brute-force for that
-    int newX = currentX + width;
     if (!fitsMinWaste(newX, region_.maxX()))
       break;
 
-    ItemSolution sol(currentX, region_.minY(), width, height);
+    ItemSolution sol(placement, region_.minY(), width, height);
     sol.itemId = item.id;
 
     solution.items.push_back(sol);
@@ -56,43 +75,37 @@ RowSolution RowPacker::run() {
 }
 
 RowPacker::Quality RowPacker::count() {
-  int currentX = region_.minX();
-  int i = start_;
-  int maxUsedY = region_.minY();
-  for (; i < nItems(); ++i) {
-    //   Attempt to place the item with the best possible size
-    //   Not actually 100% correct: due to the minimum waste
-    // constraint at the end, the optimal solution involves
-    // the orientation of all items. In practical cases,
-    // it doesn't matter
-    Item item = sequence_[i];
-    int height = max(item.width, item.height);
-    int width  = min(item.width, item.height);
-
-    // Doesn't fit vertically; try rotating
-    if (!fitsMinWaste(height, region_.height()))
-      swap(width, height);
-    // Still doesn't fit
-    if (!fitsMinWaste(height, region_.height()))
-      break;
-
-    // Not actually 100% correct due to the minWaste parameter
-    // The optimal solution involves the orientation of all items
-    // And we'd need dynamic programming or brute-force for that
-    int newX = currentX + width;
-    if (!fitsMinWaste(newX, region_.maxX()))
-      break;
-
-    maxUsedY = max(region_.minY() + height, maxUsedY);
-    currentX = newX;
-  }
-
-  //assert (run().nItems() == i - start_);
-  //assert (run().maxUsedY() == maxUsedY);
-
+  RowSolution solution = run();
   return Quality {
-    i - start_,
-    maxUsedY
+    solution.nItems(),
+    solution.maxUsedY()
   };
+}
+
+bool RowPacker::fitsDefects(int from, int width, int height) const {
+  Rectangle place = Rectangle::FromDimensions(from, region_.minY(), width, height);
+  for (Defect d : defects_) {
+    if (place.intersects(d)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+int RowPacker::earliestFit(int from, int width, int height) const {
+  int cur = from;
+  while (true) {
+    Rectangle place = Rectangle::FromDimensions(cur, region_.minY(), width, height);
+    bool hasDefect = false;
+    for (Defect d : defects_) {
+      if (place.intersects(d)) {
+        cur = max(d.maxX() + 1, cur);
+        hasDefect = true;
+      }
+    }
+    if (!hasDefect)
+      return cur;
+    cur = max(from + minWaste_, cur);
+  }
 }
 

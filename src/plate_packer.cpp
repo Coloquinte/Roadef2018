@@ -27,8 +27,6 @@ PlatePacker::PlatePacker(const Problem &problem, int plateId, const std::vector<
   maxXX_ = p.maxXX;
   minYY_ = p.minYY;
   minWaste_ = p.minWaste;
-  pitchX_ = 50;
-  pitchY_ = 50;
   region_ = Rectangle::FromCoordinates(0, 0, p.widthPlates, p.heightPlates);
 }
 
@@ -87,7 +85,7 @@ PlateSolution PlatePacker::run() {
         // Extend the last cut to the full plate
         endCoord = maxCoord;
       }
-      else if (maxCoord - beginCoord >= minXX_) {
+      else if (maxCoord - endCoord >= minXX_) {
         // Not possible to extend, add another cut instead
         // FIXME: when we need to add several new cuts
         Rectangle emptyCut = Rectangle::FromCoordinates(endCoord, region_.minY(), maxCoord, region_.maxY());
@@ -102,7 +100,9 @@ PlateSolution PlatePacker::run() {
 
     Rectangle cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
     auto solution = CutPacker::run(*this, cut, eltBegin.valeur);
-    assert (eltBegin.valeur + solution.nItems() == eltEnd.valeur);
+    assert (eltBegin.valeur + solution.nItems() == eltEnd.valeur || endCoord != eltEnd.coord);
+    assert (solution.width() >= minXX_);
+    assert (solution.width() <= maxXX_);
     plateSolution.cuts.push_back(solution);
     cur = next;
     lastCut = false;

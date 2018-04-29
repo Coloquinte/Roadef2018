@@ -75,10 +75,12 @@ void IOProblem::readItem(const std::string &s, std::vector<Item> &items) {
   for (const string &s : csv_fields)
     item_fields.push_back(stoi(s));
 
+  int width = item_fields[1];
+  int height = item_fields[2];
   Item item;
   item.id = item_fields[0];
-  item.width = item_fields[1];
-  item.height = item_fields[2];
+  item.width = min(width, height);
+  item.height = max(width, height);
   item.stack = item_fields[3];
   item.sequence = item_fields[4];
   items.push_back(item);

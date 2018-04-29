@@ -52,7 +52,7 @@ CutSolution CutPacker::run() {
       front.insert(endCoord, previousItems + result.nItems, i);
 
       if (maxUsed < endCoord) {
-        // Fully packed case
+        // Try the fully packed case too
         row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), maxUsed);
         result = RowPacker::count(*this, row, previousItems);
         front.insert(maxUsed, previousItems + result.nItems, i);
@@ -75,7 +75,9 @@ CutSolution CutPacker::run() {
 
     Rectangle row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
     auto solution = RowPacker::run(*this, row, eltBegin.valeur);
-    assert (eltBegin.valeur + solution.nItems() == eltEnd.valeur);
+    // There is one corner case (minWaste_ at the end depending on orientation) where we catch a better solution with a smaller row
+    assert (eltBegin.valeur + solution.nItems() == eltEnd.valeur || endCoord != eltEnd.coord);
+    assert (solution.height() >= minYY_);
     cutSolution.rows.push_back(solution);
     cur = next;
     lastRow = false;

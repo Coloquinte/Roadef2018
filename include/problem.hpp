@@ -26,6 +26,8 @@ class Problem {
 
   const Params params() const { return params_; }
 
+  void checkConsistency() const;
+
  private:
   void buildSequences();
   void buildPlates();

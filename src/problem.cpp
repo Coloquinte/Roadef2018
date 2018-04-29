@@ -4,6 +4,7 @@
 
 #include <map>
 #include <algorithm>
+#include <cassert>
 
 using namespace std;
 
@@ -35,6 +36,15 @@ void Problem::buildPlates() {
       continue;
     plateDefects_[d.plate_id].push_back(d);
   }
+}
+
+void Problem::checkConsistency() const {
+  for (Item item : items_) {
+    assert (item.width <= item.height);
+  }
+  // TODO: check IDs
+  //  * use only consecutive IDs
+  //  * convert only on read-write
 }
 
 Problem Problem::read(std::string prefix) {
