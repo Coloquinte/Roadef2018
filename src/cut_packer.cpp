@@ -1,6 +1,5 @@
 
 #include "cut_packer.hpp"
-#include "row_packer.hpp"
 #include "pareto_front.hpp"
 #include "utils.hpp"
 
@@ -37,8 +36,7 @@ CutSolution CutPacker::run() {
     int beginCoord = elt.coord;
     int previousItems = elt.valeur;
     for (int endCoord = maxCoord; endCoord >= beginCoord + minYY_; --endCoord) {
-      Rectangle row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
-      RowPacker::Quality result = RowPacker::count(*this, row, previousItems);
+      RowPacker::Quality result = countRow(previousItems, beginCoord, endCoord);
 
       // We cut all solutions with maxUsed + minWaste_ <= coord
       // Technically there may be non-dominated solutions within minWaste_ of the current one
@@ -46,15 +44,13 @@ CutSolution CutPacker::run() {
       if (maxUsed + minWaste_ < endCoord) {
         // Shortcut from the current solution: no need to try all the next ones
         endCoord = maxUsed + minWaste_;
-        row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
-        result = RowPacker::count(*this, row, previousItems);
+        result = countRow(previousItems, beginCoord, endCoord);
       }
       front.insert(endCoord, previousItems + result.nItems, i);
 
       if (maxUsed < endCoord) {
         // Try the fully packed case too
-        row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), maxUsed);
-        result = RowPacker::count(*this, row, previousItems);
+        result = countRow(previousItems, beginCoord, maxUsed);
         front.insert(maxUsed, previousItems + result.nItems, i);
       }
     }
@@ -73,8 +69,7 @@ CutSolution CutPacker::run() {
     int beginCoord = eltBegin.coord;
     int endCoord = lastRow ? maxCoord : eltEnd.coord;
 
-    Rectangle row = Rectangle::FromCoordinates(region_.minX(), beginCoord, region_.maxX(), endCoord);
-    auto solution = RowPacker::run(*this, row, eltBegin.valeur);
+    auto solution = packRow(eltBegin.valeur, beginCoord, endCoord);
     // There is one corner case (minWaste_ at the end depending on orientation) where we catch a better solution with a smaller row
     assert (eltBegin.valeur + solution.nItems() == eltEnd.valeur || endCoord != eltEnd.coord);
     assert (solution.height() >= minYY_);
@@ -89,5 +84,15 @@ CutSolution CutPacker::run() {
 
 int CutPacker::count() {
   return run().nItems();
+}
+
+RowPacker::Quality CutPacker::countRow(int start, int minY, int maxY) const {
+  Rectangle row = Rectangle::FromCoordinates(region_.minX(), minY, region_.maxX(), maxY);
+  return RowPacker::count(*this, row, start);
+}
+
+RowSolution CutPacker::packRow(int start, int minY, int maxY) const {
+  Rectangle row = Rectangle::FromCoordinates(region_.minX(), minY, region_.maxX(), maxY);
+  return RowPacker::run(*this, row, start);
 }
 

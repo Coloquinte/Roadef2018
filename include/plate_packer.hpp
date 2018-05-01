@@ -5,6 +5,7 @@
 #include "problem.hpp"
 #include "solution.hpp"
 #include "packer.hpp"
+#include "cut_packer.hpp"
 
 class PlatePacker : Packer {
  public:
@@ -15,6 +16,9 @@ class PlatePacker : Packer {
   PlatePacker(const Problem &problem, int plateId, const std::vector<Item> &sequence, int start);
   PlateSolution run();
   int count();
+
+  int countCut(int start, int minX, int maxX) const;
+  CutSolution packCut(int start, int minX, int maxX) const;
 };
 
 #endif

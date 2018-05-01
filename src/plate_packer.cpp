@@ -1,5 +1,4 @@
 
-#include "cut_packer.hpp"
 #include "plate_packer.hpp"
 #include "pareto_front.hpp"
 #include "utils.hpp"
@@ -45,23 +44,20 @@ PlateSolution PlatePacker::run() {
     int maxEndCoord = min(maxCoord, beginCoord + maxXX_);
     int previousItems = elt.valeur;
     for (int endCoord = maxEndCoord + minWaste_; endCoord >= beginCoord + minXX_; --endCoord) {
-      Rectangle cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
-      CutSolution cutSolution = CutPacker::run(*this, cut, previousItems);
+      CutSolution cutSolution = packCut(previousItems, beginCoord, endCoord);
 
       int maxUsed = cutSolution.maxUsedX();
       if (maxUsed + minWaste_ < endCoord) {
         // Shortcut from the current solution: no need to try all the next ones
         endCoord = maxUsed + minWaste_;
-        cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
-        cutSolution = CutPacker::run(*this, cut, previousItems);
+        cutSolution = packCut(previousItems, beginCoord, endCoord);
       }
       if (endCoord <= maxEndCoord)
         front.insert(endCoord, previousItems + cutSolution.nItems(), i);
 
       if (maxUsed < endCoord) {
         // Fully packed case
-        cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), maxUsed, region_.maxY());
-        cutSolution = CutPacker::run(*this, cut, previousItems);
+        cutSolution = packCut(previousItems, beginCoord, maxUsed);
         front.insert(maxUsed, previousItems + cutSolution.nItems(), i);
       }
     }
@@ -87,7 +83,7 @@ PlateSolution PlatePacker::run() {
       }
       else if (maxCoord - endCoord >= minXX_) {
         // Not possible to extend, add another cut instead
-        // FIXME: when we need to add several new cuts
+        // FIXME: when we need to add several new cuts; not possible with standard dimensions
         Rectangle emptyCut = Rectangle::FromCoordinates(endCoord, region_.minY(), maxCoord, region_.maxY());
         plateSolution.cuts.emplace_back(emptyCut);
       }
@@ -98,8 +94,7 @@ PlateSolution PlatePacker::run() {
       }
     }
 
-    Rectangle cut = Rectangle::FromCoordinates(beginCoord, region_.minY(), endCoord, region_.maxY());
-    auto solution = CutPacker::run(*this, cut, eltBegin.valeur);
+    auto solution = packCut(eltBegin.valeur, beginCoord, endCoord);
     assert (eltBegin.valeur + solution.nItems() == eltEnd.valeur || endCoord != eltEnd.coord);
     assert (solution.width() >= minXX_);
     assert (solution.width() <= maxXX_);
@@ -114,5 +109,15 @@ PlateSolution PlatePacker::run() {
 
 int PlatePacker::count() {
   return run().nItems();
+}
+
+int PlatePacker::countCut(int start, int minX, int maxX) const {
+  Rectangle cut = Rectangle::FromCoordinates(minX, region_.minY(), maxX, region_.maxY());
+  return CutPacker::count(*this, cut, start);
+}
+
+CutSolution PlatePacker::packCut(int start, int minX, int maxX) const {
+  Rectangle cut = Rectangle::FromCoordinates(minX, region_.minY(), maxX, region_.maxY());
+  return CutPacker::run(*this, cut, start);
 }
 

@@ -22,14 +22,19 @@ class RowPacker : Packer {
   RowSolution run();
   Quality count();
 
-  bool fitsDefects(int from, int width, int height) const;
-  int earliestFit(int from, int width, int height) const;
+  void init();
+
+  bool fitsDimensions(int width, int height) const;
+  bool fitsDimensionsAt(int minX, int width, int height) const;
+
+  bool fitsDefects(int width, int height) const;
+  bool fitsDefectsAt(int minX, int width, int height) const;
+
+  int earliestFit(int minX, int width, int height) const;
 
  private:
   int currentX_;
   int packed_;
-  int rowH_;
-  int rowW_;
 };
 
 #endif

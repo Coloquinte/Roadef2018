@@ -5,6 +5,7 @@
 #include "problem.hpp"
 #include "solution.hpp"
 #include "packer.hpp"
+#include "row_packer.hpp"
 
 class CutPacker : Packer {
  public:
@@ -15,6 +16,9 @@ class CutPacker : Packer {
   CutPacker(const Packer &parent, Rectangle cut, int start);
   CutSolution run();
   int count();
+
+  RowPacker::Quality countRow(int start, int minY, int maxY) const;
+  RowSolution packRow(int start, int minY, int maxY) const;
 };
 
 #endif

@@ -19,56 +19,47 @@ RowPacker::RowPacker(const Packer &parent, Rectangle row, int start)
 : Packer(parent) {
   region_ = row;
   start_ = start;
+  currentX_ = region_.minX();
 }
 
 RowSolution RowPacker::run() {
   // Greedy placement
+  // Attempt to place the item with the least possible usage
+  // Not actually 100% correct due to the minWaste parameter at the end
+  // The optimal solution involves the orientation of all items
+  // And we'd need dynamic programming or brute-force for that
   RowSolution solution(region_);
 
-  int currentX = region_.minX();
   for (int i = start_; i < nItems(); ++i) {
-    // Attempt to place the item with the best possible size
     Item item = sequence_[i];
     int height = item.height;
     int width = item.width;
-    int placement = currentX;
-    assert (width <= height);
+    int placement = currentX_;
 
-    // Doesn't fit vertically; try rotating
-    if (!fitsMinWaste(height, region_.height()))
-      swap(width, height);
-    // Still doesn't fit
-    if (!fitsMinWaste(height, region_.height()))
+    // TODO: push a bit further if it doesn't fit with the minimum waste
+    int straightX = earliestFit(currentX_, width, height);
+    bool fitsStraight = fitsDimensionsAt(straightX, width, height);
+
+    int rotatedX  = earliestFit(currentX_, height, width);
+    bool fitsRotated = fitsDimensionsAt(rotatedX, height, width);
+
+    if (!fitsStraight && !fitsRotated)
       break;
 
-    if (!fitsDefects(currentX, width, height)) {
-      int straightX = earliestFit(currentX, width, height);
-      int rotatedX  = earliestFit(currentX, height, width);
-      bool fitsStraight = fitsMinWaste(height, region_.height());
-      bool fitsRotated = fitsMinWaste(width, region_.height());
-      bool useStraight = !fitsRotated || (fitsStraight && straightX <= rotatedX);
-      if (useStraight) {
-        placement = straightX;
-      }
-      else {
-        assert (fitsRotated);
-        placement = rotatedX;
-        swap(width, height);
-      }
+    bool straightBetter = straightX + width <= rotatedX + height;
+    if (fitsStraight && (!fitsRotated || straightBetter)) {
+      placement = straightX;
     }
-
-    int newX = placement + width;
-    // Not actually 100% correct due to the minWaste parameter
-    // The optimal solution involves the orientation of all items
-    // And we'd need dynamic programming or brute-force for that
-    if (!fitsMinWaste(newX, region_.maxX()))
-      break;
+    else {
+      placement = rotatedX;
+      swap(width, height);
+    }
 
     ItemSolution sol(placement, region_.minY(), width, height);
     sol.itemId = item.id;
 
     solution.items.push_back(sol);
-    currentX = newX;
+    currentX_ = placement + width;
   }
 
   return solution;
@@ -82,8 +73,29 @@ RowPacker::Quality RowPacker::count() {
   };
 }
 
-bool RowPacker::fitsDefects(int from, int width, int height) const {
-  Rectangle place = Rectangle::FromDimensions(from, region_.minY(), width, height);
+void RowPacker::init() {
+  currentX_ = region_.minX();
+  packed_ = start_;
+}
+
+bool RowPacker::fitsDimensions(int width, int height) const {
+  return fitsDimensionsAt(currentX_, width, height);
+}
+
+bool RowPacker::fitsDefects(int width, int height) const {
+  return fitsDefectsAt(currentX_, width, height);
+}
+
+bool RowPacker::fitsDimensionsAt(int minX, int width, int height) const {
+  if (!fitsMinWaste(height, region_.height()))
+    return false;
+  if (!fitsMinWaste(minX + width, region_.maxX()))
+    return false;
+  return true;
+}
+
+bool RowPacker::fitsDefectsAt(int minX, int width, int height) const {
+  Rectangle place = Rectangle::FromDimensions(minX, region_.minY(), width, height);
   for (Defect d : defects_) {
     if (place.intersects(d)) {
       return false;
@@ -92,8 +104,8 @@ bool RowPacker::fitsDefects(int from, int width, int height) const {
   return true;
 }
 
-int RowPacker::earliestFit(int from, int width, int height) const {
-  int cur = from;
+int RowPacker::earliestFit(int minX, int width, int height) const {
+  int cur = minX;
   while (true) {
     Rectangle place = Rectangle::FromDimensions(cur, region_.minY(), width, height);
     bool hasDefect = false;
@@ -105,7 +117,7 @@ int RowPacker::earliestFit(int from, int width, int height) const {
     }
     if (!hasDefect)
       return cur;
-    cur = max(from + minWaste_, cur);
+    cur = max(minX + minWaste_, cur);
   }
 }
 
