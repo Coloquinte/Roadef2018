@@ -22,8 +22,6 @@ class RowPacker : Packer {
   RowSolution run();
   Quality count();
 
-  void init();
-
   bool fitsDimensions(int width, int height) const;
   bool fitsDimensionsAt(int minX, int width, int height) const;
 
@@ -34,7 +32,6 @@ class RowPacker : Packer {
 
  private:
   int currentX_;
-  int packed_;
 };
 
 #endif

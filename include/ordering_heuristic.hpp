@@ -1,5 +1,5 @@
 
-#ifndef SRDERING_HEURISTICS_HPP
+#ifndef ORDERING_HEURISTICS_HPP
 #define ORDERING_HEURISTICS_HPP
 
 #include "problem.hpp"
@@ -8,11 +8,11 @@
 
 class OrderingHeuristic {
  public:
-  static std::vector<Item> orderKeepStacks(const Problem &problem, unsigned seed);
-  static std::vector<Item> orderShuffleStacks(const Problem &problem, unsigned seed);
+  static std::vector<Item> orderKeepStacks(const Problem &problem, std::mt19937 &rgen);
+  static std::vector<Item> orderShuffleStacks(const Problem &problem, std::mt19937 &rgen);
 
  private:
-  OrderingHeuristic(const Problem &problem, unsigned seed);
+  OrderingHeuristic(const Problem &problem, std::mt19937 &rgen);
 
   std::vector<Item> orderKeepStacks();
   std::vector<Item> orderShuffleStacks();
@@ -20,9 +20,9 @@ class OrderingHeuristic {
   void takeRandomItem();
 
  private:
-  std::mt19937 rgen_;
   std::vector<std::vector<Item> > leftover_;
   std::vector<Item> ordering_;
+  std::mt19937 &rgen_;
 };
 
 #endif

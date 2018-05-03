@@ -66,16 +66,42 @@ RowSolution RowPacker::run() {
 }
 
 RowPacker::Quality RowPacker::count() {
-  RowSolution solution = run();
-  return Quality {
-    solution.nItems(),
-    solution.maxUsedY()
-  };
-}
+  int maxUsedY = region_.minY();
 
-void RowPacker::init() {
-  currentX_ = region_.minX();
-  packed_ = start_;
+  int i = start_;
+  for (; i < nItems(); ++i) {
+    Item item = sequence_[i];
+    int height = item.height;
+    int width = item.width;
+    int placement = currentX_;
+
+    // TODO: push a bit further if it doesn't fit with the minimum waste
+    int straightX = earliestFit(currentX_, width, height);
+    bool fitsStraight = fitsDimensionsAt(straightX, width, height);
+
+    int rotatedX  = earliestFit(currentX_, height, width);
+    bool fitsRotated = fitsDimensionsAt(rotatedX, height, width);
+
+    if (!fitsStraight && !fitsRotated)
+      break;
+
+    bool straightBetter = straightX + width <= rotatedX + height;
+    if (fitsStraight && (!fitsRotated || straightBetter)) {
+      placement = straightX;
+    }
+    else {
+      placement = rotatedX;
+      swap(width, height);
+    }
+
+    maxUsedY = max(maxUsedY, region_.minY() + height);
+    currentX_ = placement + width;
+  }
+
+  return Quality {
+    i - start_,
+    maxUsedY
+  };
 }
 
 bool RowPacker::fitsDimensions(int width, int height) const {

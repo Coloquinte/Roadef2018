@@ -3,21 +3,21 @@
 
 using namespace std;
 
-vector<Item> OrderingHeuristic::orderKeepStacks(const Problem &problem, unsigned seed) {
-  OrderingHeuristic heuristic(problem, seed);
+vector<Item> OrderingHeuristic::orderKeepStacks(const Problem &problem, std::mt19937 &rgen) {
+  OrderingHeuristic heuristic(problem, rgen);
   heuristic.orderKeepStacks();
   return heuristic.ordering_;
 }
 
-vector<Item> OrderingHeuristic::orderShuffleStacks(const Problem &problem, unsigned seed) {
-  OrderingHeuristic heuristic(problem, seed);
+vector<Item> OrderingHeuristic::orderShuffleStacks(const Problem &problem, std::mt19937 &rgen) {
+  OrderingHeuristic heuristic(problem, rgen);
   heuristic.orderShuffleStacks();
   return heuristic.ordering_;
 }
 
-OrderingHeuristic::OrderingHeuristic(const Problem &problem, unsigned seed)
-: rgen_(seed)
-, leftover_(problem.stackItems()) {
+OrderingHeuristic::OrderingHeuristic(const Problem &problem, std::mt19937 &rgen)
+: leftover_(problem.stackItems())
+, rgen_(rgen) {
 }
 
 vector<Item> OrderingHeuristic::orderKeepStacks() {

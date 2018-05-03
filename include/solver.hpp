@@ -13,12 +13,14 @@ class Solver {
   Solver(const Problem &problem, int seed);
   void run();
 
-  std::vector<Item> createPlacementOrder() const;
+  void run(const std::vector<Item> &sequence);
 
  private:
   const Problem &problem_;
   Solution solution_;
   int seed_;
+  double mapped_;
+  double density_;
 };
 
 #endif
