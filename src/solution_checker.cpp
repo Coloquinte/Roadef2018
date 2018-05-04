@@ -11,7 +11,7 @@
 using namespace std;
 
 template<typename ... Args>
-void SolutionChecker::error(const std::string& type, const std::string& format, Args ... args ) {
+void SolutionChecker::error(const string& type, const string& format, Args ... args ) {
     stringstream header;
     if (plateId_ >= 0)
       header << "Plate #" << plateId_;
@@ -22,9 +22,9 @@ void SolutionChecker::error(const std::string& type, const std::string& format, 
     if (plateId_ >= 0)
       header << ": ";
 
-    std::size_t size = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1;
-    std::unique_ptr<char[]> buf( new char[ size ] );
-    std::snprintf( buf.get(), size, format.c_str(), args ... );
+    size_t size = snprintf( nullptr, 0, format.c_str(), args ... ) + 1;
+    unique_ptr<char[]> buf( new char[ size ] );
+    snprintf( buf.get(), size, format.c_str(), args ... );
     string msg(buf.get(), buf.get() + size - 1);
     errors_.at(type).push_back(header.str() + msg);
 }
@@ -36,9 +36,10 @@ void SolutionChecker::report(const Problem &problem, const Solution &solution) {
   checker.reportQuality();
 }
 
-bool SolutionChecker::check(const Problem &problem, const Solution &solution) {
+int SolutionChecker::nViolations(const Problem &problem, const Solution &solution) {
   SolutionChecker checker(problem, solution);
-  return checker.check();
+  checker.check();
+  return checker.nViolations();
 }
 
 double SolutionChecker::evalPercentMapped(const Problem &problem, const Solution &solution) {
@@ -63,7 +64,7 @@ SolutionChecker::SolutionChecker(const Problem &problem, const Solution &solutio
   errors_["Defects"].clear();
 }
 
-bool SolutionChecker::check() {
+void SolutionChecker::check() {
   checkItemUnicity();
   checkSequences();
 
@@ -76,13 +77,14 @@ bool SolutionChecker::check() {
     checkPlate(plate);
   }
   plateId_ = -1;
+}
 
-  bool hasError = false;
+int SolutionChecker::nViolations() {
+  int violations = 0;
   for (const auto& err : errors_) {
-    if (!err.second.empty())
-      hasError = true;
+    violations += err.second.size();
   }
-  return hasError;
+  return violations;
 }
 
 long long SolutionChecker::evalAreaViolation() {
@@ -320,7 +322,7 @@ void SolutionChecker::checkSequences() {
     }
   }
 
-  for (const std::vector<Item> &sequence : problem_.stackItems()) {
+  for (const vector<Item> &sequence : problem_.stackItems()) {
     for (unsigned i = 0; i + 1 < sequence.size(); ++i) {
       int ida = sequence[i].id;
       int idb = sequence[i+1].id;

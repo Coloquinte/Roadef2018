@@ -10,7 +10,7 @@ using namespace std;
 
 int main(int argc, char** argv) {
   if (argc < 2) {
-    cout << "cut NAME" << std::endl;
+    cout << "cut NAME" << endl;
     cout << "will run the optimization on NAME_batch.csv with defects NAME_defects.csv" << endl;
     exit(1);
   }

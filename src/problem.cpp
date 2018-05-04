@@ -8,7 +8,7 @@
 
 using namespace std;
 
-Problem::Problem(Params params, std::vector<Item> items, std::vector<Defect> defects)
+Problem::Problem(Params params, vector<Item> items, vector<Defect> defects)
 : items_(items)
 , defects_(defects)
 , params_(params)
@@ -23,7 +23,7 @@ void Problem::buildSequences() {
     stackToItems[i.stack].push_back(i);
   }
   for (auto p : stackToItems) {
-    std::vector<Item> stack = p.second;
+    vector<Item> stack = p.second;
     sort(stack.begin(), stack.end(), [](Item a, Item b) { return a.sequence < b.sequence; });
     stackItems_.push_back(stack);
   }
@@ -47,12 +47,12 @@ void Problem::checkConsistency() const {
   //  * convert only on read-write
 }
 
-Problem Problem::read(std::string prefix) {
+Problem Problem::read(string prefix) {
   IOProblem io(prefix);
   return io.read();
 }
 
-void Problem::write(std::string prefix) const {
+void Problem::write(string prefix) const {
   IOProblem io(prefix);
   io.write(*this);
 }

@@ -3,19 +3,19 @@
 
 using namespace std;
 
-vector<Item> OrderingHeuristic::orderKeepStacks(const Problem &problem, std::mt19937 &rgen) {
+vector<Item> OrderingHeuristic::orderKeepStacks(const Problem &problem, mt19937 &rgen) {
   OrderingHeuristic heuristic(problem, rgen);
   heuristic.orderKeepStacks();
   return heuristic.ordering_;
 }
 
-vector<Item> OrderingHeuristic::orderShuffleStacks(const Problem &problem, std::mt19937 &rgen) {
+vector<Item> OrderingHeuristic::orderShuffleStacks(const Problem &problem, mt19937 &rgen) {
   OrderingHeuristic heuristic(problem, rgen);
   heuristic.orderShuffleStacks();
   return heuristic.ordering_;
 }
 
-OrderingHeuristic::OrderingHeuristic(const Problem &problem, std::mt19937 &rgen)
+OrderingHeuristic::OrderingHeuristic(const Problem &problem, mt19937 &rgen)
 : leftover_(problem.stackItems())
 , rgen_(rgen) {
 }

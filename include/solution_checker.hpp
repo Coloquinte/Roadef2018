@@ -12,15 +12,16 @@
 class SolutionChecker {
  public:
   static void report(const Problem &problem, const Solution &solution);
-  static bool check(const Problem &problem, const Solution &solution);
+  static int nViolations(const Problem &problem, const Solution &solution);
 
   static double evalPercentMapped(const Problem &problem, const Solution &solution);
   static double evalPercentDensity(const Problem &problem, const Solution &solution);
 
  private:
   SolutionChecker(const Problem &problem, const Solution &solution);
-  bool check();
+  void check();
 
+  int nViolations();
   long long evalAreaViolation();
   long long evalAreaUsage();
   long long evalAreaMapped();

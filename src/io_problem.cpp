@@ -7,7 +7,7 @@
 
 using namespace std;
 
-IOProblem::IOProblem(std::string namePrefix)
+IOProblem::IOProblem(string namePrefix)
 : namePrefix_(namePrefix) {
 }
 
@@ -29,24 +29,26 @@ Params IOProblem::readParams() {
   return Params();
 }
 
-std::string IOProblem::nameItems() const {
+string IOProblem::nameItems() const {
   return namePrefix_ + "_batch.csv";
 }
 
-std::string IOProblem::nameDefects() const {
+string IOProblem::nameDefects() const {
   return namePrefix_ + "_defects.csv";
 }
 
-std::string IOProblem::nameParams() const {
+string IOProblem::nameParams() const {
   return namePrefix_ + "_params.csv";
 }
 
-std::vector<Item> IOProblem::readItems() {
+vector<Item> IOProblem::readItems() {
   ifstream f(nameItems().c_str());
+  if (f.fail())
+    throw runtime_error("Couldn't open file \"" + nameItems() + "\"");
   string line;
   getline(f, line);
 
-  std::vector<Item> ret;
+  vector<Item> ret;
   while (getline(f, line)) {
     readItem(line, ret);
   }
@@ -54,24 +56,26 @@ std::vector<Item> IOProblem::readItems() {
   return ret;
 }
 
-std::vector<Defect> IOProblem::readDefects() {
-  std::ifstream f(nameDefects().c_str());
+vector<Defect> IOProblem::readDefects() {
+  ifstream f(nameDefects().c_str());
+  if (f.fail())
+    throw runtime_error("Couldn't open file \"" + nameDefects() + "\"");
   string line;
   getline(f, line);
 
-  std::vector<Defect> ret;
+  vector<Defect> ret;
   while (getline(f, line)) {
     readDefect(line, ret);
   }
   return ret;
 }
 
-void IOProblem::readItem(const std::string &s, std::vector<Item> &items) {
+void IOProblem::readItem(const string &s, vector<Item> &items) {
   auto csv_fields = readCSVLine(s);
   if (csv_fields.empty()) return;
   if (csv_fields.size() != 5) throw runtime_error("Un item a 5 paramètres");
 
-  std::vector<int> item_fields;
+  vector<int> item_fields;
   for (const string &s : csv_fields)
     item_fields.push_back(stoi(s));
 
@@ -86,12 +90,12 @@ void IOProblem::readItem(const std::string &s, std::vector<Item> &items) {
   items.push_back(item);
 }
 
-void IOProblem::readDefect(const std::string &s, std::vector<Defect> &defects) {
+void IOProblem::readDefect(const string &s, vector<Defect> &defects) {
   auto csv_fields = readCSVLine(s);
   if (csv_fields.empty()) return;
   if (csv_fields.size() != 6) throw runtime_error("Un defect a 6 paramètres");
 
-  std::vector<double> defect_fields;
+  vector<double> defect_fields;
   for (const string &s : csv_fields)
     defect_fields.push_back(stod(s));
 
@@ -106,7 +110,7 @@ void IOProblem::readDefect(const std::string &s, std::vector<Defect> &defects) {
   defects.push_back(defect);
 }
 
-std::vector<std::string> IOProblem::readCSVLine(const string &s) {
+vector<string> IOProblem::readCSVLine(const string &s) {
   stringstream ss(s);
   string token;
   vector<string> ret;
@@ -128,7 +132,7 @@ void IOProblem::writeParams(const Params &params) {
   f << "minWaste;" << params.minWaste<< endl;
 }
 
-void IOProblem::writeItems(const std::vector<Item> &items) {
+void IOProblem::writeItems(const vector<Item> &items) {
   ofstream f(nameItems().c_str());
   f << "ITEM_ID;WIDTH_ITEM;HEIGHT_ITEM;STACK;SEQUENCE" << endl;
   for (Item item : items) {
@@ -140,7 +144,7 @@ void IOProblem::writeItems(const std::vector<Item> &items) {
   }
 }
 
-void IOProblem::writeDefects(const std::vector<Defect> &defects) {
+void IOProblem::writeDefects(const vector<Defect> &defects) {
   ofstream f(nameDefects().c_str());
   f << "DEFECT_ID;PLATE_ID;X;Y;WIDTH;HEIGHT" << endl;
   for (Defect defect : defects) {

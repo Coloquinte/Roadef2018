@@ -16,13 +16,13 @@
 
 using namespace std;
 
-Solution SequencePacker::run(const Problem &problem, const std::vector<Item> &sequence) {
+Solution SequencePacker::run(const Problem &problem, const vector<Item> &sequence) {
   SequencePacker packer(problem, sequence);
   packer.run();
   return packer.solution_;
 }
 
-SequencePacker::SequencePacker(const Problem &problem, const std::vector<Item> &sequence)
+SequencePacker::SequencePacker(const Problem &problem, const vector<Item> &sequence)
 : problem_(problem)
 , sequence_(sequence) {
   packedItems_ = 0;

@@ -79,8 +79,8 @@ class DownScaler {
  private:
   const Problem &problem_;
   Params params_;
-  std::vector<Item> items_;
-  std::vector<Defect> defects_;
+  vector<Item> items_;
+  vector<Defect> defects_;
   int pitch_;
 };
 

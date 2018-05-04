@@ -4,6 +4,9 @@
 #include "ordering_heuristic.hpp"
 #include "solution_checker.hpp"
 
+#include "move.hpp"
+#include <iostream>
+
 using namespace std;
 
 Solver::Solver(const Problem &problem, int seed)
@@ -20,23 +23,28 @@ Solution Solver::run(const Problem &problem, int seed) {
 }
 
 void Solver::run() {
-  std::mt19937 rgen(seed_);
-  int nShuffles = 10000;
-  int nKeeps = 10000;
-  for (int i = 0; i < nKeeps; ++i) {
-    std::vector<Item> sequence = OrderingHeuristic::orderShuffleStacks(problem_, rgen);
-    run(sequence);
-  }
-  for (int i = 0; i < nShuffles; ++i) {
-    std::vector<Item> sequence = OrderingHeuristic::orderKeepStacks(problem_, rgen);
-    run(sequence);
+  mt19937 rgen(seed_);
+  ShuffleMove shuffler1;
+  StackShuffleMove shuffler2;
+  SwapMove swapper;
+  InsertMove inserter;
+  for (int i = 0; i < 100000; ++i) {
+    shuffler1.apply(problem_, solution_, rgen);
+    shuffler2.apply(problem_, solution_, rgen);
+    swapper.apply(problem_, solution_, rgen);
+    inserter.apply(problem_, solution_, rgen);
+    if (i%100 == 0) {
+      double mapped = SolutionChecker::evalPercentMapped(problem_, solution_);
+      double density = SolutionChecker::evalPercentDensity(problem_, solution_);
+      cout << "Mapped " << mapped << "% with " << density << "% density " << endl;
+    }
   }
 }
 
-void Solver::run(const std::vector<Item> &sequence) {
+void Solver::run(const vector<Item> &sequence) {
   Solution solution = SequencePacker::run(problem_, sequence);
-  bool error = SolutionChecker::check(problem_, solution);
-  if (error)
+  int violations = SolutionChecker::nViolations(problem_, solution);
+  if (violations != 0)
     return;
   double mapped = SolutionChecker::evalPercentMapped(problem_, solution);
   double density = SolutionChecker::evalPercentDensity(problem_, solution);

@@ -8,17 +8,17 @@
 
 using namespace std;
 
-PlateSolution PlatePacker::run(const Problem &problem, int plateId, const std::vector<Item> &sequence, int start) {
+PlateSolution PlatePacker::run(const Problem &problem, int plateId, const vector<Item> &sequence, int start) {
   PlatePacker packer(problem, plateId, sequence, start);
   return packer.run();
 }
 
-int PlatePacker::count(const Problem &problem, int plateId, const std::vector<Item> &sequence, int start) {
+int PlatePacker::count(const Problem &problem, int plateId, const vector<Item> &sequence, int start) {
   PlatePacker packer(problem, plateId, sequence, start);
   return packer.count();
 }
 
-PlatePacker::PlatePacker(const Problem &problem, int plateId, const std::vector<Item> &sequence, int start)
+PlatePacker::PlatePacker(const Problem &problem, int plateId, const vector<Item> &sequence, int start)
 : Packer(sequence, problem.plateDefects()[plateId]) {
   Params p = problem.params();
   start_ = start;

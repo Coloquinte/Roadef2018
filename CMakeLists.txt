@@ -23,6 +23,7 @@ SET (SOURCES
   src/row_packer.cpp
   src/ordering_heuristic.cpp
   src/solver.cpp
+  src/move.cpp
   src/utils.cpp
   src/main.cpp
 )
