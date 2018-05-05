@@ -28,5 +28,9 @@ SET (SOURCES
   src/main.cpp
 )
 
-add_executable(cut ${SOURCES})
+add_executable(gcut ${SOURCES})
+target_link_libraries(gcut
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+)
+
 

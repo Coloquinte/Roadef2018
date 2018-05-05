@@ -7,10 +7,10 @@
 
 class Solver {
  public:
-  static Solution run(const Problem &problem, int seed=1);
+  static Solution run(const Problem &problem, std::size_t seed, std::size_t nMoves);
  
  private: 
-  Solver(const Problem &problem, int seed);
+  Solver(const Problem &problem, std::size_t seed, std::size_t nMoves);
   void run();
 
   void run(const std::vector<Item> &sequence);
@@ -19,8 +19,7 @@ class Solver {
   const Problem &problem_;
   Solution solution_;
   int seed_;
-  double mapped_;
-  double density_;
+  std::size_t nMoves_;
 };
 
 #endif

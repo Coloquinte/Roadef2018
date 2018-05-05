@@ -7,8 +7,10 @@
 
 using namespace std;
 
-IOProblem::IOProblem(string namePrefix)
-: namePrefix_(namePrefix) {
+IOProblem::IOProblem(string nameItems, string nameDefects, string nameParams)
+: nameItems_(nameItems)
+, nameDefects_(nameDefects)
+, nameParams_(nameParams) {
 }
 
 Problem IOProblem::read() {
@@ -30,15 +32,15 @@ Params IOProblem::readParams() {
 }
 
 string IOProblem::nameItems() const {
-  return namePrefix_ + "_batch.csv";
+  return nameItems_;
 }
 
 string IOProblem::nameDefects() const {
-  return namePrefix_ + "_defects.csv";
+  return nameDefects_;
 }
 
 string IOProblem::nameParams() const {
-  return namePrefix_ + "_params.csv";
+  return nameParams_;
 }
 
 vector<Item> IOProblem::readItems() {
@@ -57,6 +59,8 @@ vector<Item> IOProblem::readItems() {
 }
 
 vector<Defect> IOProblem::readDefects() {
+  if (nameDefects().empty())
+    return vector<Defect>();
   ifstream f(nameDefects().c_str());
   if (f.fail())
     throw runtime_error("Couldn't open file \"" + nameDefects() + "\"");

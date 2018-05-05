@@ -6,7 +6,7 @@
 
 class IOProblem {
  public:
-  IOProblem(std::string namePrefix);
+  IOProblem(std::string nameItems, std::string nameDefects, std::string nameParams);
   Problem read();
   void write(const Problem &pb);
 
@@ -28,7 +28,9 @@ class IOProblem {
   std::vector<std::string> readCSVLine(const std::string &s);
 
  private:
-  std::string namePrefix_;
+  std::string nameItems_;
+  std::string nameDefects_;
+  std::string nameParams_;
 };
 
 #endif

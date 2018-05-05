@@ -15,8 +15,8 @@ class Problem {
  public:
   Problem(Params params, std::vector<Item> items, std::vector<Defect> defects);
 
-  static Problem read(std::string prefix);
-  void write(std::string prefix) const;
+  static Problem read(std::string nameItems, std::string nameDefects = std::string(), std::string nameParams = std::string());
+  void write(std::string nameItems, std::string nameDefects = std::string(), std::string nameParams = std::string()) const;
 
   const std::vector<Item>& items() const{ return items_; }
   const std::vector<std::vector<Item> >& stackItems() const { return stackItems_; }

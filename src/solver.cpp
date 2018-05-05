@@ -9,15 +9,14 @@
 
 using namespace std;
 
-Solver::Solver(const Problem &problem, int seed)
+Solver::Solver(const Problem &problem, size_t seed, size_t nMoves)
 : problem_(problem)
 , seed_(seed)
-, mapped_(0.0)
-, density_(0.0) {
+, nMoves_(nMoves) {
 }
 
-Solution Solver::run(const Problem &problem, int seed) {
-  Solver solver(problem, seed);
+Solution Solver::run(const Problem &problem, size_t seed, size_t nMoves) {
+  Solver solver(problem, seed, nMoves);
   solver.run();
   return solver.solution_;
 }
@@ -28,31 +27,14 @@ void Solver::run() {
   StackShuffleMove shuffler2;
   SwapMove swapper;
   InsertMove inserter;
-  for (int i = 0; i < 100000; ++i) {
+  for (size_t i = 0; i < nMoves_; ++i) {
     shuffler1.apply(problem_, solution_, rgen);
     shuffler2.apply(problem_, solution_, rgen);
     swapper.apply(problem_, solution_, rgen);
     inserter.apply(problem_, solution_, rgen);
     if (i%100 == 0) {
-      double mapped = SolutionChecker::evalPercentMapped(problem_, solution_);
-      double density = SolutionChecker::evalPercentDensity(problem_, solution_);
-      cout << "Mapped " << mapped << "% with " << density << "% density " << endl;
+      SolutionChecker::report(problem_, solution_);
     }
-  }
-}
-
-void Solver::run(const vector<Item> &sequence) {
-  Solution solution = SequencePacker::run(problem_, sequence);
-  int violations = SolutionChecker::nViolations(problem_, solution);
-  if (violations != 0)
-    return;
-  double mapped = SolutionChecker::evalPercentMapped(problem_, solution);
-  double density = SolutionChecker::evalPercentDensity(problem_, solution);
-  if (mapped > mapped_
-      || (mapped == mapped_ && density > density_)) {
-    solution_ = solution;
-    mapped_ = mapped;
-    density_ = density;
   }
 }
 

@@ -5,47 +5,78 @@
 #include "utils.hpp"
 
 #include <iostream>
+#include <boost/program_options.hpp>
 
 using namespace std;
+namespace po = boost::program_options;
 
-int main(int argc, char** argv) {
-  if (argc < 2) {
-    cout << "cut NAME" << endl;
-    cout << "will run the optimization on NAME_batch.csv with defects NAME_defects.csv" << endl;
+po::options_description getOptions() {
+  po::options_description desc("GCUT options");
+  desc.add_options()("help,h", "Print this help");
+
+  desc.add_options()("batch", po::value<string>(),
+                     "Batch file (.csv)");
+
+  desc.add_options()("defects", po::value<string>(),
+                     "Defects file (.csv)");
+
+  desc.add_options()("solution,o", po::value<string>(),
+                     "Solution file (.csv)");
+
+  desc.add_options()("moves", po::value<size_t>()->default_value(10000),
+                     "Number of moves to perform");
+
+  desc.add_options()("seed", po::value<size_t>()->default_value(0),
+                     "Random seed");
+
+  desc.add_options()("verbosity,v", po::value<int>()->default_value(1),
+                     "Output verbosity");
+
+  return desc;
+}
+
+po::variables_map parseArguments(int argc, char **argv) {
+  po::options_description desc = getOptions();
+
+  po::variables_map vm;
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+  } catch (po::error &e) {
+    cerr << "Error parsing command line arguments: ";
+    cerr << e.what() << endl << endl;
+    cout << desc << endl;
     exit(1);
   }
 
-  Problem pb = Problem::read(argv[1]);
-
-  if (argc >= 3) {
-    pb.write(argv[2]);
+  if (vm.count("help")) {
+    cout << desc << endl;
+    exit(0);
+  }
+  if (!vm.count("batch") || vm["batch"].as<string>().empty()) {
+    cout << "Missing input file" << endl;
+    cout << desc << endl;
+    exit(1);
   }
 
-  //int nRuns = 100;
-  //double sumMapped = 0.0;
-  //double sumDensity = 0.0;
-  //double bestDensity = 0.0;
-  //for (int i = 0; i < nRuns; ++i) {
-  //  Solution solution = Solver::run(pb, i);
-  //  double mapped = SolutionChecker::evalPercentMapped(pb, solution);
-  //  double density = SolutionChecker::evalPercentDensity(pb, solution);
-  //  sumMapped += mapped;
-  //  sumDensity += density;
-  //  if (mapped > 99 && density > bestDensity)
-  //    bestDensity = density;
-  //}
-  //cout << "Average " << sumMapped / nRuns << "% mapped" << endl;
-  //cout << "Average " << sumDensity / nRuns << "% density" << endl;
-  //cout << "Best density is " << bestDensity << "%" << endl;
-  //cout << endl;
+  return vm;
+}
 
-  Solution solution = Solver::run(pb);
-  solution.report(cout);
-  SolutionChecker::report(pb, solution);
-  double mapped = SolutionChecker::evalPercentMapped(pb, solution);
-  double density = SolutionChecker::evalPercentDensity(pb, solution);
-  cout << "Mapped " << mapped << "%, " << density << "% density" << endl;
-  solution.write(argv[1]);
+
+int main(int argc, char** argv) {
+  po::variables_map vm = parseArguments(argc, argv);
+
+  string batchFile = vm["batch"].as<string>();
+  string defectFile = vm.count("defects") ? vm["defects"].as<string>() : string();
+  Problem pb = Problem::read(batchFile, defectFile);
+
+  Solution solution = Solver::run(pb, vm["seed"].as<size_t>(), vm["moves"].as<size_t>());
+  if (vm["verbosity"].as<int>() >= 3)
+    solution.report(cout);
+  if (vm["verbosity"].as<int>() >= 1)
+    SolutionChecker::report(pb, solution);
+  if (vm.count("solution"))
+    solution.write(vm["solution"].as<string>());
 
   return 0;
 }

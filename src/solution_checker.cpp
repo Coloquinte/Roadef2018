@@ -337,42 +337,52 @@ void SolutionChecker::checkSequences() {
 }
 
 void SolutionChecker::reportErrors() {
-  if (!errors_.at("Critical").empty())
+  bool error = false;
+  if (!errors_.at("Critical").empty()) {
     cout << endl << "Critical violations:" << endl;
+    error = true;
+  }
   for (auto m : errors_.at("Critical")) {
     cout << "\t" << m << endl;
   }
 
-  if (!errors_.at("Ordering").empty())
+  if (!errors_.at("Ordering").empty()) {
     cout << endl << "Ordering violations:" << endl;
+    error = true;
+  }
   for (auto m : errors_.at("Ordering")) {
     cout << "\t" << m << endl;
   }
 
-  if (!errors_.at("MinWaste").empty())
+  if (!errors_.at("MinWaste").empty()) {
     cout << endl << "Minimum waste violations:" << endl;
+    error = true;
+  }
   for (auto m : errors_.at("MinWaste")) {
     cout << "\t" << m << endl;
   }
 
-  if (!errors_.at("Defects").empty())
+  if (!errors_.at("Defects").empty()) {
     cout << endl << "Defect violations:" << endl;
+    error = true;
+  }
   for (auto m : errors_.at("Defects")) {
     cout << "\t" << m << endl;
   }
+
+  if (!error)
+    cout << "No violation detected" << endl;
 }
 
 void SolutionChecker::reportQuality() {
-  cout.precision(4);
-  cout << endl << "Quality:" << endl;
   if (nMappedItems() != nItems()) {
-    cout << "\tOnly " << nMappedItems() << " out of " << nItems() << " items are cut" << endl;
-    cout << "\tThat is " << 100.0 * evalAreaMapped() / evalTotalArea() << "% of the area" << endl;
+    cout << "Only " << nMappedItems() << " out of " << nItems() << " items are cut" << endl;
+    cout << "That is " << 100.0 * evalAreaMapped() / evalTotalArea() << "% of the area" << endl;
   }
   else
-    cout << "\tEvery item has been cut" << endl;
-
-  cout << 100.0 * evalAreaMapped() / evalAreaUsage() << "% density (" << (double) evalAreaMapped() << " / " << (double) evalAreaUsage() << ")" << endl;
+    cout << "Every item has been cut" << endl;
+  cout << 100.0 * evalAreaMapped() / evalAreaUsage() << "% density" << endl;
+  cout << endl;
 }
 
 bool SolutionChecker::fitsMinWaste(int a, int b) const {

@@ -235,8 +235,8 @@ int SolutionWriter::writeRectangle(Rectangle r, int type, int cutLevel, int pare
   return nodeId_++;
 }
 
-void Solution::write(string prefix) const {
-  ofstream solutionFile(prefix + "_solution.csv");
+void Solution::write(string name) const {
+  ofstream solutionFile(name);
   SolutionWriter::run(*this, solutionFile);
 }
 

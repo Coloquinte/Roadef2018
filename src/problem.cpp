@@ -47,13 +47,13 @@ void Problem::checkConsistency() const {
   //  * convert only on read-write
 }
 
-Problem Problem::read(string prefix) {
-  IOProblem io(prefix);
+Problem Problem::read(string nameItems, string nameDefects, string nameParams) {
+  IOProblem io(nameItems, nameDefects, nameParams);
   return io.read();
 }
 
-void Problem::write(string prefix) const {
-  IOProblem io(prefix);
+void Problem::write(string nameItems, string nameDefects, string nameParams) const {
+  IOProblem io(nameItems, nameDefects, nameParams);
   io.write(*this);
 }
 
