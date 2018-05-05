@@ -13,6 +13,14 @@ Solver::Solver(const Problem &problem, size_t seed, size_t nMoves)
 : problem_(problem)
 , seed_(seed)
 , nMoves_(nMoves) {
+  moves_.emplace_back(make_unique<ShuffleMove>());
+  moves_.emplace_back(make_unique<StackShuffleMove>());
+  moves_.emplace_back(make_unique<SwapMove>());
+  moves_.emplace_back(make_unique<AdjacentSwapMove>());
+  moves_.emplace_back(make_unique<InsertMove>());
+  moves_.emplace_back(make_unique<RowInsertMove>());
+  moves_.emplace_back(make_unique<CutInsertMove>());
+  moves_.emplace_back(make_unique<PlateInsertMove>());
 }
 
 Solution Solver::run(const Problem &problem, size_t seed, size_t nMoves) {
@@ -23,18 +31,13 @@ Solution Solver::run(const Problem &problem, size_t seed, size_t nMoves) {
 
 void Solver::run() {
   mt19937 rgen(seed_);
-  ShuffleMove shuffler1;
-  StackShuffleMove shuffler2;
-  SwapMove swapper;
-  InsertMove inserter;
   for (size_t i = 0; i < nMoves_; ++i) {
-    shuffler1.apply(problem_, solution_, rgen);
-    shuffler2.apply(problem_, solution_, rgen);
-    swapper.apply(problem_, solution_, rgen);
-    inserter.apply(problem_, solution_, rgen);
-    if (i%100 == 0) {
-      SolutionChecker::report(problem_, solution_);
-    }
+    pickMove(rgen).run(problem_, solution_, rgen);
   }
+}
+
+Move& Solver::pickMove(mt19937 &rgen) {
+  uniform_int_distribution<int> dist(0, moves_.size()-1);
+  return *moves_[dist(rgen)];
 }
 

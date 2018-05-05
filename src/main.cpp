@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
   Problem pb = Problem::read(batchFile, defectFile);
 
   Solution solution = Solver::run(pb, vm["seed"].as<size_t>(), vm["moves"].as<size_t>());
-  if (vm["verbosity"].as<int>() >= 3)
+  if (vm["verbosity"].as<int>() >= 2)
     solution.report(cout);
   if (vm["verbosity"].as<int>() >= 1)
     SolutionChecker::report(pb, solution);
