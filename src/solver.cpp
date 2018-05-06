@@ -21,6 +21,9 @@ Solver::Solver(const Problem &problem, size_t seed, size_t nMoves)
   moves_.emplace_back(make_unique<RowInsertMove>());
   moves_.emplace_back(make_unique<CutInsertMove>());
   moves_.emplace_back(make_unique<PlateInsertMove>());
+  moves_.emplace_back(make_unique<RowSwapMove>());
+  moves_.emplace_back(make_unique<CutSwapMove>());
+  moves_.emplace_back(make_unique<PlateSwapMove>());
 }
 
 Solution Solver::run(const Problem &problem, size_t seed, size_t nMoves) {
@@ -33,6 +36,14 @@ void Solver::run() {
   mt19937 rgen(seed_);
   for (size_t i = 0; i < nMoves_; ++i) {
     pickMove(rgen).run(problem_, solution_, rgen);
+  }
+
+  cout << endl << "MoveName\tCalls\tViolates\tDegrades\tSame\tImproves" << endl;
+  for (auto &m : moves_) {
+    string name = m->name();
+    while (name.size() < 12)
+      name.append(" ");
+    cout << name << " " << m->nCalls() << "\t" << m->nViolations() << "\t" << m->nDegrade() << "\t" << m->nEquiv() << "\t" << m->nImprove() << endl;
   }
 }
 

@@ -14,20 +14,33 @@ class Move {
   virtual const char* name() const =0;
   virtual ~Move() {}
 
+  std::size_t nCalls() const { return nCalls_; }
+  std::size_t nAttempts() const { return nViolations_ + nImprove_ + nDegrade_ + nEquiv_; }
+  std::size_t nViolations() const { return nViolations_; }
+  std::size_t nImprove() const { return nImprove_; }
+  std::size_t nDegrade() const { return nDegrade_; }
+  std::size_t nEquiv() const { return nEquiv_; }
+
  protected:
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen) = 0;
 
   std::vector<Item> extractSequence(const Problem &problem, const Solution &solution) const;
-  void runSequence(const Problem &problem, Solution &solution, const std::vector<Item> &sequence);
+  std::vector<std::vector<Item> > extractRows(const Problem &problem, const Solution &solution) const;
+  std::vector<std::vector<Item> > extractCuts(const Problem &problem, const Solution &solution) const;
+  std::vector<std::vector<Item> > extractPlates(const Problem &problem, const Solution &solution) const;
+
   bool sequenceValid(const Problem &problem, const std::vector<Item> &sequence) const;
+  void runSequence(const Problem &problem, Solution &solution, const std::vector<Item> &sequence);
   void accept(const Problem &problem, Solution &solution, const Solution &incumbent);
 
- private:
+ protected:
   std::size_t nCalls_;
   std::size_t nViolations_;
   std::size_t nImprove_;
   std::size_t nDegrade_;
   std::size_t nEquiv_;
+
+  static const int RETRY = 100;
 };
 
 struct ShuffleMove : Move {
@@ -37,7 +50,7 @@ struct ShuffleMove : Move {
 
 struct StackShuffleMove : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
-  virtual const char* name() const { return "Stack shuffle"; }
+  virtual const char* name() const { return "StackShuffle"; }
 };
 
 struct SwapMove : Move {
@@ -47,7 +60,7 @@ struct SwapMove : Move {
 
 struct AdjacentSwapMove : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
-  virtual const char* name() const { return "Adjacent swap"; }
+  virtual const char* name() const { return "AdjacentSwap"; }
 };
 
 struct InsertMove : Move {
@@ -57,17 +70,32 @@ struct InsertMove : Move {
 
 struct RowInsertMove : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
-  virtual const char* name() const { return "Row insert"; }
+  virtual const char* name() const { return "RowInsert"; }
 };
 
 struct CutInsertMove : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
-  virtual const char* name() const { return "Cut insert"; }
+  virtual const char* name() const { return "CutInsert"; }
 };
 
 struct PlateInsertMove : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
-  virtual const char* name() const { return "Plate insert"; }
+  virtual const char* name() const { return "PlateInsert"; }
+};
+
+struct RowSwapMove : Move {
+  virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual const char* name() const { return "RowSwap"; }
+};
+
+struct CutSwapMove : Move {
+  virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual const char* name() const { return "CutSwap"; }
+};
+
+struct PlateSwapMove : Move {
+  virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual const char* name() const { return "PlateSwap"; }
 };
 
 #endif

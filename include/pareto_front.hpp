@@ -24,6 +24,11 @@ class ParetoFront {
   };
 
  public:
+  ParetoFront() {
+    front_.reserve(16);
+    helper_.reserve(16);
+  }
+
   int size() const {
     return front_.size();
   }
