@@ -6,6 +6,7 @@
 #include "solution.hpp"
 #include "packer.hpp"
 #include "row_packer.hpp"
+#include "pareto_front.hpp"
 
 class CutPacker : Packer {
  public:
@@ -17,8 +18,16 @@ class CutPacker : Packer {
   CutSolution run();
   int count();
 
+  void propagate(int previousFront, int previousItems, int beginCoord);
+  CutSolution backtrack();
+
   RowPacker::Quality countRow(int start, int minY, int maxY) const;
   RowSolution packRow(int start, int minY, int maxY) const;
+
+  std::vector<int> computeBreakpoints() const;
+
+ private:
+  ParetoFront front_;
 };
 
 #endif

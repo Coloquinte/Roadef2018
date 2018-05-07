@@ -8,18 +8,20 @@
 class ParetoFront {
  public:
   struct Element {
-    int coord;
+    int begin;
+    int end;
     int valeur;
     int previous;
 
-    Element (int coord, int valeur, int previous)
-    : coord(coord)
+    Element (int begin, int end, int valeur, int previous)
+    : begin(begin)
+    , end(end)
     , valeur(valeur)
     , previous(previous) {
     }
 
     bool dominates(const Element &o) const {
-      return coord <= o.coord && valeur >= o.valeur;
+      return end <= o.end && valeur >= o.valeur;
     }
   };
 
@@ -48,8 +50,13 @@ class ParetoFront {
     return true;
   }
 
-  void insert(int coord, int valeur, int previous) {
-    insert(Element(coord, valeur, previous));
+  void init(int coord, int valeur) {
+    assert (front_.empty());
+    insert(coord-1 /* dummy */, coord, valeur, -1 /* dummy */);
+  }
+
+  void insert(int begin, int end, int valeur, int previous) {
+    insert(Element(begin, end, valeur, previous));
   }
 
   void insert(Element elt) {
@@ -57,12 +64,12 @@ class ParetoFront {
 
     helper_.clear();
     for (Element o : front_) {
-      if (o.coord < elt.coord)
+      if (o.end < elt.end)
         helper_.push_back(o);
     }
     helper_.push_back(elt);
     for (Element o : front_) {
-      if (o.coord > elt.coord && o.valeur > elt.valeur)
+      if (o.end > elt.end && o.valeur > elt.valeur)
         helper_.push_back(o);
     }
 
@@ -72,9 +79,10 @@ class ParetoFront {
   void checkConsistency() const {
     for (int i = 0; i < size(); ++i) {
       assert (front_[i].previous < i);
+      assert (front_[i].begin < front_[i].end);
     }
     for (int i = 0; i + 1 < size(); ++i) {
-      assert (front_[i].coord < front_[i+1].coord);
+      assert (front_[i].end < front_[i+1].end);
       assert (front_[i].valeur < front_[i+1].valeur);
     }
   }

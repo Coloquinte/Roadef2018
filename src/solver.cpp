@@ -38,12 +38,12 @@ void Solver::run() {
     pickMove(rgen).run(problem_, solution_, rgen);
   }
 
-  cout << endl << "MoveName\tCalls\tViolates\tDegrades\tSame\tImproves" << endl;
+  cout << endl << "MoveName\tTotal\tErr\t-\t=\t+" << endl;
   for (auto &m : moves_) {
     string name = m->name();
     while (name.size() < 12)
       name.append(" ");
-    cout << name << " " << m->nCalls() << "\t" << m->nViolations() << "\t" << m->nDegrade() << "\t" << m->nEquiv() << "\t" << m->nImprove() << endl;
+    cout << name << "\t" << m->nCalls() << "\t" << m->nViolations() << "\t" << m->nDegrade() << "\t" << m->nEquiv() << "\t" << m->nImprove() << endl;
   }
 }
 

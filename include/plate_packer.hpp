@@ -17,8 +17,16 @@ class PlatePacker : Packer {
   PlateSolution run();
   int count();
 
+  void propagate(int previousFront, int previousItems, int beginCoord);
+  PlateSolution backtrack();
+
   int countCut(int start, int minX, int maxX) const;
   CutSolution packCut(int start, int minX, int maxX) const;
+
+  std::vector<int> computeBreakpoints() const;
+
+ private:
+  ParetoFront front_;
 };
 
 #endif
