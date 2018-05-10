@@ -7,6 +7,8 @@
 
 #include <unordered_map>
 #include <cassert>
+#include <sstream>
+#include <iostream>
 
 using namespace std;
 
@@ -169,6 +171,10 @@ bool Move::sequenceValid(const Problem &problem, const vector<Item> &sequence) c
 void Move::accept(const Problem &problem, Solution &solution, const Solution &incumbent) {
   int violations = SolutionChecker::nViolations(problem, incumbent);
   if (violations != 0) {
+    incumbent.write("failed_solution.csv");
+    incumbent.report();
+    SolutionChecker::report(problem, incumbent);
+    exit(1);
     ++nViolations_;
     return;
   }

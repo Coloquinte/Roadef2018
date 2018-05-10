@@ -32,6 +32,7 @@ CutSolution CutPacker::run() {
   for (int i = 0; i < front_.size(); ++i) {
     auto elt = front_[i];
     propagate(i, elt.valeur, elt.end);
+    propagateBreakpoints(i);
   }
   front_.checkConsistency();
 
@@ -85,29 +86,58 @@ void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) 
   }
 }
 
+void CutPacker::propagateBreakpoints(int after) {
+  int from = front_[after].end;
+  for (int bp : computeBreakpoints()) {
+    if (bp <= from)
+      continue;
+    if (after + 1 < front_.size() && bp >= front_[after+1].end)
+      break;
+    // Find the previous front element we can extend
+    int prev = 0;
+    for (; prev < front_.size(); ++prev) {
+      // Can we extend the previous row?
+      if (front_[prev].end + minWaste_ > bp)
+        break;
+      // Can we create a row before?
+      if (prev == 0 && front_[prev].end + minYY_ > bp)
+        break;
+    }
+    --prev;
+    if (prev < 0)
+      continue;
+    assert (prev <= after);
+
+    // Propagate from here
+    propagate(prev, front_[prev].valeur, bp);
+  }
+}
+
 CutSolution CutPacker::backtrack() {
-  CutSolution cutSolution(region_);
+  vector<int> slices;
+  slices.push_back(region_.maxY());
+
   int cur = front_.size() - 1;
-  bool lastRow = true;
   while (cur != 0) {
     auto elt = front_[cur];
-    int next = elt.previous;
-    auto prevElt = front_[next];
+    if (elt.begin + minYY_ > slices.back())
+      continue;
+    slices.push_back(elt.begin);
+    cur = elt.previous;
+  }
+  if (slices.back() != region_.minY())
+    slices.push_back(region_.minY());
+  reverse(slices.begin(), slices.end());
 
-    int beginCoord = elt.begin;
-    int endCoord = lastRow ? region_.maxY() : elt.end;
-
-    auto solution = packRow(prevElt.valeur, beginCoord, endCoord);
-    // There is one corner case (minWaste_ at the end depending on orientation) where we catch a better solution with a smaller row
-    assert (prevElt.valeur + solution.nItems() == elt.valeur || endCoord != elt.end);
+  int nPacked = start_;
+  CutSolution cutSolution(region_);
+  for (size_t i = 0; i + 1 < slices.size(); ++i) {
+    RowSolution solution = packRow(nPacked, slices[i], slices[i+1]);
+    nPacked += solution.nItems();
     assert (solution.height() >= minYY_);
     cutSolution.rows.push_back(solution);
-    cur = next;
-    lastRow = false;
   }
-  reverse(cutSolution.rows.begin(), cutSolution.rows.end());
 
   return cutSolution;
-
 }
 

@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 
   Solution solution = Solver::run(pb, vm["seed"].as<size_t>(), vm["moves"].as<size_t>());
   if (vm["verbosity"].as<int>() >= 2)
-    solution.report(cout);
+    solution.report();
   if (vm["verbosity"].as<int>() >= 1)
     SolutionChecker::report(pb, solution);
   if (vm.count("solution"))

@@ -57,7 +57,7 @@ struct Solution {
   int nItems() const;
   int nPlates() const { return plates.size(); }
 
-  void report(std::ostream &) const;
+  void report() const;
   void write(std::string fileName) const;
 };
 

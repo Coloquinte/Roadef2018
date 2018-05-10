@@ -19,6 +19,7 @@ class CutPacker : Packer {
   int count();
 
   void propagate(int previousFront, int previousItems, int beginCoord);
+  void propagateBreakpoints(int after);
   CutSolution backtrack();
 
   RowPacker::Quality countRow(int start, int minY, int maxY) const;

@@ -181,8 +181,9 @@ void SolutionChecker::checkPlateDivision(const PlateSolution &plate) {
 
   for (int i = 0; i+1 < (int) plate.cuts.size(); ++i) {
     if (plate.cuts[i].maxX() != plate.cuts[i+1].minX())
-      error("Critical", "Cut %d ends at %d but cut %d starts at %d", i, i+1,
-         plate.cuts[i].maxX(), plate.cuts[i+1].minX());
+      error("Critical", "Cut %d ends at %d but cut %d starts at %d",
+          i, plate.cuts[i].maxX(),
+          i+1, plate.cuts[i+1].minX());
   }
 
   // TODO: check that no defect is cut
@@ -226,8 +227,9 @@ void SolutionChecker::checkCutDivision(const CutSolution &cut) {
 
   for (int i = 0; i+1 < (int) cut.rows.size(); ++i) {
     if (cut.rows[i].maxY() != cut.rows[i+1].minY())
-      error("Critical", "Row #%d ends at %d but row #%d starts at %d", i, i+1,
-         cut.rows[i].maxY(), cut.rows[i+1].minY());
+      error("Critical", "Row #%d ends at %d but row #%d starts at %d",
+          i, cut.rows[i].maxY(),
+          i+1, cut.rows[i+1].minY());
   }
 
   // TODO: check that no defect is cut

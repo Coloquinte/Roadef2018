@@ -91,49 +91,41 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
 }
 
 PlateSolution PlatePacker::backtrack() {
-  PlateSolution plateSolution(region_);
+  vector<int> slices;
+  slices.push_back(region_.maxX());
 
-  int maxCoord = region_.maxX();
   int cur = front_.size() - 1;
-  bool lastCut = true;
-
   while (cur != 0) {
     auto elt = front_[cur];
-    int next = elt.previous;
-    auto prevElt = front_[next];
+    if (elt.begin + minXX_ > slices.back())
+      continue;
+    while (elt.begin + maxXX_ < slices.back())
+      slices.push_back(slices.back() - maxXX_ + minXX_);
 
-    int beginCoord = elt.begin;
-    int endCoord = elt.end;
-    if (lastCut && elt.valeur != nItems()) {
-      // End but not the residual
-      if (maxCoord - beginCoord <= maxXX_) {
-        // Extend the last cut to the full plate
-        endCoord = maxCoord;
-      }
-      else if (maxCoord - endCoord >= minXX_) {
-        // Not possible to extend, add another cut instead
-        // FIXME: when we need to add several new cuts; not possible with standard dimensions
-        Rectangle emptyCut = Rectangle::FromCoordinates(endCoord, region_.minY(), maxCoord, region_.maxY());
-        plateSolution.cuts.emplace_back(emptyCut);
-      }
-      else {
-        // Not possible to add a cut; try again
-        --cur;
-        continue;
-      }
-    }
+    // Keep residual on the last plate
+    if (elt.valeur == nItems())
+      slices.push_back(elt.end);
+    slices.push_back(elt.begin);
+    cur = elt.previous;
+  }
+  while (region_.minX() + maxXX_ < slices.back())
+    slices.push_back(slices.back() - maxXX_ + minXX_);
+  if (slices.back() != region_.minX())
+    slices.push_back(region_.minX());
+  reverse(slices.begin(), slices.end());
 
-    auto solution = packCut(prevElt.valeur, beginCoord, endCoord);
-    assert (prevElt.valeur + solution.nItems() == elt.valeur || endCoord != elt.end);
+  int nPacked = start_;
+  PlateSolution plateSolution(region_);
+  for (size_t i = 0; i + 1 < slices.size(); ++i) {
+    if (nPacked == nItems())
+      break;
+    CutSolution solution = packCut(nPacked, slices[i], slices[i+1]);
+    nPacked += solution.nItems();
     assert (solution.width() >= minXX_);
     assert (solution.width() <= maxXX_);
     plateSolution.cuts.push_back(solution);
-    cur = next;
-    lastCut = false;
   }
-  reverse(plateSolution.cuts.begin(), plateSolution.cuts.end());
 
   return plateSolution;
-
 }
 
