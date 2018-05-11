@@ -34,26 +34,25 @@ RowSolution RowPacker::run() {
     Item item = sequence_[i];
     int height = item.height;
     int width = item.width;
-    int placement = currentX_;
 
     // TODO: push a bit further if it doesn't fit with the minimum waste
-    int straightX = earliestFit(currentX_, width, height);
-    bool fitsStraight = fitsDimensionsAt(straightX, width, height);
+    int placement = earliestFit(currentX_, width, height);
+    bool fits = fitsDimensionsAt(placement, width, height);
 
-    int rotatedX  = earliestFit(currentX_, height, width);
-    bool fitsRotated = fitsDimensionsAt(rotatedX, height, width);
+    if (!fits || placement + width > currentX_ + height) {
+      int rotatedX  = earliestFit(currentX_, height, width);
+      bool fitsRotated = fitsDimensionsAt(rotatedX, height, width);
 
-    if (!fitsStraight && !fitsRotated)
+      bool rotatedBetter = placement + width > rotatedX + height;
+      if (fitsRotated && (!fits || rotatedBetter)) {
+        placement = rotatedX;
+        swap(width, height);
+        fits = true;
+      }
+    }
+
+    if (!fits)
       break;
-
-    bool straightBetter = straightX + width <= rotatedX + height;
-    if (fitsStraight && (!fitsRotated || straightBetter)) {
-      placement = straightX;
-    }
-    else {
-      placement = rotatedX;
-      swap(width, height);
-    }
 
     ItemSolution sol(placement, region_.minY(), width, height);
     sol.itemId = item.id;
@@ -73,26 +72,25 @@ RowPacker::Quality RowPacker::count() {
     Item item = sequence_[i];
     int height = item.height;
     int width = item.width;
-    int placement = currentX_;
 
     // TODO: push a bit further if it doesn't fit with the minimum waste
-    int straightX = earliestFit(currentX_, width, height);
-    bool fitsStraight = fitsDimensionsAt(straightX, width, height);
+    int placement = earliestFit(currentX_, width, height);
+    bool fits = fitsDimensionsAt(placement, width, height);
 
-    int rotatedX  = earliestFit(currentX_, height, width);
-    bool fitsRotated = fitsDimensionsAt(rotatedX, height, width);
+    if (!fits || placement + width > currentX_ + height) {
+      int rotatedX  = earliestFit(currentX_, height, width);
+      bool fitsRotated = fitsDimensionsAt(rotatedX, height, width);
 
-    if (!fitsStraight && !fitsRotated)
+      bool rotatedBetter = placement + width > rotatedX + height;
+      if (fitsRotated && (!fits || rotatedBetter)) {
+        placement = rotatedX;
+        swap(width, height);
+        fits = true;
+      }
+    }
+
+    if (!fits)
       break;
-
-    bool straightBetter = straightX + width <= rotatedX + height;
-    if (fitsStraight && (!fitsRotated || straightBetter)) {
-      placement = straightX;
-    }
-    else {
-      placement = rotatedX;
-      swap(width, height);
-    }
 
     maxUsedY = max(maxUsedY, region_.minY() + height);
     currentX_ = placement + width;

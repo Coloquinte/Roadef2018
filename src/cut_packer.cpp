@@ -115,6 +115,7 @@ void CutPacker::propagateBreakpoints(int after) {
 
 CutSolution CutPacker::backtrack() {
   vector<int> slices;
+  slices.reserve(8);
   slices.push_back(region_.maxY());
 
   int cur = front_.size() - 1;

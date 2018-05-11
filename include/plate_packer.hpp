@@ -18,6 +18,7 @@ class PlatePacker : Packer {
   int count();
 
   void propagate(int previousFront, int previousItems, int beginCoord);
+  void propagateBreakpoints(int after);
   PlateSolution backtrack();
 
   int countCut(int start, int minX, int maxX) const;

@@ -90,8 +90,36 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
   }
 }
 
+void PlatePacker::propagateBreakpoints(int after) {
+  int from = front_[after].end;
+  for (int bp : computeBreakpoints()) {
+    if (bp <= from)
+      continue;
+    if (after + 1 < front_.size() && bp >= front_[after+1].end)
+      break;
+    // Find the previous front element we can extend
+    int prev = 0;
+    for (; prev < front_.size(); ++prev) {
+      // Can we extend the previous row?
+      if (front_[prev].end + minWaste_ > bp)
+        break;
+      // Can we create a row before?
+      if (prev == 0 && front_[prev].end + minXX_ > bp)
+        break;
+    }
+    --prev;
+    if (prev < 0)
+      continue;
+    assert (prev <= after);
+
+    // Propagate from here
+    propagate(prev, front_[prev].valeur, bp);
+  }
+}
+
 PlateSolution PlatePacker::backtrack() {
   vector<int> slices;
+  slices.reserve(8);
   slices.push_back(region_.maxX());
 
   int cur = front_.size() - 1;
