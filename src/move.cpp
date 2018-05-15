@@ -205,95 +205,108 @@ void Move::accept(const Problem &problem, Solution &solution, const Solution &in
   }
 }
 
-void SwapMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
-  vector<Item> initial = extractSequence(problem, solution);
-  for (int i = 0; i < RETRY; ++i) {
-    vector<Item> sequence = initial;
-    randomSwap(sequence, rgen);
-    if (sequenceValid(problem, sequence)) {
-      runSequence(problem, solution, sequence);
-      break;
-    }
-  }
-}
-
-void AdjacentSwapMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
-  vector<Item> initial = extractSequence(problem, solution);
-  for (int i = 0; i < RETRY; ++i) {
-    vector<Item> sequence = initial;
-    randomAdjacentSwap(sequence, rgen);
-    if (sequenceValid(problem, sequence)) {
-      runSequence(problem, solution, sequence);
-      break;
-    }
-  }
-}
-
-void InsertMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
-  vector<Item> initial = extractSequence(problem, solution);
-  for (int i = 0; i < RETRY; ++i) {
-    vector<Item> sequence = initial;
-    randomInsert(sequence, rgen);
-    if (sequenceValid(problem, sequence)) {
-      runSequence(problem, solution, sequence);
-      break;
-    }
-  }
-}
-
-void ShuffleMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
-  vector<Item> sequence = OrderingHeuristic::orderKeepStacks(problem, rgen);
+void Shuffle::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+  vector<Item> sequence = OrderingHeuristic::orderShuffle(problem, rgen);
   assert (sequenceValid(problem, sequence));
   Solution incumbent = SequencePacker::run(problem, sequence);
   accept(problem, solution, incumbent);
 }
 
-void StackShuffleMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
-  vector<Item> sequence = OrderingHeuristic::orderKeepStacks(problem, rgen);
+void StackShuffle::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+  vector<Item> sequence = OrderingHeuristic::orderShuffleStacks(problem, rgen);
   assert (sequenceValid(problem, sequence));
   Solution incumbent = SequencePacker::run(problem, sequence);
   accept(problem, solution, incumbent);
 }
 
-void RowInsertMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+void SizeHeuristicShuffle::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+  vector<Item> sequence = OrderingHeuristic::orderSizeHeuristic(problem, rgen);
+  assert (sequenceValid(problem, sequence));
+  Solution incumbent = SequencePacker::run(problem, sequence);
+  accept(problem, solution, incumbent);
+}
+
+
+void ItemInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+  vector<Item> sequence = extractSequence(problem, solution);
+  randomInsert(sequence, rgen);
+  runSequence(problem, solution, sequence);
+}
+
+void RowInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > rows = extractRows(problem, solution);
   randomInsert(rows, rgen);
   vector<Item> sequence = merge(rows);
   runSequence(problem, solution, sequence);
 }
 
-void CutInsertMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+void CutInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > cuts = extractCuts(problem, solution);
   randomInsert(cuts, rgen);
   vector<Item> sequence = merge(cuts);
   runSequence(problem, solution, sequence);
 }
 
-void PlateInsertMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+void PlateInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > plates = extractPlates(problem, solution);
   randomInsert(plates, rgen);
   vector<Item> sequence = merge(plates);
   runSequence(problem, solution, sequence);
 }
 
-void RowSwapMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+void ItemSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+  vector<Item> sequence = extractSequence(problem, solution);
+  randomSwap(sequence, rgen);
+  runSequence(problem, solution, sequence);
+}
+
+void RowSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > rows = extractRows(problem, solution);
   randomSwap(rows, rgen);
   vector<Item> sequence = merge(rows);
   runSequence(problem, solution, sequence);
 }
 
-void CutSwapMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+void CutSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > cuts = extractCuts(problem, solution);
   randomSwap(cuts, rgen);
   vector<Item> sequence = merge(cuts);
   runSequence(problem, solution, sequence);
 }
 
-void PlateSwapMove::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+void PlateSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > plates = extractPlates(problem, solution);
   randomSwap(plates, rgen);
   vector<Item> sequence = merge(plates);
   runSequence(problem, solution, sequence);
 }
+
+void AdjacentItemSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+  vector<Item> sequence = extractSequence(problem, solution);
+  randomAdjacentSwap(sequence, rgen);
+  runSequence(problem, solution, sequence);
+}
+
+void AdjacentRowSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+  vector<vector<Item> > rows = extractRows(problem, solution);
+  randomAdjacentSwap(rows, rgen);
+  vector<Item> sequence = merge(rows);
+  runSequence(problem, solution, sequence);
+}
+
+void AdjacentCutSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+  vector<vector<Item> > cuts = extractCuts(problem, solution);
+  randomAdjacentSwap(cuts, rgen);
+  vector<Item> sequence = merge(cuts);
+  runSequence(problem, solution, sequence);
+}
+
+void AdjacentPlateSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+  vector<vector<Item> > plates = extractPlates(problem, solution);
+  randomAdjacentSwap(plates, rgen);
+  vector<Item> sequence = merge(plates);
+  runSequence(problem, solution, sequence);
+}
+
+
 

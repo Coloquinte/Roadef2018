@@ -35,7 +35,6 @@ RowSolution RowPacker::run() {
     int height = item.height;
     int width = item.width;
 
-    // TODO: push a bit further if it doesn't fit with the minimum waste
     int placement = earliestFit(currentX_, width, height);
     bool fits = fitsDimensionsAt(placement, width, height);
 
@@ -73,7 +72,6 @@ RowPacker::Quality RowPacker::count() {
     int height = item.height;
     int width = item.width;
 
-    // TODO: push a bit further if it doesn't fit with the minimum waste
     int placement = earliestFit(currentX_, width, height);
     bool fits = fitsDimensionsAt(placement, width, height);
 
@@ -129,6 +127,7 @@ bool RowPacker::fitsDefectsAt(int minX, int width, int height) const {
 }
 
 int RowPacker::earliestFit(int minX, int width, int height) const {
+  // TODO: optimize this part
   int cur = minX;
   while (true) {
     Rectangle place = Rectangle::FromDimensions(cur, region_.minY(), width, height);

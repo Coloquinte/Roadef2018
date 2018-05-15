@@ -13,17 +13,21 @@ Solver::Solver(const Problem &problem, size_t seed, size_t nMoves)
 : problem_(problem)
 , seed_(seed)
 , nMoves_(nMoves) {
-  moves_.emplace_back(make_unique<ShuffleMove>());
-  moves_.emplace_back(make_unique<StackShuffleMove>());
-  moves_.emplace_back(make_unique<SwapMove>());
-  moves_.emplace_back(make_unique<AdjacentSwapMove>());
-  moves_.emplace_back(make_unique<InsertMove>());
-  moves_.emplace_back(make_unique<RowInsertMove>());
-  moves_.emplace_back(make_unique<CutInsertMove>());
-  moves_.emplace_back(make_unique<PlateInsertMove>());
-  moves_.emplace_back(make_unique<RowSwapMove>());
-  moves_.emplace_back(make_unique<CutSwapMove>());
-  moves_.emplace_back(make_unique<PlateSwapMove>());
+  moves_.emplace_back(make_unique<Shuffle>());
+  moves_.emplace_back(make_unique<StackShuffle>());
+  moves_.emplace_back(make_unique<SizeHeuristicShuffle>());
+  moves_.emplace_back(make_unique<ItemInsert>());
+  moves_.emplace_back(make_unique<RowInsert>());
+  moves_.emplace_back(make_unique<CutInsert>());
+  moves_.emplace_back(make_unique<PlateInsert>());
+  moves_.emplace_back(make_unique<ItemSwap>());
+  moves_.emplace_back(make_unique<RowSwap>());
+  moves_.emplace_back(make_unique<CutSwap>());
+  moves_.emplace_back(make_unique<PlateSwap>());
+  moves_.emplace_back(make_unique<AdjacentItemSwap>());
+  moves_.emplace_back(make_unique<AdjacentRowSwap>());
+  moves_.emplace_back(make_unique<AdjacentCutSwap>());
+  moves_.emplace_back(make_unique<AdjacentPlateSwap>());
 }
 
 Solution Solver::run(const Problem &problem, size_t seed, size_t nMoves) {

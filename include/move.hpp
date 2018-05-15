@@ -43,60 +43,81 @@ class Move {
   static const int RETRY = 100;
 };
 
-struct ShuffleMove : Move {
+struct Shuffle : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
   virtual const char* name() const { return "Shuffle"; }
 };
 
-struct StackShuffleMove : Move {
+struct StackShuffle : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
   virtual const char* name() const { return "StackShuffle"; }
 };
 
-struct SwapMove : Move {
+struct SizeHeuristicShuffle : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
-  virtual const char* name() const { return "Swap"; }
+  virtual const char* name() const { return "SizeHeuristicShuffle"; }
 };
 
-struct AdjacentSwapMove : Move {
+struct ItemInsert : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
-  virtual const char* name() const { return "AdjacentSwap"; }
+  virtual const char* name() const { return "ItemInsert"; }
 };
 
-struct InsertMove : Move {
-  virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
-  virtual const char* name() const { return "Insert"; }
-};
-
-struct RowInsertMove : Move {
+struct RowInsert : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
   virtual const char* name() const { return "RowInsert"; }
 };
 
-struct CutInsertMove : Move {
+struct CutInsert : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
   virtual const char* name() const { return "CutInsert"; }
 };
 
-struct PlateInsertMove : Move {
+struct PlateInsert : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
   virtual const char* name() const { return "PlateInsert"; }
 };
 
-struct RowSwapMove : Move {
+struct ItemSwap : Move {
+  virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual const char* name() const { return "ItemSwap"; }
+};
+
+struct RowSwap : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
   virtual const char* name() const { return "RowSwap"; }
 };
 
-struct CutSwapMove : Move {
+struct CutSwap : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
   virtual const char* name() const { return "CutSwap"; }
 };
 
-struct PlateSwapMove : Move {
+struct PlateSwap : Move {
   virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
   virtual const char* name() const { return "PlateSwap"; }
 };
+
+struct AdjacentItemSwap : Move {
+  virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual const char* name() const { return "AdjacentItemSwap"; }
+};
+
+struct AdjacentRowSwap : Move {
+  virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual const char* name() const { return "AdjacentRowSwap"; }
+};
+
+struct AdjacentCutSwap : Move {
+  virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual const char* name() const { return "AdjacentCutSwap"; }
+};
+
+struct AdjacentPlateSwap : Move {
+  virtual void apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual const char* name() const { return "AdjacentPlateSwap"; }
+};
+
 
 #endif
 
