@@ -23,8 +23,11 @@ po::options_description getOptions() {
   desc.add_options()("solution,o", po::value<string>(),
                      "Solution file (.csv)");
 
-  desc.add_options()("moves", po::value<size_t>()->default_value(10000),
+  desc.add_options()("moves", po::value<size_t>()->default_value(numeric_limits<size_t>::max()),
                      "Number of moves to perform");
+
+  desc.add_options()("time", po::value<double>()->default_value(60.0),
+                     "Time limit");
 
   desc.add_options()("seed", po::value<size_t>()->default_value(0),
                      "Random seed");
@@ -69,8 +72,12 @@ int main(int argc, char** argv) {
   string batchFile = vm["batch"].as<string>();
   string defectFile = vm.count("defects") ? vm["defects"].as<string>() : string();
   Problem pb = Problem::read(batchFile, defectFile);
+  SolverParams params;
+  params.seed = vm["seed"].as<size_t>();
+  params.moveLimit = vm["moves"].as<size_t>();
+  params.timeLimit = vm["time"].as<double>();
 
-  Solution solution = Solver::run(pb, vm["seed"].as<size_t>(), vm["moves"].as<size_t>());
+  Solution solution = Solver::run(pb, params);
   if (vm["verbosity"].as<int>() >= 2)
     solution.report();
   if (vm["verbosity"].as<int>() >= 1)

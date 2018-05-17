@@ -6,13 +6,13 @@
 
 #include "move.hpp"
 #include <iostream>
+#include <chrono>
 
 using namespace std;
 
-Solver::Solver(const Problem &problem, size_t seed, size_t nMoves)
+Solver::Solver(const Problem &problem, SolverParams params)
 : problem_(problem)
-, seed_(seed)
-, nMoves_(nMoves) {
+, params_(params) {
   moves_.emplace_back(make_unique<Shuffle>());
   moves_.emplace_back(make_unique<StackShuffle>());
   moves_.emplace_back(make_unique<SizeHeuristicShuffle>());
@@ -30,16 +30,21 @@ Solver::Solver(const Problem &problem, size_t seed, size_t nMoves)
   moves_.emplace_back(make_unique<AdjacentPlateSwap>());
 }
 
-Solution Solver::run(const Problem &problem, size_t seed, size_t nMoves) {
-  Solver solver(problem, seed, nMoves);
+Solution Solver::run(const Problem &problem, SolverParams params) {
+  Solver solver(problem, params);
   solver.run();
   return solver.solution_;
 }
 
 void Solver::run() {
-  mt19937 rgen(seed_);
-  for (size_t i = 0; i < nMoves_; ++i) {
+  auto start = chrono::system_clock::now();
+
+  mt19937 rgen(params_.seed);
+  for (size_t i = 0; i < params_.moveLimit; ++i) {
     pickMove(rgen).run(problem_, solution_, rgen);
+    std::chrono::duration<double> elapsed(chrono::system_clock::now() - start);
+    if (elapsed.count() > params_.timeLimit)
+      break;
   }
 
   cout << endl << "MoveName\tTotal\tErr\t-\t=\t+" << endl;
