@@ -10,16 +10,20 @@
 
 struct ItemSolution : Rectangle {
   ItemSolution() {}
-  ItemSolution(Rectangle r) : Rectangle(r) {}
-  ItemSolution(int x, int y, int w, int h);
+  ItemSolution(Rectangle r, int itemId)
+    : Rectangle(r)
+    , itemId(itemId) {
+    }
 
   int itemId;
 };
 
 struct RowSolution : Rectangle {
   RowSolution() {}
-  RowSolution(Rectangle r) : Rectangle(r) {}
-  RowSolution(int x, int y, int w, int h);
+  RowSolution(Rectangle r)
+    : Rectangle(r) {
+      items.reserve(4);
+    }
 
   std::vector<ItemSolution> items;
 
@@ -30,8 +34,10 @@ struct RowSolution : Rectangle {
 
 struct CutSolution : Rectangle {
   CutSolution() {}
-  CutSolution(Rectangle r) : Rectangle(r) {}
-  CutSolution(int x, int y, int w, int h);
+  CutSolution(Rectangle r)
+    : Rectangle(r) {
+      rows.reserve(4);
+    }
 
   std::vector<RowSolution> rows;
 
@@ -42,8 +48,10 @@ struct CutSolution : Rectangle {
 
 struct PlateSolution : Rectangle {
   PlateSolution() {}
-  PlateSolution(Rectangle r) : Rectangle(r) {}
-  PlateSolution(int x, int y, int w, int h);
+  PlateSolution(Rectangle r)
+    : Rectangle(r) {
+      cuts.reserve(4);
+    }
 
   std::vector<CutSolution> cuts;
 

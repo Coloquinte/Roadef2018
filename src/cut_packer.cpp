@@ -14,8 +14,17 @@ CutPacker::CutPacker(const Problem &problem, const vector<Item> &sequence)
 }
 
 CutSolution CutPacker::run(Rectangle cut, int start, const std::vector<Defect> &defects) {
+  runCommon(cut, start, defects);
+  return backtrack();
+}
+
+int CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defects) {
+  runCommon(cut, start, defects);
+  return countBacktrack();
+}
+
+void CutPacker::runCommon(Rectangle cut, int start, const std::vector<Defect> &defects) {
   init(cut, start, defects);
-  // Dynamic programming on the rows i.e. second-level cuts
   assert (region_.minY() == 0);
 
   front_.clear();
@@ -26,12 +35,6 @@ CutSolution CutPacker::run(Rectangle cut, int start, const std::vector<Defect> &
     propagateBreakpoints(i);
   }
   front_.checkConsistency();
-
-  return backtrack();
-}
-
-int CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defects) {
-  return run(cut, start, defects).nItems();
 }
 
 RowPacker::Quality CutPacker::countRow(int start, int minY, int maxY) {
@@ -119,5 +122,16 @@ CutSolution CutPacker::backtrack() {
   }
 
   return cutSolution;
+}
+
+int CutPacker::countBacktrack() {
+  int cur = front_.size() - 1;
+  while (cur != 0) {
+    auto elt = front_[cur];
+    if (elt.begin + minYY_ > slices_.back())
+      continue;
+    cur = elt.previous;
+  }
+  return front_[cur].valeur;
 }
 

@@ -43,10 +43,8 @@ RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &
     if (!fits)
       break;
 
-    ItemSolution sol(placement, region_.minY(), width, height);
-    sol.itemId = item.id;
-
-    solution.items.push_back(sol);
+    Rectangle r = Rectangle::FromDimensions(placement, region_.minY(), width, height);
+    solution.items.emplace_back(ItemSolution(r, item.id));
     currentX_ = placement + width;
   }
 

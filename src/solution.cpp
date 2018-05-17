@@ -6,25 +6,6 @@
 
 using namespace std;
 
-ItemSolution::ItemSolution(int x, int y, int w, int h) {
-  *(Rectangle*) this = Rectangle::FromDimensions(x, y, w, h);
-}
-
-RowSolution::RowSolution(int x, int y, int w, int h) {
-  *(Rectangle*) this = Rectangle::FromDimensions(x, y, w, h);
-  items.reserve(8);
-}
-
-CutSolution::CutSolution(int x, int y, int w, int h) {
-  *(Rectangle*) this = Rectangle::FromDimensions(x, y, w, h);
-  rows.reserve(8);
-}
-
-PlateSolution::PlateSolution(int x, int y, int w, int h) {
-  *(Rectangle*) this = Rectangle::FromDimensions(x, y, w, h);
-  cuts.reserve(8);
-}
-
 int RowSolution::nItems() const {
   return items.size();
 }

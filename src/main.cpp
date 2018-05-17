@@ -24,10 +24,10 @@ po::options_description getOptions() {
                      "Solution file (.csv)");
 
   desc.add_options()("moves", po::value<size_t>()->default_value(numeric_limits<size_t>::max()),
-                     "Number of moves to perform");
+                     "Move limit");
 
-  desc.add_options()("time", po::value<double>()->default_value(60.0),
-                     "Time limit");
+  desc.add_options()("time", po::value<double>()->default_value(3.0),
+                     "Time limit (minutes)");
 
   desc.add_options()("seed", po::value<size_t>()->default_value(0),
                      "Random seed");

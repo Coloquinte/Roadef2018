@@ -43,7 +43,7 @@ void Solver::run() {
   for (size_t i = 0; i < params_.moveLimit; ++i) {
     pickMove(rgen).run(problem_, solution_, rgen);
     std::chrono::duration<double> elapsed(chrono::system_clock::now() - start);
-    if (elapsed.count() > params_.timeLimit)
+    if (elapsed.count() / 60.0 > params_.timeLimit)
       break;
   }
 

@@ -28,8 +28,6 @@ PlateSolution PlatePacker::run(int plateId, int start) {
   Params p = problem_.params();
   Rectangle plate = Rectangle::FromCoordinates(0, 0, p.widthPlates, p.heightPlates);
   init(plate, start, problem_.plateDefects()[plateId]);
-
-  // Dynamic programming on the first-level cuts
   assert (region_.minX() == 0);
   assert (region_.minY() == 0);
 

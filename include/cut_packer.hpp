@@ -15,9 +15,12 @@ class CutPacker : Packer {
   int count(Rectangle cut, int start, const std::vector<Defect> &defects);
 
  private:
+  void runCommon(Rectangle cut, int start, const std::vector<Defect> &defects);
   void propagate(int previousFront, int previousItems, int beginCoord);
   void propagateBreakpoints(int after);
+
   CutSolution backtrack();
+  int countBacktrack();
 
   RowPacker::Quality countRow(int start, int minY, int maxY);
   RowSolution packRow(int start, int minY, int maxY);
