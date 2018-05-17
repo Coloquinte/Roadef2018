@@ -12,22 +12,24 @@ class PlatePacker : Packer {
   static PlateSolution run(const Problem &problem, int plateId, const std::vector<Item> &sequence, int start);
   static int count(const Problem &problem, int plateId, const std::vector<Item> &sequence, int start);
 
- private:
-  PlatePacker(const Problem &problem, int plateId, const std::vector<Item> &sequence, int start);
-  PlateSolution run();
-  int count();
+  PlatePacker(const Problem &problem, const std::vector<Item> &sequence);
+  PlateSolution run(int plateId, int start);
+  int count(int plateId, int start);
 
+ private:
   void propagate(int previousFront, int previousItems, int beginCoord);
   void propagateBreakpoints(int after);
   PlateSolution backtrack();
 
-  int countCut(int start, int minX, int maxX) const;
-  CutSolution packCut(int start, int minX, int maxX) const;
+  int countCut(int start, int minX, int maxX);
+  CutSolution packCut(int start, int minX, int maxX);
 
   std::vector<int> computeBreakpoints() const;
 
  private:
+  CutPacker cutPacker_;
   ParetoFront front_;
+  const Problem &problem_;
 };
 
 #endif

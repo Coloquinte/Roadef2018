@@ -226,7 +226,6 @@ void SizeHeuristicShuffle::apply(const Problem &problem, Solution &solution, mt1
   accept(problem, solution, incumbent);
 }
 
-
 void ItemInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<Item> sequence = extractSequence(problem, solution);
   randomInsert(sequence, rgen);

@@ -10,25 +10,23 @@
 
 class CutPacker : Packer {
  public:
-  static CutSolution run(const Packer &parent, Rectangle cut, int start);
-  static int count(const Packer &parent, Rectangle cut, int start);
+  CutPacker(const Problem &problem, const std::vector<Item> &sequence);
+  CutSolution run(Rectangle cut, int start, const std::vector<Defect> &defects);
+  int count(Rectangle cut, int start, const std::vector<Defect> &defects);
 
  private:
-  CutPacker(const Packer &parent, Rectangle cut, int start);
-  CutSolution run();
-  int count();
-
   void propagate(int previousFront, int previousItems, int beginCoord);
   void propagateBreakpoints(int after);
   CutSolution backtrack();
 
-  RowPacker::Quality countRow(int start, int minY, int maxY) const;
-  RowSolution packRow(int start, int minY, int maxY) const;
+  RowPacker::Quality countRow(int start, int minY, int maxY);
+  RowSolution packRow(int start, int minY, int maxY);
 
   std::vector<int> computeBreakpoints() const;
 
  private:
   ParetoFront front_;
+  RowPacker rowPacker_;
 };
 
 #endif

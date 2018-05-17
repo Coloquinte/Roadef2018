@@ -14,14 +14,11 @@ class RowPacker : Packer {
   };
 
  public:
-  static RowSolution run(const Packer &parent, Rectangle row, int start);
-  static Quality count(const Packer &parent, Rectangle row, int start);
+  RowPacker(const Problem &problem, const std::vector<Item> &sequence);
+  RowSolution run(Rectangle row, int start, const std::vector<Defect> &defects);
+  Quality count(Rectangle row, int start, const std::vector<Defect> &defects);
 
  private:
-  RowPacker(const Packer &parent, Rectangle row, int start);
-  RowSolution run();
-  Quality count();
-
   bool fitsDimensions(int width, int height) const;
   bool fitsDimensionsAt(int minX, int width, int height) const;
 

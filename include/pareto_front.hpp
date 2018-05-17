@@ -35,7 +35,11 @@ class ParetoFront {
     return front_.size();
   }
 
-  Element operator[](int i) {
+  void clear() {
+    front_.clear();
+  }
+
+  Element operator[](int i) const {
     return front_[i];
   }
 

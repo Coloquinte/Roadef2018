@@ -8,26 +8,17 @@
 
 using namespace std;
 
-CutSolution CutPacker::run(const Packer &parent, Rectangle cut, int start) {
-  CutPacker packer(parent, cut, start);
-  return packer.run();
+CutPacker::CutPacker(const Problem &problem, const vector<Item> &sequence)
+: Packer(problem, sequence)
+, rowPacker_(problem, sequence) {
 }
 
-int CutPacker::count(const Packer &parent, Rectangle cut, int start) {
-  CutPacker packer(parent, cut, start);
-  return packer.count();
-}
-
-CutPacker::CutPacker(const Packer &parent, Rectangle cut, int start)
-: Packer(parent) {
-  region_ = cut;
-  start_ = start;
-}
-
-CutSolution CutPacker::run() {
+CutSolution CutPacker::run(Rectangle cut, int start, const std::vector<Defect> &defects) {
+  init(cut, start, defects);
   // Dynamic programming on the rows i.e. second-level cuts
   assert (region_.minY() == 0);
 
+  front_.clear();
   front_.init(region_.minY(), start_);
   for (int i = 0; i < front_.size(); ++i) {
     auto elt = front_[i];
@@ -39,18 +30,18 @@ CutSolution CutPacker::run() {
   return backtrack();
 }
 
-int CutPacker::count() {
-  return run().nItems();
+int CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defects) {
+  return run(cut, start, defects).nItems();
 }
 
-RowPacker::Quality CutPacker::countRow(int start, int minY, int maxY) const {
+RowPacker::Quality CutPacker::countRow(int start, int minY, int maxY) {
   Rectangle row = Rectangle::FromCoordinates(region_.minX(), minY, region_.maxX(), maxY);
-  return RowPacker::count(*this, row, start);
+  return rowPacker_.count(row, start, defects_);
 }
 
-RowSolution CutPacker::packRow(int start, int minY, int maxY) const {
+RowSolution CutPacker::packRow(int start, int minY, int maxY) {
   Rectangle row = Rectangle::FromCoordinates(region_.minX(), minY, region_.maxX(), maxY);
-  return RowPacker::run(*this, row, start);
+  return rowPacker_.run(row, start, defects_);
 }
 
 vector<int> CutPacker::computeBreakpoints() const {
@@ -115,7 +106,6 @@ void CutPacker::propagateBreakpoints(int after) {
 
 CutSolution CutPacker::backtrack() {
   vector<int> slices;
-  slices.reserve(8);
   slices.push_back(region_.maxY());
 
   int cur = front_.size() - 1;

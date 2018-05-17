@@ -7,14 +7,23 @@
 
 class Packer {
  protected:
-  Packer(const std::vector<Item> &sequence, const std::vector<Defect> &defects)
+  Packer(const std::vector<Item> &sequence)
   : start_(0)
   , sequence_(sequence)
-  , defects_(defects)
   , minWaste_(0)
   , minXX_(0)
   , maxXX_(0)
   , minYY_(0) {
+  }
+
+  Packer(const Problem &problem, const std::vector<Item> &sequence)
+  : sequence_(sequence) {
+    Params p = problem.params();
+    minXX_ = p.minXX;
+    maxXX_ = p.maxXX;
+    minYY_ = p.minYY;
+    minWaste_ = p.minWaste;
+    start_ = 0;
   }
 
   int nItems() const {
@@ -22,19 +31,33 @@ class Packer {
   }
 
   bool fitsMinWaste(int a, int b) const {
-      return a == b || a <= b - minWaste_;
+      return a <= b - minWaste_ || a == b;
+  }
+
+  void init(Rectangle region, int start, const std::vector<Defect> &defects) {
+    region_ = region;
+    start_ = start;
+    defects_.clear();
+    for (Defect d : defects) {
+      if (d.intersects(region_))
+        defects_.push_back(d);
+    }
   }
 
  protected:
   Rectangle region_;
   int start_;
+  std::vector<Defect> defects_;
 
   const std::vector<Item> &sequence_;
-  const std::vector<Defect> &defects_;
   int minWaste_;
   int minXX_;
   int maxXX_;
   int minYY_;
+
+  friend class RowPacker;
+  friend class CutPacker;
+  friend class PlatePacker;
 };
 
 #endif

@@ -9,31 +9,31 @@
 using namespace std;
 
 PlateSolution PlatePacker::run(const Problem &problem, int plateId, const vector<Item> &sequence, int start) {
-  PlatePacker packer(problem, plateId, sequence, start);
-  return packer.run();
+  PlatePacker packer(problem, sequence);
+  return packer.run(plateId, start);
 }
 
 int PlatePacker::count(const Problem &problem, int plateId, const vector<Item> &sequence, int start) {
-  PlatePacker packer(problem, plateId, sequence, start);
-  return packer.count();
+  PlatePacker packer(problem, sequence);
+  return packer.count(plateId, start);
 }
 
-PlatePacker::PlatePacker(const Problem &problem, int plateId, const vector<Item> &sequence, int start)
-: Packer(sequence, problem.plateDefects()[plateId]) {
-  Params p = problem.params();
-  start_ = start;
-  minXX_ = p.minXX;
-  maxXX_ = p.maxXX;
-  minYY_ = p.minYY;
-  minWaste_ = p.minWaste;
-  region_ = Rectangle::FromCoordinates(0, 0, p.widthPlates, p.heightPlates);
+PlatePacker::PlatePacker(const Problem &problem, const vector<Item> &sequence)
+: Packer(problem, sequence)
+, cutPacker_(problem, sequence)
+, problem_(problem) {
 }
 
-PlateSolution PlatePacker::run() {
+PlateSolution PlatePacker::run(int plateId, int start) {
+  Params p = problem_.params();
+  Rectangle plate = Rectangle::FromCoordinates(0, 0, p.widthPlates, p.heightPlates);
+  init(plate, start, problem_.plateDefects()[plateId]);
+
   // Dynamic programming on the first-level cuts
   assert (region_.minX() == 0);
   assert (region_.minY() == 0);
 
+  front_.clear();
   front_.init(region_.minX(), start_);
   for (int i = 0; i < front_.size(); ++i) {
     auto elt = front_[i];
@@ -44,18 +44,18 @@ PlateSolution PlatePacker::run() {
   return backtrack();
 }
 
-int PlatePacker::count() {
-  return run().nItems();
+int PlatePacker::count(int plateId, int start) {
+  return run(plateId, start).nItems();
 }
 
-int PlatePacker::countCut(int start, int minX, int maxX) const {
+int PlatePacker::countCut(int start, int minX, int maxX) {
   Rectangle cut = Rectangle::FromCoordinates(minX, region_.minY(), maxX, region_.maxY());
-  return CutPacker::count(*this, cut, start);
+  return cutPacker_.count(cut, start, defects_);
 }
 
-CutSolution PlatePacker::packCut(int start, int minX, int maxX) const {
+CutSolution PlatePacker::packCut(int start, int minX, int maxX) {
   Rectangle cut = Rectangle::FromCoordinates(minX, region_.minY(), maxX, region_.maxY());
-  return CutPacker::run(*this, cut, start);
+  return cutPacker_.run(cut, start, defects_);
 }
 
 vector<int> PlatePacker::computeBreakpoints() const {
@@ -119,7 +119,6 @@ void PlatePacker::propagateBreakpoints(int after) {
 
 PlateSolution PlatePacker::backtrack() {
   vector<int> slices;
-  slices.reserve(8);
   slices.push_back(region_.maxX());
 
   int cur = front_.size() - 1;

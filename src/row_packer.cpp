@@ -5,24 +5,14 @@
 
 using namespace std;
 
-RowSolution RowPacker::run(const Packer &parent, Rectangle row, int start) {
-  RowPacker packer(parent, row, start);
-  return packer.run();
+RowPacker::RowPacker(const Problem &problem, const vector<Item> &sequence)
+: Packer(problem, sequence) {
+  currentX_ = 0;
 }
 
-RowPacker::Quality RowPacker::count(const Packer &parent, Rectangle row, int start) {
-  RowPacker packer(parent, row, start);
-  return packer.count();
-}
-
-RowPacker::RowPacker(const Packer &parent, Rectangle row, int start)
-: Packer(parent) {
-  region_ = row;
-  start_ = start;
+RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &defects) {
+  init(row, start, defects);
   currentX_ = region_.minX();
-}
-
-RowSolution RowPacker::run() {
   // Greedy placement
   // Attempt to place the item with the least possible usage
   // Not actually 100% correct due to the minWaste parameter at the end
@@ -63,7 +53,9 @@ RowSolution RowPacker::run() {
   return solution;
 }
 
-RowPacker::Quality RowPacker::count() {
+RowPacker::Quality RowPacker::count(Rectangle row, int start, const std::vector<Defect> &defects) {
+  init(row, start, defects);
+  currentX_ = region_.minX();
   int maxUsedY = region_.minY();
 
   int i = start_;
