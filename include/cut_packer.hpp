@@ -22,11 +22,10 @@ class CutPacker : Packer {
   RowPacker::Quality countRow(int start, int minY, int maxY);
   RowSolution packRow(int start, int minY, int maxY);
 
-  std::vector<int> computeBreakpoints() const;
-
  private:
   ParetoFront front_;
   RowPacker rowPacker_;
+  std::vector<int> slices_;
 };
 
 #endif

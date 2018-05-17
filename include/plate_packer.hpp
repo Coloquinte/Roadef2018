@@ -24,11 +24,10 @@ class PlatePacker : Packer {
   int countCut(int start, int minX, int maxX);
   CutSolution packCut(int start, int minX, int maxX);
 
-  std::vector<int> computeBreakpoints() const;
-
  private:
   CutPacker cutPacker_;
   ParetoFront front_;
+  std::vector<int> slices_;
   const Problem &problem_;
 };
 

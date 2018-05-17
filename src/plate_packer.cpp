@@ -58,16 +58,6 @@ CutSolution PlatePacker::packCut(int start, int minX, int maxX) {
   return cutPacker_.run(cut, start, defects_);
 }
 
-vector<int> PlatePacker::computeBreakpoints() const {
-  vector<int> ret;
-  for (const Defect &defect : defects_) {
-    ret.push_back(defect.maxX() + 1);
-  }
-  sort(ret.begin(), ret.end());
-  return ret;
-}
-
-
 void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord) {
   int maxEndCoord = min(region_.maxX(), beginCoord + maxXX_);
   for (int endCoord = maxEndCoord + minWaste_; endCoord >= beginCoord + minXX_; --endCoord) {
@@ -92,11 +82,11 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
 
 void PlatePacker::propagateBreakpoints(int after) {
   int from = front_[after].end;
-  for (int bp : computeBreakpoints()) {
-    if (bp <= from)
+  int to = after + 1 < front_.size() ? front_[after+1].end : region_.maxX();
+  for (const Defect &defect : defects_) {
+    int bp = defect.maxX() + 1;
+    if (bp <= from || bp >= to)
       continue;
-    if (after + 1 < front_.size() && bp >= front_[after+1].end)
-      break;
     // Find the previous front element we can extend
     int prev = 0;
     for (; prev < front_.size(); ++prev) {
@@ -118,35 +108,35 @@ void PlatePacker::propagateBreakpoints(int after) {
 }
 
 PlateSolution PlatePacker::backtrack() {
-  vector<int> slices;
-  slices.push_back(region_.maxX());
+  slices_.clear();
+  slices_.push_back(region_.maxX());
 
   int cur = front_.size() - 1;
   while (cur != 0) {
     auto elt = front_[cur];
-    if (elt.begin + minXX_ > slices.back())
+    if (elt.begin + minXX_ > slices_.back())
       continue;
-    while (elt.begin + maxXX_ < slices.back())
-      slices.push_back(slices.back() - maxXX_ + minXX_);
+    while (elt.begin + maxXX_ < slices_.back())
+      slices_.push_back(slices_.back() - maxXX_ + minXX_);
 
     // Keep residual on the last plate
     if (elt.valeur == nItems())
-      slices.push_back(elt.end);
-    slices.push_back(elt.begin);
+      slices_.push_back(elt.end);
+    slices_.push_back(elt.begin);
     cur = elt.previous;
   }
-  while (region_.minX() + maxXX_ < slices.back())
-    slices.push_back(slices.back() - maxXX_ + minXX_);
-  if (slices.back() != region_.minX())
-    slices.push_back(region_.minX());
-  reverse(slices.begin(), slices.end());
+  while (region_.minX() + maxXX_ < slices_.back())
+    slices_.push_back(slices_.back() - maxXX_ + minXX_);
+  if (slices_.back() != region_.minX())
+    slices_.push_back(region_.minX());
+  reverse(slices_.begin(), slices_.end());
 
   int nPacked = start_;
   PlateSolution plateSolution(region_);
-  for (size_t i = 0; i + 1 < slices.size(); ++i) {
+  for (size_t i = 0; i + 1 < slices_.size(); ++i) {
     if (nPacked == nItems())
       break;
-    CutSolution solution = packCut(nPacked, slices[i], slices[i+1]);
+    CutSolution solution = packCut(nPacked, slices_[i], slices_[i+1]);
     nPacked += solution.nItems();
     assert (solution.width() >= minXX_);
     assert (solution.width() <= maxXX_);

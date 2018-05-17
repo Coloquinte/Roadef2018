@@ -44,17 +44,6 @@ RowSolution CutPacker::packRow(int start, int minY, int maxY) {
   return rowPacker_.run(row, start, defects_);
 }
 
-vector<int> CutPacker::computeBreakpoints() const {
-  vector<int> ret;
-  for (const Defect &defect : defects_) {
-    if (!defect.intersects(region_))
-      continue;
-    ret.push_back(defect.maxY() + 1);
-  }
-  sort(ret.begin(), ret.end());
-  return ret;
-}
-
 void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) {
   // TODO: more precise definition for domination
   for (int endCoord = region_.maxY(); endCoord >= beginCoord + minYY_; --endCoord) {
@@ -79,11 +68,11 @@ void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) 
 
 void CutPacker::propagateBreakpoints(int after) {
   int from = front_[after].end;
-  for (int bp : computeBreakpoints()) {
-    if (bp <= from)
+  int to = after + 1 < front_.size() ? front_[after+1].end : region_.maxY();
+  for (const Defect &defect : defects_) {
+    int bp = defect.maxY() + 1;
+    if (bp <= from || bp >= to)
       continue;
-    if (after + 1 < front_.size() && bp >= front_[after+1].end)
-      break;
     // Find the previous front element we can extend
     int prev = 0;
     for (; prev < front_.size(); ++prev) {
@@ -105,25 +94,25 @@ void CutPacker::propagateBreakpoints(int after) {
 }
 
 CutSolution CutPacker::backtrack() {
-  vector<int> slices;
-  slices.push_back(region_.maxY());
+  slices_.clear();
+  slices_.push_back(region_.maxY());
 
   int cur = front_.size() - 1;
   while (cur != 0) {
     auto elt = front_[cur];
-    if (elt.begin + minYY_ > slices.back())
+    if (elt.begin + minYY_ > slices_.back())
       continue;
-    slices.push_back(elt.begin);
+    slices_.push_back(elt.begin);
     cur = elt.previous;
   }
-  if (slices.back() != region_.minY())
-    slices.push_back(region_.minY());
-  reverse(slices.begin(), slices.end());
+  if (slices_.back() != region_.minY())
+    slices_.push_back(region_.minY());
+  reverse(slices_.begin(), slices_.end());
 
   int nPacked = start_;
   CutSolution cutSolution(region_);
-  for (size_t i = 0; i + 1 < slices.size(); ++i) {
-    RowSolution solution = packRow(nPacked, slices[i], slices[i+1]);
+  for (size_t i = 0; i + 1 < slices_.size(); ++i) {
+    RowSolution solution = packRow(nPacked, slices_[i], slices_[i+1]);
     nPacked += solution.nItems();
     assert (solution.height() >= minYY_);
     cutSolution.rows.push_back(solution);
