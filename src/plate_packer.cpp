@@ -1,6 +1,5 @@
 
 #include "plate_packer.hpp"
-#include "pareto_front.hpp"
 #include "utils.hpp"
 
 #include <cassert>

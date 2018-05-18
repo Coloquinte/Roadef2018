@@ -6,7 +6,7 @@
 #include "solution.hpp"
 #include "packer.hpp"
 #include "row_packer.hpp"
-#include "pareto_front.hpp"
+#include "packer_front.hpp"
 
 class CutPacker : Packer {
  public:
@@ -26,7 +26,7 @@ class CutPacker : Packer {
   RowSolution packRow(int start, int minY, int maxY);
 
  private:
-  ParetoFront front_;
+  PackerFront front_;
   RowPacker rowPacker_;
   std::vector<int> slices_;
 };

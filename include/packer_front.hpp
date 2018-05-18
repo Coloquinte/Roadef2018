@@ -1,11 +1,11 @@
 
-#ifndef PARETO_FRONT_HPP
-#define PARETO_FRONT_HPP
+#ifndef PACKER_FRONT_HPP
+#define PACKER_FRONT_HPP
 
 #include <vector>
 #include <cassert>
 
-class ParetoFront {
+class PackerFront {
  public:
   struct Element {
     int begin;
@@ -26,7 +26,7 @@ class ParetoFront {
   };
 
  public:
-  ParetoFront() {
+  PackerFront() {
     front_.reserve(16);
     helper_.reserve(16);
   }

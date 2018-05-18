@@ -5,6 +5,7 @@
 #include "problem.hpp"
 #include "solution.hpp"
 #include "packer.hpp"
+#include "packer_front.hpp"
 #include "cut_packer.hpp"
 
 class PlatePacker : Packer {
@@ -26,7 +27,7 @@ class PlatePacker : Packer {
 
  private:
   CutPacker cutPacker_;
-  ParetoFront front_;
+  PackerFront front_;
   std::vector<int> slices_;
   const Problem &problem_;
 };
