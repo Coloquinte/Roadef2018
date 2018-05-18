@@ -12,25 +12,27 @@ using namespace std;
 
 Solver::Solver(const Problem &problem, SolverParams params)
 : problem_(problem)
-, params_(params) {
+, params_(params)
+, nMoves_(0) {
   moves_.emplace_back(make_unique<Shuffle>(1));
   moves_.emplace_back(make_unique<Shuffle>(2));
   moves_.emplace_back(make_unique<Shuffle>(4));
   moves_.emplace_back(make_unique<Shuffle>(8));
   moves_.emplace_back(make_unique<Shuffle>(16));
   moves_.emplace_back(make_unique<Shuffle>(32));
-  //moves_.emplace_back(make_unique<ItemInsert>());
-  //moves_.emplace_back(make_unique<RowInsert>());
-  //moves_.emplace_back(make_unique<CutInsert>());
-  //moves_.emplace_back(make_unique<PlateInsert>());
-  //moves_.emplace_back(make_unique<ItemSwap>());
-  //moves_.emplace_back(make_unique<RowSwap>());
-  //moves_.emplace_back(make_unique<CutSwap>());
-  //moves_.emplace_back(make_unique<PlateSwap>());
-  //moves_.emplace_back(make_unique<AdjacentItemSwap>());
-  //moves_.emplace_back(make_unique<AdjacentRowSwap>());
-  //moves_.emplace_back(make_unique<AdjacentCutSwap>());
-  //moves_.emplace_back(make_unique<AdjacentPlateSwap>());
+  moves_.emplace_back(make_unique<Shuffle>(64));
+  moves_.emplace_back(make_unique<ItemInsert>());
+  moves_.emplace_back(make_unique<RowInsert>());
+  moves_.emplace_back(make_unique<CutInsert>());
+  moves_.emplace_back(make_unique<PlateInsert>());
+  moves_.emplace_back(make_unique<ItemSwap>());
+  moves_.emplace_back(make_unique<RowSwap>());
+  moves_.emplace_back(make_unique<CutSwap>());
+  moves_.emplace_back(make_unique<PlateSwap>());
+  moves_.emplace_back(make_unique<AdjacentItemSwap>());
+  moves_.emplace_back(make_unique<AdjacentRowSwap>());
+  moves_.emplace_back(make_unique<AdjacentCutSwap>());
+  moves_.emplace_back(make_unique<AdjacentPlateSwap>());
 }
 
 Solution Solver::run(const Problem &problem, SolverParams params) {
@@ -43,7 +45,7 @@ void Solver::run() {
   auto start = chrono::system_clock::now();
 
   mt19937 rgen(params_.seed);
-  for (size_t i = 0; i < params_.moveLimit; ++i) {
+  for (nMoves_ = 0; nMoves_ < params_.moveLimit; ++nMoves_) {
     pickMove(rgen).run(problem_, solution_, rgen);
 
     std::chrono::duration<double> elapsed(chrono::system_clock::now() - start);
@@ -51,12 +53,14 @@ void Solver::run() {
       break;
   }
 
-  cout << endl << "MoveName\tTotal\tErr\t-\t=\t+" << endl;
-  for (auto &m : moves_) {
-    string name = m->name();
-    while (name.size() < 12)
-      name.append(" ");
-    cout << name << "\t" << m->nCalls() << "\t" << m->nViolations() << "\t" << m->nDegrade() << "\t" << m->nEquiv() << "\t" << m->nImprove() << endl;
+  if (params_.verbosity >= 2) {
+    cout << endl << "MoveName\tTotal\tErr\t-\t=\t+" << endl;
+    for (auto &m : moves_) {
+      string name = m->name();
+      while (name.size() < 12)
+        name.append(" ");
+      cout << name << "\t" << m->nCalls() << "\t" << m->nViolations() << "\t" << m->nDegrade() << "\t" << m->nEquiv() << "\t" << m->nImprove() << endl;
+    }
   }
 }
 

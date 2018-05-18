@@ -73,14 +73,15 @@ int main(int argc, char** argv) {
   string defectFile = vm.count("defects") ? vm["defects"].as<string>() : string();
   Problem pb = Problem::read(batchFile, defectFile);
   SolverParams params;
+  params.verbosity = vm["verbosity"].as<int>();
   params.seed = vm["seed"].as<size_t>();
   params.moveLimit = vm["moves"].as<size_t>();
   params.timeLimit = vm["time"].as<double>();
 
   Solution solution = Solver::run(pb, params);
-  if (vm["verbosity"].as<int>() >= 2)
+  if (params.verbosity >= 3)
     solution.report();
-  if (vm["verbosity"].as<int>() >= 1)
+  if (params.verbosity >= 1)
     SolutionChecker::report(pb, solution);
   if (vm.count("solution"))
     solution.write(vm["solution"].as<string>());

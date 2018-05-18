@@ -26,6 +26,9 @@ class Solver {
   SolverParams params_;
 
   std::vector<std::unique_ptr<Move> > moves_;
+  std::size_t nMoves_;
+
+  friend class Move;
 };
 
 #endif
