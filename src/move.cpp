@@ -206,24 +206,16 @@ void Move::accept(const Problem &problem, Solution &solution, const Solution &in
 }
 
 void Shuffle::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
-  vector<Item> sequence = OrderingHeuristic::orderShuffle(problem, rgen);
+  vector<Item> sequence = OrderingHeuristic::orderShuffle(problem, rgen, chunkSize);
   assert (sequenceValid(problem, sequence));
   Solution incumbent = SequencePacker::run(problem, sequence);
   accept(problem, solution, incumbent);
 }
 
-void StackShuffle::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
-  vector<Item> sequence = OrderingHeuristic::orderShuffleStacks(problem, rgen);
-  assert (sequenceValid(problem, sequence));
-  Solution incumbent = SequencePacker::run(problem, sequence);
-  accept(problem, solution, incumbent);
-}
-
-void SizeHeuristicShuffle::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
-  vector<Item> sequence = OrderingHeuristic::orderSizeHeuristic(problem, rgen);
-  assert (sequenceValid(problem, sequence));
-  Solution incumbent = SequencePacker::run(problem, sequence);
-  accept(problem, solution, incumbent);
+string Shuffle::name() const {
+  stringstream ss;
+  ss << "Shuffle-" << chunkSize;
+  return ss.str();
 }
 
 void ItemInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {

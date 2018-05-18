@@ -8,18 +8,11 @@
 
 class OrderingHeuristic {
  public:
-  static std::vector<Item> orderShuffleStacks(const Problem &problem, std::mt19937 &rgen);
-  static std::vector<Item> orderShuffle(const Problem &problem, std::mt19937 &rgen);
-  static std::vector<Item> orderSizeHeuristic(const Problem &problem, std::mt19937 &rgen);
+  static std::vector<Item> orderShuffle(const Problem &problem, std::mt19937 &rgen, int chunkSize);
 
  private:
   OrderingHeuristic(const Problem &problem, std::mt19937 &rgen);
-
-  void orderShuffleStacks();
-  void orderShuffle();
-  void orderSizeHeuristic();
-
-  void takeRandomItem();
+  void orderShuffle(int chunkSize);
 
  private:
   std::vector<std::vector<Item> > leftover_;

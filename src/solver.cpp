@@ -13,21 +13,24 @@ using namespace std;
 Solver::Solver(const Problem &problem, SolverParams params)
 : problem_(problem)
 , params_(params) {
-  moves_.emplace_back(make_unique<Shuffle>());
-  moves_.emplace_back(make_unique<StackShuffle>());
-  moves_.emplace_back(make_unique<SizeHeuristicShuffle>());
-  moves_.emplace_back(make_unique<ItemInsert>());
-  moves_.emplace_back(make_unique<RowInsert>());
-  moves_.emplace_back(make_unique<CutInsert>());
-  moves_.emplace_back(make_unique<PlateInsert>());
-  moves_.emplace_back(make_unique<ItemSwap>());
-  moves_.emplace_back(make_unique<RowSwap>());
-  moves_.emplace_back(make_unique<CutSwap>());
-  moves_.emplace_back(make_unique<PlateSwap>());
-  moves_.emplace_back(make_unique<AdjacentItemSwap>());
-  moves_.emplace_back(make_unique<AdjacentRowSwap>());
-  moves_.emplace_back(make_unique<AdjacentCutSwap>());
-  moves_.emplace_back(make_unique<AdjacentPlateSwap>());
+  moves_.emplace_back(make_unique<Shuffle>(1));
+  moves_.emplace_back(make_unique<Shuffle>(2));
+  moves_.emplace_back(make_unique<Shuffle>(4));
+  moves_.emplace_back(make_unique<Shuffle>(8));
+  moves_.emplace_back(make_unique<Shuffle>(16));
+  moves_.emplace_back(make_unique<Shuffle>(32));
+  //moves_.emplace_back(make_unique<ItemInsert>());
+  //moves_.emplace_back(make_unique<RowInsert>());
+  //moves_.emplace_back(make_unique<CutInsert>());
+  //moves_.emplace_back(make_unique<PlateInsert>());
+  //moves_.emplace_back(make_unique<ItemSwap>());
+  //moves_.emplace_back(make_unique<RowSwap>());
+  //moves_.emplace_back(make_unique<CutSwap>());
+  //moves_.emplace_back(make_unique<PlateSwap>());
+  //moves_.emplace_back(make_unique<AdjacentItemSwap>());
+  //moves_.emplace_back(make_unique<AdjacentRowSwap>());
+  //moves_.emplace_back(make_unique<AdjacentCutSwap>());
+  //moves_.emplace_back(make_unique<AdjacentPlateSwap>());
 }
 
 Solution Solver::run(const Problem &problem, SolverParams params) {
@@ -42,6 +45,7 @@ void Solver::run() {
   mt19937 rgen(params_.seed);
   for (size_t i = 0; i < params_.moveLimit; ++i) {
     pickMove(rgen).run(problem_, solution_, rgen);
+
     std::chrono::duration<double> elapsed(chrono::system_clock::now() - start);
     if (elapsed.count() / 60.0 > params_.timeLimit)
       break;
