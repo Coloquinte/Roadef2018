@@ -10,7 +10,7 @@ FIND_PACKAGE(Boost COMPONENTS system filesystem program_options unit_test_framew
 
 INCLUDE_DIRECTORIES(${ROADEF2018_SOURCE_DIR}/include)
 
-option(BUILD_TEST "Build unit tests" ON)
+SET(TEST_TIME 0.05 CACHE STRING "Run time for each test (minutes)")
 
 SET (SOURCES
   src/problem.cpp
@@ -33,4 +33,8 @@ target_link_libraries(gcut
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
 )
 
+enable_testing()
+foreach (i RANGE 1 20)
+  ADD_TEST(BENCH_A${i} gcut --batch ${ROADEF2018_SOURCE_DIR}/dataset/A${i}_batch.csv --defects ${ROADEF2018_SOURCE_DIR}/dataset/A${i}_defects.csv --time ${TEST_TIME} -o A${i}_solution.csv)
+endforeach(i)
 
