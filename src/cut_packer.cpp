@@ -75,14 +75,15 @@ void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) 
 
 void CutPacker::propagateBreakpoints(int after) {
   int from = front_[after].end;
-  int to = after + 1 < front_.size() ? front_[after+1].end : region_.maxY();
   assert (is_sorted(defects_.begin(), defects_.end(),
         [](const Defect &a, const Defect &b) {
           return a.maxY() < b.maxY();
         }));
   for (const Defect &defect : defects_) {
     int bp = defect.maxY() + 1;
-    if (bp <= from || bp >= to)
+    if (bp <= from)
+      continue;
+    if (after + 1 < front_.size() && bp >= front_[after+1].end)
       continue;
     // Find the previous front element we can extend
     int prev = 0;

@@ -40,6 +40,7 @@ PlateSolution PlatePacker::run(int plateId, int start) {
   for (int i = 0; i < front_.size(); ++i) {
     auto elt = front_[i];
     propagate(i, elt.valeur, elt.end);
+    propagateBreakpoints(i);
   }
   front_.checkConsistency();
 
@@ -84,14 +85,15 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
 
 void PlatePacker::propagateBreakpoints(int after) {
   int from = front_[after].end;
-  int to = after + 1 < front_.size() ? front_[after+1].end : region_.maxX();
   assert (is_sorted(defects_.begin(), defects_.end(),
         [](const Defect &a, const Defect &b) {
           return a.maxX() < b.maxX();
         }));
   for (const Defect &defect : defects_) {
     int bp = defect.maxX() + 1;
-    if (bp <= from || bp >= to)
+    if (bp <= from)
+      continue;
+    if (after + 1 < front_.size() && bp >= front_[after+1].end)
       continue;
     // Find the previous front element we can extend
     int prev = 0;
