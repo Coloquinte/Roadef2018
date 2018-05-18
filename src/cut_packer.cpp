@@ -25,6 +25,10 @@ int CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defect
 
 void CutPacker::runCommon(Rectangle cut, int start, const std::vector<Defect> &defects) {
   init(cut, start, defects);
+  sort(defects_.begin(), defects_.end(),
+        [](const Defect &a, const Defect &b) {
+          return a.maxY() < b.maxY();
+        });
   assert (region_.minY() == 0);
 
   front_.clear();
@@ -72,6 +76,10 @@ void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) 
 void CutPacker::propagateBreakpoints(int after) {
   int from = front_[after].end;
   int to = after + 1 < front_.size() ? front_[after+1].end : region_.maxY();
+  assert (is_sorted(defects_.begin(), defects_.end(),
+        [](const Defect &a, const Defect &b) {
+          return a.maxY() < b.maxY();
+        }));
   for (const Defect &defect : defects_) {
     int bp = defect.maxY() + 1;
     if (bp <= from || bp >= to)
@@ -105,6 +113,8 @@ CutSolution CutPacker::backtrack() {
     auto elt = front_[cur];
     if (elt.begin + minYY_ > slices_.back())
       continue;
+    assert (elt.previous < cur);
+    assert (elt.begin < slices_.back());
     slices_.push_back(elt.begin);
     cur = elt.previous;
   }
@@ -130,6 +140,7 @@ int CutPacker::countBacktrack() {
     auto elt = front_[cur];
     if (elt.begin + minYY_ > slices_.back())
       continue;
+    assert (elt.previous < cur);
     cur = elt.previous;
   }
   return front_[cur].valeur;

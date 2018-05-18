@@ -28,6 +28,10 @@ PlateSolution PlatePacker::run(int plateId, int start) {
   Params p = problem_.params();
   Rectangle plate = Rectangle::FromCoordinates(0, 0, p.widthPlates, p.heightPlates);
   init(plate, start, problem_.plateDefects()[plateId]);
+  sort(defects_.begin(), defects_.end(),
+        [](const Defect &a, const Defect &b) {
+          return a.maxX() < b.maxX();
+        });
   assert (region_.minX() == 0);
   assert (region_.minY() == 0);
 
@@ -81,6 +85,10 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
 void PlatePacker::propagateBreakpoints(int after) {
   int from = front_[after].end;
   int to = after + 1 < front_.size() ? front_[after+1].end : region_.maxX();
+  assert (is_sorted(defects_.begin(), defects_.end(),
+        [](const Defect &a, const Defect &b) {
+          return a.maxX() < b.maxX();
+        }));
   for (const Defect &defect : defects_) {
     int bp = defect.maxX() + 1;
     if (bp <= from || bp >= to)
@@ -118,8 +126,12 @@ PlateSolution PlatePacker::backtrack() {
       slices_.push_back(slices_.back() - maxXX_ + minXX_);
 
     // Keep residual on the last plate
-    if (elt.valeur == nItems())
+    if (elt.valeur == nItems()) {
+      slices_.clear();
       slices_.push_back(elt.end);
+    }
+    assert (elt.previous < cur);
+    assert (elt.begin < slices_.back());
     slices_.push_back(elt.begin);
     cur = elt.previous;
   }
