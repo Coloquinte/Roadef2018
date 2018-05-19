@@ -46,6 +46,8 @@ class SolutionChecker {
   void checkSequences();
 
   bool fitsMinWaste(int a, int b) const;
+  bool vCutIntersects(int x, const Defect &defect, int minY, int maxY) const;
+  bool hCutIntersects(int y, const Defect &defect, int minX, int maxX) const;
 
   void reportErrors();
   void reportQuality();

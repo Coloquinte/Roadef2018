@@ -34,6 +34,10 @@ Solver::Solver(const Problem &problem, SolverParams params)
   moves_.emplace_back(make_unique<AdjacentRowSwap>());
   moves_.emplace_back(make_unique<AdjacentCutSwap>());
   moves_.emplace_back(make_unique<AdjacentPlateSwap>());
+
+  for (const unique_ptr<Move> &m : moves_) {
+    m->solver_ = this;
+  }
 }
 
 Solution Solver::run(const Problem &problem, SolverParams params) {

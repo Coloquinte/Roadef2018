@@ -52,6 +52,9 @@ class Move {
   std::size_t nPlateau_;
 
   static const int RETRY = 10;
+
+ public:
+  Solver *solver_;
 };
 
 struct Shuffle : Move {

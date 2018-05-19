@@ -196,12 +196,11 @@ bool Move::sequenceValid(const Problem &problem, const vector<Item> &sequence) c
 Move::Status Move::accept(const Problem &problem, Solution &solution, const Solution &incumbent) {
   int violations = SolutionChecker::nViolations(problem, incumbent);
   if (violations != 0) {
-#ifndef NDEBUG
-    incumbent.write("failed_solution.csv");
-    incumbent.report();
-    SolutionChecker::report(problem, incumbent);
-    exit(1);
-#endif
+    if (solver_->params_.failOnViolation) {
+      incumbent.report();
+      SolutionChecker::report(problem, incumbent);
+      exit(1);
+    }
     return Status::Violation;
   }
 

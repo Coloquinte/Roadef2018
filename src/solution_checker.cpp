@@ -61,7 +61,7 @@ SolutionChecker::SolutionChecker(const Problem &problem, const Solution &solutio
   errors_["Critical"].clear();
   errors_["Ordering"].clear();
   errors_["MinWaste"].clear();
-  errors_["Defects"].clear();
+  errors_["Defect"].clear();
 }
 
 void SolutionChecker::check() {
@@ -169,10 +169,10 @@ void SolutionChecker::checkPlateDivision(const PlateSolution &plate) {
 
   if (plate.cuts.front().minX() != plate.minX())
     error("Critical", "First cut doesn't start at %d", plate.minX());
-  if (plate.cuts.back().maxX() > plate.maxX())
-    error("Critical", "Last cut doesn't end at %d", plate.maxX());
   if (plateId_ != solution_.nPlates() - 1 && plate.cuts.back().maxX() != plate.maxX())
     error("Critical", "Last cut doesn't end at %d", plate.maxX());
+  else if (plate.cuts.back().maxX() > plate.maxX())
+    error("Critical", "Last cut ends after %d", plate.maxX());
 
   for (const CutSolution &cut : plate.cuts) {
     if (cut.minY() != plate.minY() || cut.maxY() != plate.maxY())
@@ -184,9 +184,13 @@ void SolutionChecker::checkPlateDivision(const PlateSolution &plate) {
       error("Critical", "Cut %d ends at %d but cut %d starts at %d",
           i, plate.cuts[i].maxX(),
           i+1, plate.cuts[i+1].minX());
-  }
 
-  // TODO: check that no defect is cut
+    for (const Defect &defect : problem_.plateDefects()[plateId_]) {
+      if (vCutIntersects(plate.cuts[i].maxX(), defect, plate.minY(), plate.maxY()))
+        error("Defect", "Cut at %d intersects a defect (%d,%d)x(%d,%d)", plate.cuts[i].maxX(),
+          defect.minX(), defect.maxX(), defect.minY(), defect.maxY());
+    }
+  }
 }
 
 void SolutionChecker::checkCut(const CutSolution &cut) {
@@ -230,9 +234,13 @@ void SolutionChecker::checkCutDivision(const CutSolution &cut) {
       error("Critical", "Row #%d ends at %d but row #%d starts at %d",
           i, cut.rows[i].maxY(),
           i+1, cut.rows[i+1].minY());
-  }
 
-  // TODO: check that no defect is cut
+    for (const Defect &defect : problem_.plateDefects()[plateId_]) {
+      if (hCutIntersects(cut.rows[i].maxY(), defect, cut.minX(), cut.maxX()))
+        error("Defect", "Cut at %d intersects a defect (%d,%d)x(%d,%d)", cut.rows[i].maxY(),
+          defect.minX(), defect.maxX(), defect.minY(), defect.maxY());
+    }
+  }
 }
 
 void SolutionChecker::checkRow(const RowSolution &row) {
@@ -258,6 +266,8 @@ void SolutionChecker::checkRowDivision(const RowSolution &row) {
       error("MinWaste", "Below item #%d", item.itemId);
     if (!fitsMinWaste(item.maxY(), row.maxY()))
       error("MinWaste", "Above item #%d", item.itemId);
+    if (item.maxY() != row.maxY() && item.minY() != row.minY())
+      error("Critical", "Item #%d would require two 4-cuts", item.itemId);
   }
 
   if (!fitsMinWaste(row.minX(), row.items.front().minX()))
@@ -274,6 +284,15 @@ void SolutionChecker::checkRowDivision(const RowSolution &row) {
     else if (!fitsMinWaste(item1.maxX(), item2.minX()))
       error("MinWaste", "Between items #%d and #%d",
           item1.itemId, item2.itemId);
+
+    for (const Defect &defect : problem_.plateDefects()[plateId_]) {
+      if (vCutIntersects(item1.maxX(), defect, row.minY(), row.maxY()))
+        error("Defect", "Cut at %d intersects a defect (%d,%d)x(%d,%d)", item1.maxX(),
+          defect.minX(), defect.maxX(), defect.minY(), defect.maxY());
+      if (item1.maxX() != item2.minX() && vCutIntersects(item2.minX(), defect, row.minY(), row.maxY()))
+        error("Defect", "Cut at %d intersects a defect (%d,%d)x(%d,%d)", item2.minX(),
+          defect.minX(), defect.maxX(), defect.minY(), defect.maxY());
+    }
   }
 }
 
@@ -289,9 +308,9 @@ void SolutionChecker::checkItem(const ItemSolution &sol) {
         item.width, item.height,
         sol.itemId, sol.width(), sol.height());
 
-  for (Defect defect : problem_.plateDefects()[plateId_]) {
+  for (const Defect &defect : problem_.plateDefects()[plateId_]) {
     if (sol.intersects(defect))
-      error("Defects", "Item #%d intersects a defect (%d,%d)x(%d,%d)", sol.itemId,
+      error("Defect", "Item #%d intersects a defect (%d,%d)x(%d,%d)", sol.itemId,
           defect.minX(), defect.maxX(), defect.minY(), defect.maxY());
   }
 }
@@ -364,11 +383,11 @@ void SolutionChecker::reportErrors() {
     cout << "\t" << m << endl;
   }
 
-  if (!errors_.at("Defects").empty()) {
+  if (!errors_.at("Defect").empty()) {
     cout << endl << "Defect violations:" << endl;
     error = true;
   }
-  for (auto m : errors_.at("Defects")) {
+  for (auto m : errors_.at("Defect")) {
     cout << "\t" << m << endl;
   }
 
@@ -390,5 +409,15 @@ void SolutionChecker::reportQuality() {
 bool SolutionChecker::fitsMinWaste(int a, int b) const {
   return a == b
     || a <= b - problem_.params().minWaste;
+}
+
+bool SolutionChecker::vCutIntersects(int x, const Defect &defect, int minY, int maxY) const {
+  Rectangle cut = Rectangle::FromCoordinates(x, minY, x, maxY);
+  return defect.intersects(cut);
+}
+
+bool SolutionChecker::hCutIntersects(int y, const Defect &defect, int minX, int maxX) const {
+  Rectangle cut = Rectangle::FromCoordinates(minX, y, maxX, y);
+  return defect.intersects(cut);
 }
 

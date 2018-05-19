@@ -36,6 +36,8 @@ po::options_description getOptions() {
   desc.add_options()("verbosity,v", po::value<int>()->default_value(1),
                      "Output verbosity");
 
+  desc.add_options()("check", "Fail and report on violation");
+
   return desc;
 }
 
@@ -81,6 +83,7 @@ int main(int argc, char** argv) {
   params.seed = vm["seed"].as<size_t>();
   params.moveLimit = vm["moves"].as<size_t>();
   params.timeLimit = vm["time"].as<double>();
+  params.failOnViolation = vm.count("check");
 
   Solution solution = Solver::run(pb, params);
   if (params.verbosity >= 3)
