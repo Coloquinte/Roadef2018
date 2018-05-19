@@ -5,6 +5,7 @@
 #include "utils.hpp"
 
 #include <iostream>
+#include <iomanip>
 #include <boost/program_options.hpp>
 
 using namespace std;
@@ -67,11 +68,14 @@ po::variables_map parseArguments(int argc, char **argv) {
 
 
 int main(int argc, char** argv) {
+  cout << fixed << setw(4) << setprecision(4);
+  cerr << fixed << setw(4) << setprecision(4);
   po::variables_map vm = parseArguments(argc, argv);
 
   string batchFile = vm["batch"].as<string>();
   string defectFile = vm.count("defects") ? vm["defects"].as<string>() : string();
   Problem pb = Problem::read(batchFile, defectFile);
+
   SolverParams params;
   params.verbosity = vm["verbosity"].as<int>();
   params.seed = vm["seed"].as<size_t>();

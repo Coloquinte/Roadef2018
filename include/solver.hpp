@@ -18,7 +18,7 @@ class Solver {
  private: 
   Solver(const Problem &problem, SolverParams params);
   void run();
-  Move& pickMove(std::mt19937 &rgen);
+  Move* pickMove();
 
  private:
   const Problem &problem_;
@@ -26,6 +26,7 @@ class Solver {
   SolverParams params_;
 
   std::vector<std::unique_ptr<Move> > moves_;
+  std::mt19937 rgen_;
   std::size_t nMoves_;
 
   friend class Move;

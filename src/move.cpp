@@ -13,16 +13,41 @@
 using namespace std;
 
 Move::Move()
-: nCalls_(0)
-, nViolations_(0)
-, nImprove_(0)
-, nDegrade_(0)
-, nEquiv_(0) {
+: nCall_(0)
+, nViolation_(0)
+, nImprovement_(0)
+, nDegradation_(0)
+, nPlateau_(0) {
 }
 
-void Move::run(const Problem &problem, Solution &solution, mt19937 &rgen) {
-  ++nCalls_;
-  apply(problem, solution, rgen);
+Move::Status Move::run(const Problem &problem, Solution &solution, std::mt19937 &rgen) {
+  ++nCall_;
+  for (int i = 0; i < RETRY; ++i) {
+    Status status = apply(problem, solution, rgen);
+    updateStats(status);
+    if (status != Status::Failure)
+      return status;
+  }
+  return Status::Failure;
+}
+
+void Move::updateStats(Status status) {
+  switch (status) {
+    case Status::Improvement:
+      ++nImprovement_;
+      break;
+    case Status::Degradation:
+      ++nDegradation_;
+      break;
+    case Status::Plateau:
+      ++nPlateau_;
+      break;
+    case Status::Violation:
+      ++nViolation_;
+      break;
+    case Status::Failure:
+      break;
+  }
 }
 
 vector<Item> Move::extractSequence(const Problem &problem, const Solution &solution) const {
@@ -87,12 +112,12 @@ vector<vector<Item> > Move::extractPlates(const Problem &problem, const Solution
   return plates;
 }
 
-void Move::runSequence(const Problem &problem, Solution &solution, const vector<Item> &sequence) {
+Move::Status Move::runSequence(const Problem &problem, Solution &solution, const vector<Item> &sequence) {
   if (!sequenceValid(problem, sequence))
-    return;
+    return Status::Failure;
 
   Solution incumbent = SequencePacker::run(problem, sequence);
-  accept(problem, solution, incumbent);
+  return accept(problem, solution, incumbent);
 }
 
 template<typename T>
@@ -168,48 +193,46 @@ bool Move::sequenceValid(const Problem &problem, const vector<Item> &sequence) c
   return true;
 }
 
-void Move::accept(const Problem &problem, Solution &solution, const Solution &incumbent) {
+Move::Status Move::accept(const Problem &problem, Solution &solution, const Solution &incumbent) {
   int violations = SolutionChecker::nViolations(problem, incumbent);
   if (violations != 0) {
+#ifndef NDEBUG
     incumbent.write("failed_solution.csv");
     incumbent.report();
     SolutionChecker::report(problem, incumbent);
     exit(1);
-    ++nViolations_;
-    return;
+#endif
+    return Status::Violation;
   }
 
   double mapped = SolutionChecker::evalPercentMapped(problem, incumbent);
   double prevMapped = SolutionChecker::evalPercentMapped(problem, solution);
   if (mapped > prevMapped) {
     solution = incumbent;
-    ++nImprove_;
+    return Status::Improvement;
   }
-  else if (mapped < prevMapped) {
-    ++nDegrade_;
+  if (mapped < prevMapped) {
+    return Status::Degradation;
   }
-  else {
-    double density = SolutionChecker::evalPercentDensity(problem, incumbent);
-    double prevDensity = SolutionChecker::evalPercentDensity(problem, solution);
-    if (density > prevDensity) {
-      solution = incumbent;
-      ++nImprove_;
-    }
-    else if (density < prevDensity) {
-      ++nDegrade_;
-    }
-    else {
-      solution = incumbent;
-      ++nEquiv_;
-    }
+
+  double density = SolutionChecker::evalPercentDensity(problem, incumbent);
+  double prevDensity = SolutionChecker::evalPercentDensity(problem, solution);
+  if (density > prevDensity) {
+    solution = incumbent;
+    return Status::Improvement;
   }
+  if (density < prevDensity) {
+    return Status::Degradation;
+  }
+  solution = incumbent;
+  return Status::Plateau;
 }
 
-void Shuffle::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status Shuffle::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<Item> sequence = OrderingHeuristic::orderShuffle(problem, rgen, chunkSize);
   assert (sequenceValid(problem, sequence));
   Solution incumbent = SequencePacker::run(problem, sequence);
-  accept(problem, solution, incumbent);
+  return accept(problem, solution, incumbent);
 }
 
 string Shuffle::name() const {
@@ -218,85 +241,85 @@ string Shuffle::name() const {
   return ss.str();
 }
 
-void ItemInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status ItemInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<Item> sequence = extractSequence(problem, solution);
   randomInsert(sequence, rgen);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void RowInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status RowInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > rows = extractRows(problem, solution);
   randomInsert(rows, rgen);
   vector<Item> sequence = merge(rows);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void CutInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status CutInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > cuts = extractCuts(problem, solution);
   randomInsert(cuts, rgen);
   vector<Item> sequence = merge(cuts);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void PlateInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status PlateInsert::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > plates = extractPlates(problem, solution);
   randomInsert(plates, rgen);
   vector<Item> sequence = merge(plates);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void ItemSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status ItemSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<Item> sequence = extractSequence(problem, solution);
   randomSwap(sequence, rgen);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void RowSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status RowSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > rows = extractRows(problem, solution);
   randomSwap(rows, rgen);
   vector<Item> sequence = merge(rows);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void CutSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status CutSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > cuts = extractCuts(problem, solution);
   randomSwap(cuts, rgen);
   vector<Item> sequence = merge(cuts);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void PlateSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status PlateSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > plates = extractPlates(problem, solution);
   randomSwap(plates, rgen);
   vector<Item> sequence = merge(plates);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void AdjacentItemSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status AdjacentItemSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<Item> sequence = extractSequence(problem, solution);
   randomAdjacentSwap(sequence, rgen);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void AdjacentRowSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status AdjacentRowSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > rows = extractRows(problem, solution);
   randomAdjacentSwap(rows, rgen);
   vector<Item> sequence = merge(rows);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void AdjacentCutSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status AdjacentCutSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > cuts = extractCuts(problem, solution);
   randomAdjacentSwap(cuts, rgen);
   vector<Item> sequence = merge(cuts);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
-void AdjacentPlateSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
+Move::Status AdjacentPlateSwap::apply(const Problem &problem, Solution &solution, mt19937 &rgen) {
   vector<vector<Item> > plates = extractPlates(problem, solution);
   randomAdjacentSwap(plates, rgen);
   vector<Item> sequence = merge(plates);
-  runSequence(problem, solution, sequence);
+  return runSequence(problem, solution, sequence);
 }
 
 

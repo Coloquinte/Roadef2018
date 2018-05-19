@@ -13,6 +13,7 @@ using namespace std;
 Solver::Solver(const Problem &problem, SolverParams params)
 : problem_(problem)
 , params_(params)
+, rgen_(params.seed)
 , nMoves_(0) {
   moves_.emplace_back(make_unique<Shuffle>(1));
   moves_.emplace_back(make_unique<Shuffle>(2));
@@ -44,9 +45,17 @@ Solution Solver::run(const Problem &problem, SolverParams params) {
 void Solver::run() {
   auto start = chrono::system_clock::now();
 
-  mt19937 rgen(params_.seed);
+  if (params_.verbosity >= 2) {
+    cout << "Trace:" << endl;
+  }
+
   for (nMoves_ = 0; nMoves_ < params_.moveLimit; ++nMoves_) {
-    pickMove(rgen).run(problem_, solution_, rgen);
+    Move *move = pickMove();
+    Move::Status status = move->run(problem_, solution_, rgen_);
+
+    if (status == Move::Status::Improvement && params_.verbosity >= 2) {
+      cout << SolutionChecker::evalPercentDensity(problem_, solution_) << "%\t" << nMoves_ << "\t" << move->name() << endl;
+    }
 
     std::chrono::duration<double> elapsed(chrono::system_clock::now() - start);
     if (elapsed.count() / 60.0 > params_.timeLimit)
@@ -59,13 +68,13 @@ void Solver::run() {
       string name = m->name();
       while (name.size() < 12)
         name.append(" ");
-      cout << name << "\t" << m->nCalls() << "\t" << m->nViolations() << "\t" << m->nDegrade() << "\t" << m->nEquiv() << "\t" << m->nImprove() << endl;
+      cout << name << "\t" << m->nCall() << "\t" << m->nViolation() << "\t" << m->nDegradation() << "\t" << m->nPlateau() << "\t" << m->nImprovement() << endl;
     }
   }
 }
 
-Move& Solver::pickMove(mt19937 &rgen) {
+Move* Solver::pickMove() {
   uniform_int_distribution<int> dist(0, moves_.size()-1);
-  return *moves_[dist(rgen)];
+  return moves_[dist(rgen_)].get();
 }
 
