@@ -15,13 +15,12 @@ Solver::Solver(const Problem &problem, SolverParams params)
 , params_(params)
 , rgen_(params.seed)
 , nMoves_(0) {
-  moves_.emplace_back(make_unique<Shuffle>(1));
-  moves_.emplace_back(make_unique<Shuffle>(2));
-  moves_.emplace_back(make_unique<Shuffle>(4));
-  moves_.emplace_back(make_unique<Shuffle>(8));
+  moves_.emplace_back(make_unique<Shuffle>( 4));
   moves_.emplace_back(make_unique<Shuffle>(16));
-  moves_.emplace_back(make_unique<Shuffle>(32));
   moves_.emplace_back(make_unique<Shuffle>(64));
+  moves_.emplace_back(make_unique<Shuffle>(4,  8));
+  moves_.emplace_back(make_unique<Shuffle>(4, 16));
+  moves_.emplace_back(make_unique<Shuffle>(4, 32));
   moves_.emplace_back(make_unique<ItemInsert>());
   moves_.emplace_back(make_unique<RowInsert>());
   moves_.emplace_back(make_unique<CutInsert>());

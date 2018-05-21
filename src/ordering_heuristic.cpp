@@ -2,25 +2,61 @@
 #include "ordering_heuristic.hpp"
 
 #include <algorithm>
+#include <unordered_set>
 
 using namespace std;
 
 vector<Item> OrderingHeuristic::orderShuffle(const Problem &problem, mt19937 &rgen, int chunkSize) {
   OrderingHeuristic heuristic(problem, rgen);
+  heuristic.init();
+  heuristic.orderShuffle(chunkSize);
+  return heuristic.ordering_;
+}
+
+vector<Item> OrderingHeuristic::orderShuffle(const Problem &problem, mt19937 &rgen,
+    const std::vector<Item> &initial, int chunkSize, int windowSize) {
+  OrderingHeuristic heuristic(problem, rgen);
+  windowSize = min(windowSize, (int) initial.size());
+  uniform_int_distribution<int> beginDist(0, initial.size() - windowSize);
+  int windowBegin = beginDist(rgen);
+  heuristic.init(initial, windowBegin, windowBegin + windowSize);
   heuristic.orderShuffle(chunkSize);
   return heuristic.ordering_;
 }
 
 OrderingHeuristic::OrderingHeuristic(const Problem &problem, mt19937 &rgen)
-: leftover_(problem.stackItems())
+: problem_(problem)
 , rgen_(rgen) {
-  for (vector<Item> &left : leftover_) {
-    reverse(left.begin(), left.end());
+}
+
+void OrderingHeuristic::init() {
+  unordered_set<int> fixed;
+  for (const Item &item : before_)
+    fixed.insert(item.id);
+  for (const Item &item : after_)
+    fixed.insert(item.id);
+
+  for (const vector<Item> &pbStack : problem_.stackItems()) {
+    vector<Item> stack;
+    for (const Item &item : pbStack) {
+      if (fixed.count(item.id) == 0)
+        stack.push_back(item);
+    }
+    reverse(stack.begin(), stack.end());
+    if (!stack.empty())
+      leftover_.push_back(stack);
   }
+
   nLeftover_ = 0;
   for (const vector<Item> &left : leftover_) {
     nLeftover_ += left.size();
   }
+}
+
+void OrderingHeuristic::init(const std::vector<Item> &sequence, int begin, int end) {
+  before_.insert(before_.end(), sequence.begin(), sequence.begin() + begin);
+  after_.insert(after_.end(), sequence.begin() + end, sequence.end());
+  init();
 }
 
 void OrderingHeuristic::orderShuffle(int chunkSize) {
@@ -41,6 +77,8 @@ void OrderingHeuristic::orderShuffle(int chunkSize) {
       leftover_.erase(leftover_.begin() + stackInd);
   }
   leftover_.clear();
+  before_.clear();
+  after_.clear();
 }
 
 

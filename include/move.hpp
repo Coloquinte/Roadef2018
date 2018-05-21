@@ -65,8 +65,12 @@ class Move {
 struct Shuffle : Move {
   virtual Status apply();
   virtual std::string name() const;
-  Shuffle(int chunkSize) : chunkSize(chunkSize) {}
-  int chunkSize;
+  Shuffle(int chunkSize, int windowSize=0)
+    : chunkSize_(chunkSize)
+    , windowSize_(windowSize) {
+  }
+  int chunkSize_;
+  int windowSize_;
 };
 
 struct ItemInsert : Move {

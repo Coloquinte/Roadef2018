@@ -228,7 +228,14 @@ Move::Status Move::accept(const Solution &incumbent) {
 }
 
 Move::Status Shuffle::apply() {
-  vector<Item> sequence = OrderingHeuristic::orderShuffle(problem(), rgen(), chunkSize);
+  vector<Item> sequence;
+  if (windowSize_ == 0) {
+    sequence = OrderingHeuristic::orderShuffle(problem(), rgen(), chunkSize_);
+  } else {
+    vector<Item> initial = extractSequence(solution());
+    sequence = OrderingHeuristic::orderShuffle(problem(), rgen(),
+        initial, chunkSize_, windowSize_);
+  }
   assert (sequenceValid(sequence));
   Solution incumbent = SequencePacker::run(problem(), sequence);
   return accept(incumbent);
@@ -236,7 +243,10 @@ Move::Status Shuffle::apply() {
 
 string Shuffle::name() const {
   stringstream ss;
-  ss << "Shuffle-" << chunkSize;
+  if (windowSize_ <= 0)
+    ss << "FullShuffle-" << chunkSize_;
+  else
+    ss << "PartialShuffle-" << chunkSize_ << "-" << windowSize_;
   return ss.str();
 }
 
