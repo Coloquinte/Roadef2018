@@ -55,7 +55,7 @@ void Solver::run() {
 
   for (nMoves_ = 0; nMoves_ < params_.moveLimit; ++nMoves_) {
     Move *move = pickMove();
-    Move::Status status = move->run(problem_, solution_, rgen_);
+    Move::Status status = move->run();
 
     if (status == Move::Status::Improvement && params_.verbosity >= 2) {
       cout << SolutionChecker::evalPercentDensity(problem_, solution_) << "%\t" << nMoves_ << "\t" << move->name() << endl;

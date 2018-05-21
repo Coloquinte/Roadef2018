@@ -20,7 +20,7 @@ class Move {
 
  public:
   Move();
-  Status run(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  Status run();
   virtual std::string name() const =0;
   virtual ~Move() {}
 
@@ -33,16 +33,21 @@ class Move {
   std::size_t nPlateau() const { return nPlateau_; }
 
  protected:
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen) = 0;
+  virtual Status apply() = 0;
 
-  std::vector<Item> extractSequence(const Problem &problem, const Solution &solution) const;
-  std::vector<std::vector<Item> > extractRows(const Problem &problem, const Solution &solution) const;
-  std::vector<std::vector<Item> > extractCuts(const Problem &problem, const Solution &solution) const;
-  std::vector<std::vector<Item> > extractPlates(const Problem &problem, const Solution &solution) const;
+  std::vector<Item> extractSequence(const Solution &solution) const;
+  std::vector<std::vector<Item> > extractRows(const Solution &solution) const;
+  std::vector<std::vector<Item> > extractCuts(const Solution &solution) const;
+  std::vector<std::vector<Item> > extractPlates(const Solution &solution) const;
 
-  bool sequenceValid(const Problem &problem, const std::vector<Item> &sequence) const;
-  Status runSequence(const Problem &problem, Solution &solution, const std::vector<Item> &sequence);
-  Status accept(const Problem &problem, Solution &solution, const Solution &incumbent);
+  bool sequenceValid(const std::vector<Item> &sequence) const;
+  Status runSequence(const std::vector<Item> &sequence);
+  Status accept(const Solution &incumbent);
+
+  const Problem&  problem  () const { return solver_->problem_; }
+  const Solution& solution () const { return solver_->solution_; }
+  Solution&       solution ()       { return solver_->solution_; }
+  std::mt19937&   rgen     ()       { return solver_->rgen_; }
 
  protected:
   std::size_t nCall_;
@@ -58,69 +63,69 @@ class Move {
 };
 
 struct Shuffle : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const;
   Shuffle(int chunkSize) : chunkSize(chunkSize) {}
   int chunkSize;
 };
 
 struct ItemInsert : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "ItemInsert"; }
 };
 
 struct RowInsert : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "RowInsert"; }
 };
 
 struct CutInsert : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "CutInsert"; }
 };
 
 struct PlateInsert : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "PlateInsert"; }
 };
 
 struct ItemSwap : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "ItemSwap"; }
 };
 
 struct RowSwap : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "RowSwap"; }
 };
 
 struct CutSwap : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "CutSwap"; }
 };
 
 struct PlateSwap : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "PlateSwap"; }
 };
 
 struct AdjacentItemSwap : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "AdjacentItemSwap"; }
 };
 
 struct AdjacentRowSwap : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "AdjacentRowSwap"; }
 };
 
 struct AdjacentCutSwap : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "AdjacentCutSwap"; }
 };
 
 struct AdjacentPlateSwap : Move {
-  virtual Status apply(const Problem &problem, Solution &solution, std::mt19937 &rgen);
+  virtual Status apply();
   virtual std::string name() const { return "AdjacentPlateSwap"; }
 };
 

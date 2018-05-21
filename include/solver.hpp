@@ -22,10 +22,11 @@ class Solver {
 
  private:
   const Problem &problem_;
-  Solution solution_;
   SolverParams params_;
-
   std::vector<std::unique_ptr<Move> > moves_;
+
+  Solution solution_;
+
   std::mt19937 rgen_;
   std::size_t nMoves_;
 
