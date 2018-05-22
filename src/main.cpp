@@ -33,6 +33,9 @@ po::options_description getOptions() {
   desc.add_options()("seed", po::value<size_t>()->default_value(0),
                      "Random seed");
 
+  desc.add_options()("initial,i", po::value<string>(),
+                     "Initial solution file (.csv)");
+
   desc.add_options()("verbosity,v", po::value<int>()->default_value(1),
                      "Output verbosity");
 
@@ -85,7 +88,11 @@ int main(int argc, char** argv) {
   params.timeLimit = vm["time"].as<double>();
   params.failOnViolation = vm.count("check");
 
-  Solution solution = Solver::run(pb, params);
+  vector<int> initialOrder;
+  if (vm.count("initial"))
+    initialOrder = Solution::readOrdering(vm["initial"].as<string>());
+
+  Solution solution = Solver::run(pb, params, initialOrder);
   if (params.verbosity >= 3)
     solution.report();
   if (params.verbosity >= 1)

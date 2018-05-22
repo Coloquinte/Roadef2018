@@ -13,10 +13,11 @@ class Move;
 
 class Solver {
  public:
-  static Solution run(const Problem &problem, SolverParams params);
+  static Solution run(const Problem &problem, SolverParams params, std::vector<int> initial=std::vector<int>());
  
  private: 
-  Solver(const Problem &problem, SolverParams params);
+  Solver(const Problem &problem, SolverParams params, std::vector<int> initial);
+  void init(std::vector<int> initial);
   void run();
   Move* pickMove();
 

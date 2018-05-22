@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -219,5 +220,80 @@ int SolutionWriter::writeRectangle(Rectangle r, int type, int cutLevel, int pare
 void Solution::write(string name) const {
   ofstream solutionFile(name);
   SolutionWriter::run(*this, solutionFile);
+}
+
+class SolutionReader {
+ public:
+  SolutionReader(std::string name);
+  vector<Node> read();
+
+ private:
+  void readNode(const string &s, vector<Node> &nodes);
+  vector<std::string> readCSVLine(const string &s);
+
+ private:
+  string name_;
+};
+
+SolutionReader::SolutionReader(std::string name)
+: name_(name) {
+}
+
+vector<Node> SolutionReader::read() {
+  ifstream f(name_.c_str());
+  if (f.fail())
+    throw runtime_error("Couldn't open file \"" + name_ + "\"");
+  string line;
+  getline(f, line);
+
+  vector<Node> nodes;
+  while (getline(f, line)) {
+    readNode(line, nodes);
+  }
+
+  return nodes;
+}
+
+void SolutionReader::readNode(const string &s, vector<Node> &nodes) {
+  auto csv_fields = readCSVLine(s);
+  if (csv_fields.empty()) return;
+  if (csv_fields.size() < 8 || csv_fields.size() > 9) throw runtime_error("A node must have 8 or 9 parameters");
+
+  vector<int> node_fields;
+  for (const string &s : csv_fields)
+    node_fields.push_back(stoi(s));
+
+  Node node;
+  node.plateId = node_fields[0];
+  node.id = node_fields[1];
+  node.x = node_fields[2];
+  node.y = node_fields[3];
+  node.width = node_fields[4];
+  node.height = node_fields[5];
+  node.type = node_fields[6];
+  node.cut = node_fields[7];
+  node.parentId = node_fields.size() == 9 ? node_fields[8] : -1;
+  nodes.push_back(node);
+}
+
+vector<string> SolutionReader::readCSVLine(const string &s) {
+  stringstream ss(s);
+  string token;
+  vector<string> ret;
+  while (getline(ss, token, ';')) {
+    ret.push_back(token);
+  }
+  return ret;
+}
+
+vector<int> Solution::readOrdering(string filename) {
+  SolutionReader reader(filename);
+  vector<Node> nodes = reader.read();
+  vector<int> sequence;
+  for (const Node &node : nodes) {
+    if (node.type < 0) continue;
+    sequence.push_back(node.type);
+  }
+  return sequence;
 }
 

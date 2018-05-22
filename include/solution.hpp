@@ -3,6 +3,7 @@
 #define SOLUTION_HPP
 
 #include "item.hpp"
+#include "node.hpp"
 #include "rectangle.hpp"
 
 #include <vector>
@@ -67,6 +68,8 @@ struct Solution {
 
   void report() const;
   void write(std::string fileName) const;
+
+  static std::vector<int> readOrdering(std::string filename);
 };
 
 #endif

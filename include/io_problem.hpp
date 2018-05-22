@@ -25,6 +25,7 @@ class IOProblem {
 
   void readItem(const std::string &s, std::vector<Item> &items);
   void readDefect(const std::string &s, std::vector<Defect> &defects);
+
   std::vector<std::string> readCSVLine(const std::string &s);
 
  private:

@@ -10,7 +10,13 @@
 
 using namespace std;
 
-Solver::Solver(const Problem &problem, SolverParams params)
+Solution Solver::run(const Problem &problem, SolverParams params, vector<int> initial) {
+  Solver solver(problem, params, initial);
+  solver.run();
+  return solver.solution_;
+}
+
+Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 : problem_(problem)
 , params_(params)
 , rgen_(params.seed)
@@ -37,20 +43,25 @@ Solver::Solver(const Problem &problem, SolverParams params)
   for (const unique_ptr<Move> &m : moves_) {
     m->solver_ = this;
   }
+
+  init(initial);
 }
 
-Solution Solver::run(const Problem &problem, SolverParams params) {
-  Solver solver(problem, params);
-  solver.run();
-  return solver.solution_;
+void Solver::init(vector<int> initial) {
+  if (params_.verbosity >= 2) {
+    cout << "Trace:" << endl;
+  }
+
+  if (initial.empty()) return;
+  solution_ = SequencePacker::run(problem_, initial);
+
+  if (params_.verbosity >= 2) {
+    cout << SolutionChecker::evalPercentDensity(problem_, solution_) << "%\t0\tInitial" << endl;
+  }
 }
 
 void Solver::run() {
   auto start = chrono::system_clock::now();
-
-  if (params_.verbosity >= 2) {
-    cout << "Trace:" << endl;
-  }
 
   for (nMoves_ = 0; nMoves_ < params_.moveLimit; ++nMoves_) {
     Move *move = pickMove();
@@ -60,7 +71,7 @@ void Solver::run() {
       cout << SolutionChecker::evalPercentDensity(problem_, solution_) << "%\t" << nMoves_ << "\t" << move->name() << endl;
     }
 
-    std::chrono::duration<double> elapsed(chrono::system_clock::now() - start);
+    chrono::duration<double> elapsed(chrono::system_clock::now() - start);
     if (elapsed.count() / 60.0 > params_.timeLimit)
       break;
   }

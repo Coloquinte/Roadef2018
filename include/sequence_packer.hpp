@@ -8,6 +8,7 @@
 class SequencePacker {
  public:
   static Solution run(const Problem &problem, const std::vector<Item> &sequence);
+  static Solution run(const Problem &problem, const std::vector<int> &sequence);
 
  private:
   SequencePacker(const Problem &problem, const std::vector<Item> &sequence);
