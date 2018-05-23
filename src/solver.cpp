@@ -21,24 +21,39 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 , params_(params)
 , rgen_(params.seed)
 , nMoves_(0) {
+
+  // Shuffle everything
   moves_.emplace_back(make_unique<Shuffle>( 4));
   moves_.emplace_back(make_unique<Shuffle>(16));
   moves_.emplace_back(make_unique<Shuffle>(64));
+
+  // Shuffle a range
   moves_.emplace_back(make_unique<Shuffle>(4,  8));
   moves_.emplace_back(make_unique<Shuffle>(4, 16));
   moves_.emplace_back(make_unique<Shuffle>(4, 32));
+
+  // Insertions
   moves_.emplace_back(make_unique<ItemInsert>());
   moves_.emplace_back(make_unique<RowInsert>());
   moves_.emplace_back(make_unique<CutInsert>());
   moves_.emplace_back(make_unique<PlateInsert>());
+
+  // Swaps
   moves_.emplace_back(make_unique<ItemSwap>());
   moves_.emplace_back(make_unique<RowSwap>());
   moves_.emplace_back(make_unique<CutSwap>());
   moves_.emplace_back(make_unique<PlateSwap>());
+
+  // Local swaps
   moves_.emplace_back(make_unique<AdjacentItemSwap>());
   moves_.emplace_back(make_unique<AdjacentRowSwap>());
   moves_.emplace_back(make_unique<AdjacentCutSwap>());
   moves_.emplace_back(make_unique<AdjacentPlateSwap>());
+
+  // Reverse a range
+  moves_.emplace_back(make_unique<Mirror>(4));
+  moves_.emplace_back(make_unique<Mirror>(8));
+  moves_.emplace_back(make_unique<Mirror>(16));
 
   for (const unique_ptr<Move> &m : moves_) {
     m->solver_ = this;

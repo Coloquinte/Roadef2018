@@ -133,5 +133,14 @@ struct AdjacentPlateSwap : Move {
   virtual std::string name() const { return "AdjacentPlateSwap"; }
 };
 
+struct Mirror : Move {
+  virtual Status apply();
+  virtual std::string name() const;
+  Mirror(int width)
+    : width_(width) {
+  }
+  int width_;
+};
+
 #endif
 

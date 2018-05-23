@@ -30,7 +30,7 @@ po::options_description getOptions() {
   desc.add_options()("time", po::value<double>()->default_value(3.0),
                      "Time limit (minutes)");
 
-  desc.add_options()("seed", po::value<size_t>()->default_value(0),
+  desc.add_options()("seed,s", po::value<size_t>()->default_value(0),
                      "Random seed");
 
   desc.add_options()("initial,i", po::value<string>(),

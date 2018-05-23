@@ -6,6 +6,7 @@
 #include "ordering_heuristic.hpp"
 
 #include <unordered_map>
+#include <algorithm>
 #include <cassert>
 #include <sstream>
 #include <iostream>
@@ -152,6 +153,19 @@ void randomSwap(vector<T> &vec, mt19937 &rgen) {
 }
 
 template<typename T>
+void randomMirror(vector<T> &vec, mt19937 &rgen, int maxWidth) {
+  assert (maxWidth >= 3);
+  if (vec.size() <= 3)
+    return;
+
+  uniform_int_distribution<int> widthDist(3, maxWidth);
+  int width = min(widthDist(rgen), (int) vec.size());
+  uniform_int_distribution<int> beginDist(0, vec.size()-width);
+  int begin = beginDist(rgen);
+  reverse(vec.begin() + begin, vec.begin() + begin + width);
+}
+
+template<typename T>
 void randomAdjacentSwap(vector<T> &vec, mt19937 &rgen) {
   if (vec.size() < 2)
     return;
@@ -223,6 +237,7 @@ Move::Status Move::accept(const Solution &incumbent) {
   if (density < prevDensity) {
     return Status::Degradation;
   }
+
   solution() = incumbent;
   return Status::Plateau;
 }
@@ -330,6 +345,19 @@ Move::Status AdjacentPlateSwap::apply() {
   vector<Item> sequence = merge(plates);
   return runSequence(sequence);
 }
+
+Move::Status Mirror::apply() {
+  vector<Item> sequence = extractSequence(solution());
+  randomMirror(sequence, rgen(), width_);
+  return runSequence(sequence);
+}
+
+string Mirror::name() const {
+  stringstream ss;
+  ss << "Mirror-" << width_;
+  return ss.str();
+}
+
 
 
 

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <unordered_set>
+#include <cassert>
 
 using namespace std;
 
@@ -14,11 +15,15 @@ vector<Item> OrderingHeuristic::orderShuffle(const Problem &problem, mt19937 &rg
 }
 
 vector<Item> OrderingHeuristic::orderShuffle(const Problem &problem, mt19937 &rgen,
-    const std::vector<Item> &initial, int chunkSize, int windowSize) {
+    const std::vector<Item> &initial, int chunkSize, int maxWindowSize) {
+  assert (maxWindowSize >= 3);
+  uniform_int_distribution<int> windowDist(3, maxWindowSize);
+  int windowSize = min(windowDist(rgen), (int) initial.size());
+
   OrderingHeuristic heuristic(problem, rgen);
-  windowSize = min(windowSize, (int) initial.size());
   uniform_int_distribution<int> beginDist(0, initial.size() - windowSize);
   int windowBegin = beginDist(rgen);
+
   heuristic.init(initial, windowBegin, windowBegin + windowSize);
   heuristic.orderShuffle(chunkSize);
   return heuristic.ordering_;
