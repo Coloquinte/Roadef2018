@@ -113,6 +113,11 @@ struct PlateSwap : Move {
   virtual std::string name() const { return "PlateSwap"; }
 };
 
+struct RangeSwap : Move {
+  virtual Status apply();
+  virtual std::string name() const { return "RangeSwap"; }
+};
+
 struct AdjacentItemSwap : Move {
   virtual Status apply();
   virtual std::string name() const { return "AdjacentItemSwap"; }

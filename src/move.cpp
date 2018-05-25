@@ -153,6 +153,38 @@ void randomSwap(vector<T> &vec, mt19937 &rgen) {
 }
 
 template<typename T>
+void randomRangeSwap(vector<T> &vec, mt19937 &rgen) {
+  if (vec.size() <= 4)
+    return;
+  uniform_int_distribution<int> dist(0, vec.size()-1);
+  vector<int> lims;
+  lims.push_back(dist(rgen));
+  lims.push_back(dist(rgen));
+  lims.push_back(dist(rgen));
+  lims.push_back(dist(rgen));
+  sort(lims.begin(), lims.end());
+
+  int b1 = lims[0];
+  int e1 = lims[1];
+  int b2 = lims[2];
+  int e2 = lims[3];
+
+  vector<T> ret;
+  for (int i = 0; i < b1; ++i)
+    ret.push_back(vec[i]);
+  for (int i = b2; i < e2; ++i)
+    ret.push_back(vec[i]);
+  for (int i = e1; i < b2; ++i)
+    ret.push_back(vec[i]);
+  for (int i = b1; i < e1; ++i)
+    ret.push_back(vec[i]);
+  for (int i = e2; i < (int) vec.size(); ++i)
+    ret.push_back(vec[i]);
+
+  swap(vec, ret);
+}
+
+template<typename T>
 void randomMirror(vector<T> &vec, mt19937 &rgen, int maxWidth) {
   assert (maxWidth >= 3);
   if (vec.size() <= 3)
@@ -316,6 +348,12 @@ Move::Status PlateSwap::apply() {
   vector<vector<Item> > plates = extractPlates(solution());
   randomSwap(plates, rgen());
   vector<Item> sequence = merge(plates);
+  return runSequence(sequence);
+}
+
+Move::Status RangeSwap::apply() {
+  vector<Item> sequence = extractSequence(solution());
+  randomRangeSwap(sequence, rgen());
   return runSequence(sequence);
 }
 

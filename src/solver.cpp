@@ -55,6 +55,9 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
   moves_.emplace_back(make_unique<Mirror>(8));
   moves_.emplace_back(make_unique<Mirror>(16));
 
+  // Swap two ranges
+  moves_.emplace_back(make_unique<RangeSwap>());
+
   for (const unique_ptr<Move> &m : moves_) {
     m->solver_ = this;
   }
