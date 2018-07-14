@@ -27,8 +27,8 @@ po::options_description getOptions() {
   desc.add_options()("moves", po::value<size_t>()->default_value(numeric_limits<size_t>::max()),
                      "Move limit");
 
-  desc.add_options()("time", po::value<double>()->default_value(3.0),
-                     "Time limit (minutes)");
+  desc.add_options()("time,t", po::value<double>()->default_value(3.0),
+                     "Time limit (seconds)");
 
   desc.add_options()("seed,s", po::value<size_t>()->default_value(0),
                      "Random seed");

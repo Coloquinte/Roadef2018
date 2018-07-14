@@ -10,7 +10,7 @@ FIND_PACKAGE(Boost COMPONENTS system filesystem program_options unit_test_framew
 
 INCLUDE_DIRECTORIES(${ROADEF2018_SOURCE_DIR}/include)
 
-SET(TEST_TIME 0.05 CACHE STRING "Run time for each test (minutes)")
+SET(TEST_TIME 3 CACHE STRING "Run time for each test (seconds)")
 
 SET (SOURCES
   src/problem.cpp

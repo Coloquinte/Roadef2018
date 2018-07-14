@@ -90,7 +90,7 @@ void Solver::run() {
     }
 
     chrono::duration<double> elapsed(chrono::system_clock::now() - start);
-    if (elapsed.count() / 60.0 > params_.timeLimit)
+    if (elapsed.count() * 0.95 > params_.timeLimit)
       break;
   }
 
