@@ -49,6 +49,10 @@ class Move {
   Solution&       solution ()       { return solver_->solution_; }
   std::mt19937&   rgen     ()       { return solver_->rgen_; }
 
+  double& bestMapped  () { return solver_->bestMapped_; }
+  double& bestDensity () { return solver_->bestDensity_; }
+
+
  protected:
   std::size_t nCall_;
   std::size_t nViolation_;

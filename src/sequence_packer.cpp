@@ -25,7 +25,7 @@ Solution SequencePacker::run(const Problem &problem, const vector<Item> &sequenc
 Solution SequencePacker::run(const Problem &problem, const vector<int> &sequence) {
   vector<Item> items;
   for (int id : sequence) {
-    assert (id >= 0 && id < problem.items().size());
+    assert (id >= 0 && id < (int) problem.items().size());
     items.push_back(problem.items()[id]);
   }
   return run(problem, items);

@@ -251,27 +251,35 @@ Move::Status Move::accept(const Solution &incumbent) {
   }
 
   double mapped = SolutionChecker::evalPercentMapped(problem(), incumbent);
-  double prevMapped = SolutionChecker::evalPercentMapped(problem(), solution());
-  if (mapped > prevMapped) {
-    solution() = incumbent;
-    return Status::Improvement;
-  }
-  if (mapped < prevMapped) {
-    return Status::Degradation;
-  }
-
   double density = SolutionChecker::evalPercentDensity(problem(), incumbent);
-  double prevDensity = SolutionChecker::evalPercentDensity(problem(), solution());
-  if (density > prevDensity) {
-    solution() = incumbent;
-    return Status::Improvement;
+  double prevMapped = bestMapped();
+  double prevDensity = bestDensity();
+
+  Status status;
+  if (mapped > prevMapped) {
+    status = Status::Improvement;
   }
-  if (density < prevDensity) {
-    return Status::Degradation;
+  else if (mapped < prevMapped) {
+    status = Status::Degradation;
+  }
+  else if (density > prevDensity) {
+    solution() = incumbent;
+    status = Status::Improvement;
+  }
+  else if (density < prevDensity) {
+    status = Status::Degradation;
+  }
+  else {
+    status = Status::Plateau;
   }
 
-  solution() = incumbent;
-  return Status::Plateau;
+  if (status != Status::Degradation) {
+    solution() = incumbent;
+    bestMapped() = mapped;
+    bestDensity() = density;
+  }
+
+  return status;
 }
 
 Move::Status Shuffle::apply() {
@@ -283,9 +291,7 @@ Move::Status Shuffle::apply() {
     sequence = OrderingHeuristic::orderShuffle(problem(), rgen(),
         initial, chunkSize_, windowSize_);
   }
-  assert (sequenceValid(sequence));
-  Solution incumbent = SequencePacker::run(problem(), sequence);
-  return accept(incumbent);
+  return runSequence(sequence);
 }
 
 string Shuffle::name() const {

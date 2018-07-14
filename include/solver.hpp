@@ -27,6 +27,8 @@ class Solver {
   std::vector<std::unique_ptr<Move> > moves_;
 
   Solution solution_;
+  double bestMapped_;
+  double bestDensity_;
 
   std::mt19937 rgen_;
   std::size_t nMoves_;

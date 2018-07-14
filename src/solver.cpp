@@ -19,6 +19,8 @@ Solution Solver::run(const Problem &problem, SolverParams params, vector<int> in
 Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 : problem_(problem)
 , params_(params)
+, bestMapped_(0.0)
+, bestDensity_(0.0)
 , rgen_(params.seed)
 , nMoves_(0) {
 
