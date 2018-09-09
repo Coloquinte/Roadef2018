@@ -101,10 +101,10 @@ void Solver::run() {
   }
 
   if (params_.verbosity >= 2) {
-    cout << endl << "MoveName\tTotal\t-\t=\t+\tErr" << endl;
+    cout << endl << "MoveName        \tTotal\t-\t=\t+\tErr" << endl;
     for (auto &m : moves_) {
       string name = m->name();
-      while (name.size() < 12)
+      while (name.size() < 16)
         name.append(" ");
 
       cout << name << "\t" << m->nCall();

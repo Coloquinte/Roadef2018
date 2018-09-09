@@ -71,8 +71,9 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
       endCoord = maxUsed + minWaste_;
       // Solve the packed case; sometimes, an item fits perfectly where it didn't
       CutSolution packed = packCut(previousItems, beginCoord, endCoord);
-      assert (packed.nItems() >= cutSolution.nItems());
-      cutSolution = packed;
+      // But that's not entirely sure since the algorithm does not handle all cornercases
+      if (packed.nItems() >= cutSolution.nItems())
+        cutSolution = packed;
     }
     if (endCoord <= maxEndCoord)
       front_.insert(beginCoord, endCoord, previousItems + cutSolution.nItems(), previousFront);

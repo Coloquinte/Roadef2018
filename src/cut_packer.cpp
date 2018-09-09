@@ -60,8 +60,9 @@ void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) 
       endCoord = maxUsed + minWaste_;
       // Solve the packed case; sometimes, an item fits perfectly where it didn't
       RowPacker::Quality packed = countRow(previousItems, beginCoord, endCoord);
-      assert (packed.nItems >= result.nItems);
-      result = packed;
+      // But that's not entirely sure since the algorithm does not handle all cornercases
+      if (packed.nItems >= result.nItems)
+        result = packed;
     }
     front_.insert(beginCoord, endCoord, previousItems + result.nItems, previousFront);
 
