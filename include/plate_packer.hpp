@@ -25,6 +25,8 @@ class PlatePacker : Packer {
   int countCut(int start, int minX, int maxX);
   CutSolution packCut(int start, int minX, int maxX);
 
+  bool isAdmissibleCutLine(int x) const;
+
  private:
   CutPacker cutPacker_;
   PackerFront front_;

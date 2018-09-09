@@ -67,15 +67,19 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
 
     int maxUsed = cutSolution.maxUsedX();
     if (maxUsed + minWaste_ < endCoord) {
-      // Shortcut from the current solution: no need to try all the next ones
+      // All solutions with "maxUsed + minWaste_ <= end" are considered dominated
       endCoord = maxUsed + minWaste_;
-      cutSolution = packCut(previousItems, beginCoord, endCoord);
+      // Solve the packed case; sometimes, an item fits perfectly where it didn't
+      CutSolution packed = packCut(previousItems, beginCoord, endCoord);
+      assert (packed.nItems() >= cutSolution.nItems());
+      cutSolution = packed;
     }
     if (endCoord <= maxEndCoord)
       front_.insert(beginCoord, endCoord, previousItems + cutSolution.nItems(), previousFront);
 
     if (maxUsed < endCoord) {
-      // Fully packed case
+      // Try the tight case too, else the first minWaste_ iterations could short-circuit it
+      // TODO: handle this case in another manner (for example start after maxX)
       cutSolution = packCut(previousItems, beginCoord, maxUsed);
       front_.insert(beginCoord, maxUsed, previousItems + cutSolution.nItems(), previousFront);
     }
@@ -155,5 +159,13 @@ PlateSolution PlatePacker::backtrack() {
   }
 
   return plateSolution;
+}
+
+bool PlatePacker::isAdmissibleCutLine(int x) const {
+  for (Defect d : defects_) {
+    if (d.intersectsVerticalLine(x))
+      return false;
+  }
+  return true;
 }
 

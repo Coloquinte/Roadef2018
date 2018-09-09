@@ -55,6 +55,43 @@ int Solution::nItems() const {
   return cnt;
 }
 
+void ItemSolution::report() const {
+  cout << "Item at (" << minX() << ", " << maxX() << ")x(" << minY() << ", " << maxY() << ")" << endl;
+}
+
+void RowSolution::report() const {
+  cout << "Row from " << minY() << " to " << maxY() << "  (" << width() << "x" << height() << ")" << endl;
+  for (const ItemSolution &item: items) {
+    cout << "\tItem #" << item.itemId << " from " << item.minX() << " to " << item.maxX() << "  (" << item.width() << "x" << item.height() << ")" << endl;
+  }
+}
+
+void CutSolution::report() const {
+  cout << "Cut from " << minX() << " to " << maxX() << "  (" << width() << "x" << height() << ")" << endl;
+  int rowId = 0;
+  for (const RowSolution &row : rows) {
+    cout << "\tRow #" << rowId++ << " from " << row.minY() << " to " << row.maxY() << "  (" << row.width() << "x" << row.height() << ")" << endl;
+    for (const ItemSolution &item: row.items) {
+      cout << "\t\tItem #" << item.itemId << " from " << item.minX() << " to " << item.maxX() << "  (" << item.width() << "x" << item.height() << ")" << endl;
+    }
+  }
+}
+
+void PlateSolution::report() const {
+  cout << "Plate" << endl;
+  int cutId = 0;
+  for (const CutSolution &cut : cuts) {
+    cout << "\tCut #" << cutId++ << " from " << cut.minX() << " to " << cut.maxX() << "  (" << cut.width() << "x" << cut.height() << ")" << endl;
+    int rowId = 0;
+    for (const RowSolution &row : cut.rows) {
+      cout << "\t\tRow #" << rowId++ << " from " << row.minY() << " to " << row.maxY() << "  (" << row.width() << "x" << row.height() << ")" << endl;
+      for (const ItemSolution &item: row.items) {
+        cout << "\t\t\tItem #" << item.itemId << " from " << item.minX() << " to " << item.maxX() << "  (" << item.width() << "x" << item.height() << ")" << endl;
+      }
+    }
+  }
+}
+
 void Solution::report() const {
   int plateId = 0;
   for (const PlateSolution &plate : plates) {
@@ -67,7 +104,6 @@ void Solution::report() const {
         cout << "\t\tRow #" << rowId++ << " from " << row.minY() << " to " << row.maxY() << "  (" << row.width() << "x" << row.height() << ")" << endl;
         for (const ItemSolution &item: row.items) {
           cout << "\t\t\tItem #" << item.itemId << " from " << item.minX() << " to " << item.maxX() << "  (" << item.width() << "x" << item.height() << ")" << endl;
-          //s << "\t\t\tItem #" << item.itemId << " at (" << item.minX() << ", " << item.maxX() << ")x(" << item.minY() << ", " << item.maxY() << ")" << endl;
         }
       }
     }

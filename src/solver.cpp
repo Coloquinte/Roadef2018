@@ -87,6 +87,10 @@ void Solver::run() {
     Move *move = pickMove();
     Move::Status status = move->run();
 
+    if (params_.verbosity >= 3) {
+      cout << "Move attempt: " << SolutionChecker::evalPercentDensity(problem_, solution_) << "%" << endl;
+    }
+
     if (status == Move::Status::Improvement && params_.verbosity >= 2) {
       cout << SolutionChecker::evalPercentDensity(problem_, solution_) << "%\t" << nMoves_ << "\t" << move->name() << endl;
     }
@@ -97,12 +101,24 @@ void Solver::run() {
   }
 
   if (params_.verbosity >= 2) {
-    cout << endl << "MoveName\tTotal\tErr\t-\t=\t+" << endl;
+    cout << endl << "MoveName\tTotal\t-\t=\t+\tErr" << endl;
     for (auto &m : moves_) {
       string name = m->name();
       while (name.size() < 12)
         name.append(" ");
-      cout << name << "\t" << m->nCall() << "\t" << m->nViolation() << "\t" << m->nDegradation() << "\t" << m->nPlateau() << "\t" << m->nImprovement() << endl;
+
+      cout << name << "\t" << m->nCall();
+      cout << "\t" << m->nDegradation();
+      cout << "\t" << m->nPlateau();
+      cout << "\t" << m->nImprovement();
+      cout << "\t";
+
+      if (m->nViolation())
+        cout << m->nViolation();
+      else
+        cout << "-";
+
+      cout << endl;
     }
   }
 }

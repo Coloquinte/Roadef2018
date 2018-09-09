@@ -25,6 +25,8 @@ class CutPacker : Packer {
   RowPacker::Quality countRow(int start, int minY, int maxY);
   RowSolution packRow(int start, int minY, int maxY);
 
+  bool isAdmissibleCutLine(int y) const;
+
  private:
   PackerFront front_;
   RowPacker rowPacker_;

@@ -51,21 +51,23 @@ RowSolution CutPacker::packRow(int start, int minY, int maxY) {
 }
 
 void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) {
-  // TODO: more precise definition for domination
   for (int endCoord = region_.maxY(); endCoord >= beginCoord + minYY_; --endCoord) {
     RowPacker::Quality result = countRow(previousItems, beginCoord, endCoord);
 
-    // We cut all solutions with maxUsed + minWaste_ <= end
     int maxUsed = result.maxUsedY;
     if (maxUsed + minWaste_ < endCoord) {
-      // Shortcut from the current solution: no need to try all the next ones
+      // All solutions with "maxUsed + minWaste_ <= end" are considered dominated
       endCoord = maxUsed + minWaste_;
-      result = countRow(previousItems, beginCoord, endCoord);
+      // Solve the packed case; sometimes, an item fits perfectly where it didn't
+      RowPacker::Quality packed = countRow(previousItems, beginCoord, endCoord);
+      assert (packed.nItems >= result.nItems);
+      result = packed;
     }
     front_.insert(beginCoord, endCoord, previousItems + result.nItems, previousFront);
 
     if (maxUsed < endCoord) {
-      // Try the fully packed case too
+      // Try the tight case too, else the first minWaste_ iterations could short-circuit it
+      // TODO: handle this case in another manner (for example start after maxY)
       result = countRow(previousItems, beginCoord, maxUsed);
       front_.insert(beginCoord, maxUsed, previousItems + result.nItems, previousFront);
     }
@@ -144,5 +146,13 @@ int CutPacker::countBacktrack() {
     cur = elt.previous;
   }
   return front_[cur].valeur;
+}
+
+bool CutPacker::isAdmissibleCutLine(int y) const {
+  for (Defect d : defects_) {
+    if (d.intersectsHorizontalLine(y))
+      return false;
+  }
+  return true;
 }
 

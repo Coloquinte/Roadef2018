@@ -51,6 +51,16 @@ class Rectangle {
         && maxY_ >= o.minY_;
   }
 
+  bool intersectsVerticalLine(int x) const {
+    return minX_ <= x
+        && maxX_ >= x;
+  }
+
+  bool intersectsHorizontalLine(int y) const {
+    return minY_ <= y
+        && maxY_ >= y;
+  }
+
  protected:
   Rectangle(int minX, int minY, int maxX, int maxY) {
     minX_ = minX;

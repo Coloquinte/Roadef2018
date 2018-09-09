@@ -80,16 +80,8 @@ class PackerFront {
     std::swap(helper_, front_);
   }
 
-  void checkConsistency() const {
-    for (int i = 0; i < size(); ++i) {
-      assert (front_[i].previous < i);
-      assert (front_[i].begin < front_[i].end);
-    }
-    for (int i = 0; i + 1 < size(); ++i) {
-      assert (front_[i].end < front_[i+1].end);
-      assert (front_[i].valeur < front_[i+1].valeur);
-    }
-  }
+  void checkConsistency() const;
+  void report() const;
 
  private:
   std::vector<Element> front_;

@@ -15,6 +15,7 @@ struct ItemSolution : Rectangle {
     : Rectangle(r)
     , itemId(itemId) {
     }
+  void report() const;
 
   int itemId;
 };
@@ -25,6 +26,7 @@ struct RowSolution : Rectangle {
     : Rectangle(r) {
       items.reserve(4);
     }
+  void report() const;
 
   std::vector<ItemSolution> items;
 
@@ -39,6 +41,7 @@ struct CutSolution : Rectangle {
     : Rectangle(r) {
       rows.reserve(4);
     }
+  void report() const;
 
   std::vector<RowSolution> rows;
 
@@ -53,6 +56,7 @@ struct PlateSolution : Rectangle {
     : Rectangle(r) {
       cuts.reserve(4);
     }
+  void report() const;
 
   std::vector<CutSolution> cuts;
 

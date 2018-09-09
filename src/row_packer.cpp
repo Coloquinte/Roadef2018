@@ -24,6 +24,7 @@ RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &
     Item item = sequence_[i];
     int height = item.height;
     int width = item.width;
+    assert (height >= width /* precondition */ );
 
     int placement = earliestFit(currentX_, width, height);
     bool fits = fitsDimensionsAt(placement, width, height);
@@ -90,14 +91,6 @@ RowPacker::Quality RowPacker::count(Rectangle row, int start, const std::vector<
   };
 }
 
-bool RowPacker::fitsDimensions(int width, int height) const {
-  return fitsDimensionsAt(currentX_, width, height);
-}
-
-bool RowPacker::fitsDefects(int width, int height) const {
-  return fitsDefectsAt(currentX_, width, height);
-}
-
 bool RowPacker::fitsDimensionsAt(int minX, int width, int height) const {
   if (!fitsMinWaste(height, region_.height()))
     return false;
@@ -106,18 +99,9 @@ bool RowPacker::fitsDimensionsAt(int minX, int width, int height) const {
   return true;
 }
 
-bool RowPacker::fitsDefectsAt(int minX, int width, int height) const {
-  Rectangle place = Rectangle::FromDimensions(minX, region_.minY(), width, height);
-  for (Defect d : defects_) {
-    if (place.intersects(d)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 int RowPacker::earliestFit(int minX, int width, int height) const {
   // TODO: optimize this part
+  // TODO: place above/below a defect whenever possible
   int cur = minX;
   while (true) {
     Rectangle place = Rectangle::FromDimensions(cur, region_.minY(), width, height);
@@ -125,6 +109,14 @@ int RowPacker::earliestFit(int minX, int width, int height) const {
     for (Defect d : defects_) {
       if (place.intersects(d)) {
         cur = max(d.maxX() + 1, cur);
+        hasDefect = true;
+      }
+      if (d.intersectsVerticalLine(place.minX())) {
+        cur = max(d.maxX() + 1, cur);
+        hasDefect = true;
+      }
+      if (d.intersectsVerticalLine(place.maxX())) {
+        cur = max(d.maxX() + 1 - width, cur);
         hasDefect = true;
       }
     }

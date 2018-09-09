@@ -19,12 +19,7 @@ class RowPacker : Packer {
   Quality count(Rectangle row, int start, const std::vector<Defect> &defects);
 
  private:
-  bool fitsDimensions(int width, int height) const;
   bool fitsDimensionsAt(int minX, int width, int height) const;
-
-  bool fitsDefects(int width, int height) const;
-  bool fitsDefectsAt(int minX, int width, int height) const;
-
   int earliestFit(int minX, int width, int height) const;
 
  private:
