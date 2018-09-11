@@ -87,10 +87,6 @@ void Solver::run() {
     Move *move = pickMove();
     Move::Status status = move->run();
 
-    if (params_.verbosity >= 3) {
-      cout << "Move attempt: " << SolutionChecker::evalPercentDensity(problem_, solution_) << "%" << endl;
-    }
-
     if (status == Move::Status::Improvement && params_.verbosity >= 2) {
       cout << SolutionChecker::evalPercentDensity(problem_, solution_) << "%\t" << nMoves_ << "\t" << move->name() << endl;
     }
@@ -121,6 +117,7 @@ void Solver::run() {
       cout << endl;
     }
   }
+  cout << endl;
 }
 
 Move* Solver::pickMove() {

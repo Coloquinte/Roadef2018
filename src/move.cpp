@@ -23,12 +23,20 @@ Move::Move()
 
 Move::Status Move::run() {
   ++nCall_;
+
+  if (solver_->params_.verbosity >= 3)
+      cout << "Move attempt" << endl;
+
   for (int i = 0; i < RETRY; ++i) {
     Status status = apply();
     updateStats(status);
     if (status != Status::Failure)
       return status;
   }
+
+  if (solver_->params_.verbosity >= 3)
+      cout << "No valid solution found" << endl;
+
   return Status::Failure;
 }
 
@@ -241,6 +249,20 @@ bool Move::sequenceValid(const vector<Item> &sequence) const {
 
 Move::Status Move::accept(const Solution &incumbent) {
   int violations = SolutionChecker::nViolations(problem(), incumbent);
+
+  if (solver_->params_.verbosity >= 3) {
+    if (violations != 0) {
+      cout << "Invalid incumbent solution" << endl;
+    }
+    else {
+      double mapped = SolutionChecker::evalPercentMapped(problem(), incumbent);
+      double density = SolutionChecker::evalPercentDensity(problem(), incumbent);
+      cout << "Incumbent solution: " << density << "% density";
+      if (mapped < 99.9) cout << " but only " << mapped << "% mapped";
+      cout << endl;
+    }
+  }
+
   if (violations != 0) {
     if (solver_->params_.failOnViolation) {
       incumbent.report();
