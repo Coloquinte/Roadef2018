@@ -2,9 +2,9 @@
 cmake_minimum_required(VERSION 2.8)
 PROJECT(ROADEF2018)
 
-SET(CMAKE_CXX_FLAGS "-g -Wall -std=c++14")
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Og")
-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -march=native")
+SET(CMAKE_CXX_FLAGS "-Wall -std=c++14")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Og -g")
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -march=native -static -s")
 
 FIND_PACKAGE(Boost COMPONENTS system filesystem program_options unit_test_framework REQUIRED)
 
