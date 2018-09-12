@@ -13,19 +13,11 @@ namespace po = boost::program_options;
 
 po::options_description getOptions() {
   po::options_description desc("GCUT options");
+
   desc.add_options()("help,h", "Print this help");
 
   desc.add_options()("prefix,p", po::value<string>(),
-                     "Instance name - loads two files <NAME>_batch.csv and <NAME>_defects.csv");
-
-  desc.add_options()("batch", po::value<string>(),
-                     "Batch file (.csv)");
-
-  desc.add_options()("defects", po::value<string>(),
-                     "Defects file (.csv)");
-
-  desc.add_options()("solution,o", po::value<string>(),
-                     "Solution file (.csv)");
+                     "Instance name - loads <NAME>_batch.csv and <NAME>_defects.csv; writes <NAME>_solution.csv");
 
   desc.add_options()("time,t", po::value<double>()->default_value(3.0),
                      "Time limit (seconds)");
@@ -33,17 +25,39 @@ po::options_description getOptions() {
   desc.add_options()("seed,s", po::value<size_t>()->default_value(0),
                      "Random seed");
 
-  desc.add_options()("initial,i", po::value<string>(),
+  return desc;
+}
+
+po::options_description getAdvancedOptions() {
+  po::options_description desc("GCUT advanced options");
+
+  desc.add_options()("batch", po::value<string>(),
+                     "Batch file (.csv)");
+
+  desc.add_options()("defects", po::value<string>(),
+                     "Defects file (.csv)");
+
+  desc.add_options()("solution", po::value<string>(),
+                     "Solution file (.csv)");
+
+  desc.add_options()("initial", po::value<string>(),
                      "Initial solution file (.csv)");
+
+  return desc;
+}
+
+po::options_description getHiddenOptions() {
+  po::options_description desc("GCUT hidden options");
+
+  desc.add_options()("help-all", "Print the help for all command line arguments");
 
   desc.add_options()("verbosity,v", po::value<int>()->default_value(1),
                      "Output verbosity");
 
-  desc.add_options()("moves", po::value<size_t>(),
-                     "Move limit");
-
   desc.add_options()("check", "Fail and report on violation");
 
+  desc.add_options()("moves", po::value<size_t>(),
+                     "Move limit");
   return desc;
 }
 
@@ -53,10 +67,18 @@ bool fileOptionPresent(const po::variables_map &vm, const string &option) {
 
 po::variables_map parseArguments(int argc, char **argv) {
   po::options_description desc = getOptions();
+  po::options_description adv = getAdvancedOptions();
+  po::options_description hid = getHiddenOptions();
+
+  po::options_description visibleOptions;
+  visibleOptions.add(desc).add(adv);
+
+  po::options_description allOptions;
+  allOptions.add(desc).add(adv).add(hid);
 
   po::variables_map vm;
   try {
-    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::store(po::parse_command_line(argc, argv, allOptions), vm);
     po::notify(vm);
   } catch (po::error &e) {
     cerr << "Error parsing command line arguments: ";
@@ -66,7 +88,11 @@ po::variables_map parseArguments(int argc, char **argv) {
   }
 
   if (vm.count("help")) {
-    cout << desc << endl;
+    cout << visibleOptions << endl;
+    exit(0);
+  }
+  if (vm.count("help-all")) {
+    cout << allOptions << endl;
     exit(0);
   }
 
@@ -81,7 +107,7 @@ po::variables_map parseArguments(int argc, char **argv) {
   }
   if (prefixPresent && (batchPresent || defectPresent)) {
     cout << "-prefix option cannot be used with --batch or --defects" << endl << endl;
-    cout << desc << endl;
+    cout << visibleOptions << endl;
     exit(1);
   }
 
@@ -122,8 +148,11 @@ int main(int argc, char** argv) {
     solution.report();
   if (params.verbosity >= 1)
     SolutionChecker::report(pb, solution);
+
   if (vm.count("solution"))
     solution.write(vm["solution"].as<string>());
+  else if (vm.count("prefix"))
+    solution.write(vm["prefix"].as<string>() + "_solution.csv");
 
   return 0;
 }
