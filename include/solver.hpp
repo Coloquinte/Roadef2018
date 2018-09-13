@@ -20,11 +20,13 @@ class Solver {
   void init(std::vector<int> initial);
   void run();
   Move* pickMove();
+  Move* pickInitializer();
 
  private:
   const Problem &problem_;
   SolverParams params_;
   std::vector<std::unique_ptr<Move> > moves_;
+  std::vector<std::unique_ptr<Move> > initializers_;
 
   Solution solution_;
   double bestMapped_;

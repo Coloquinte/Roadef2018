@@ -56,8 +56,12 @@ po::options_description getHiddenOptions() {
 
   desc.add_options()("check", "Fail and report on violation");
 
-  desc.add_options()("moves", po::value<size_t>(),
+  desc.add_options()("moves", po::value<size_t>()->default_value(1000000000llu),
                      "Move limit");
+
+  desc.add_options()("init-runs", po::value<size_t>()->default_value(100llu),
+                     "Initialization runs");
+
   return desc;
 }
 
@@ -135,9 +139,10 @@ int main(int argc, char** argv) {
   SolverParams params;
   params.verbosity = vm["verbosity"].as<int>();
   params.seed = vm["seed"].as<size_t>();
-  params.moveLimit = vm.count("moves") ? vm["moves"].as<size_t>() : std::numeric_limits<size_t>::max();
   params.timeLimit = vm["time"].as<double>();
   params.failOnViolation = vm.count("check");
+  params.initializationRuns = vm["init-runs"].as<size_t>();
+  params.moveLimit = vm["moves"].as<size_t>();
 
   vector<int> initialOrder;
   if (vm.count("initial"))

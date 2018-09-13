@@ -25,9 +25,9 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 , nMoves_(0) {
 
   // Shuffle everything
-  moves_.emplace_back(make_unique<Shuffle>( 4));
-  moves_.emplace_back(make_unique<Shuffle>(16));
-  moves_.emplace_back(make_unique<Shuffle>(64));
+  initializers_.emplace_back(make_unique<Shuffle>( 4));
+  initializers_.emplace_back(make_unique<Shuffle>(16));
+  initializers_.emplace_back(make_unique<Shuffle>(64));
 
   // Shuffle a range
   moves_.emplace_back(make_unique<Shuffle>(4,  8));
@@ -60,9 +60,8 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
   // Swap two ranges
   moves_.emplace_back(make_unique<RangeSwap>());
 
-  for (const unique_ptr<Move> &m : moves_) {
-    m->solver_ = this;
-  }
+  for (const unique_ptr<Move> &m : initializers_) m->solver_ = this;
+  for (const unique_ptr<Move> &m : moves_) m->solver_ = this;
 
   init(initial);
 }
@@ -82,14 +81,18 @@ void Solver::init(vector<int> initial) {
 
 void Solver::run() {
   auto start = chrono::system_clock::now();
+  nMoves_ = 0;
 
-  for (nMoves_ = 0; nMoves_ < params_.moveLimit; ++nMoves_) {
-    Move *move = pickMove();
-    Move::Status status = move->run();
-
+  for (; nMoves_ < params_.initializationRuns; ++nMoves_) {
     chrono::duration<double> elapsed(chrono::system_clock::now() - start);
-    if (elapsed.count() * 0.95 > params_.timeLimit)
-      break;
+    if (elapsed.count() * 0.95 > params_.timeLimit) break;
+    pickInitializer()->run();
+  }
+
+  for (; nMoves_ < params_.moveLimit; ++nMoves_) {
+    chrono::duration<double> elapsed(chrono::system_clock::now() - start);
+    if (elapsed.count() * 0.95 > params_.timeLimit) break;
+    pickMove()->run();
   }
 
   if (params_.verbosity >= 2) {
@@ -116,7 +119,14 @@ void Solver::run() {
   cout << endl;
 }
 
+Move* Solver::pickInitializer() {
+  if  (initializers_.empty()) throw std::runtime_error("No initialization move provided.");
+  uniform_int_distribution<int> dist(0, initializers_.size()-1);
+  return initializers_[dist(rgen_)].get();
+}
+
 Move* Solver::pickMove() {
+  if  (moves_.empty()) throw std::runtime_error("No move provided.");
   uniform_int_distribution<int> dist(0, moves_.size()-1);
   return moves_[dist(rgen_)].get();
 }
