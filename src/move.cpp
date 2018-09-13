@@ -24,9 +24,6 @@ Move::Move()
 Move::Status Move::run() {
   ++nCall_;
 
-  if (solver_->params_.verbosity >= 3)
-      cout << "Move attempt" << endl;
-
   for (int i = 0; i < RETRY; ++i) {
     Status status = apply();
     updateStats(status);
@@ -35,7 +32,7 @@ Move::Status Move::run() {
   }
 
   if (solver_->params_.verbosity >= 3)
-      cout << "No valid solution found" << endl;
+      cout << "No valid solution found by " << name() << endl;
 
   return Status::Failure;
 }
@@ -225,6 +222,8 @@ vector<Item> merge(const vector<vector<Item> > &vecvec) {
 }
 
 bool Move::sequenceValid(const vector<Item> &sequence) const {
+  if (sequence.empty())
+    return false;
   unordered_map<int, int> itemPositions;
   int pos = 0;
   for (Item item : sequence) {
@@ -250,20 +249,10 @@ bool Move::sequenceValid(const vector<Item> &sequence) const {
 Move::Status Move::accept(const Solution &incumbent) {
   int violations = SolutionChecker::nViolations(problem(), incumbent);
 
-  if (solver_->params_.verbosity >= 3) {
-    if (violations != 0) {
-      cout << "Invalid incumbent solution" << endl;
-    }
-    else {
-      double mapped = SolutionChecker::evalPercentMapped(problem(), incumbent);
-      double density = SolutionChecker::evalPercentDensity(problem(), incumbent);
-      cout << "Incumbent solution: " << density << "% density";
-      if (mapped < 99.9) cout << " but only " << mapped << "% mapped";
-      cout << endl;
-    }
-  }
-
   if (violations != 0) {
+    if (solver_->params_.verbosity >= 3) {
+      cout << "Invalid incumbent solution obtained by " << name() << endl;
+    }
     if (solver_->params_.failOnViolation) {
       incumbent.report();
       SolutionChecker::report(problem(), incumbent);
@@ -299,6 +288,18 @@ Move::Status Move::accept(const Solution &incumbent) {
     solution() = incumbent;
     bestMapped() = mapped;
     bestDensity() = density;
+  }
+
+  if (solver_->params_.verbosity >= 3) {
+    if (status == Status::Improvement)      cout << "Improved";
+    else if (status == Status::Degradation) cout << "Rejected";
+    else if (status == Status::Plateau)     cout << "Accepted";
+    cout << " solution: " << density << "% density";
+    if (mapped < 99.9) cout << " but only " << mapped << "% mapped";
+    cout << " obtained by " << name() << endl;
+  }
+  else if (status == Move::Status::Improvement && solver_->params_.verbosity >= 2) {
+    cout << density << "%\t" << solver_->nMoves_ << "\t" << name() << endl;
   }
 
   return status;

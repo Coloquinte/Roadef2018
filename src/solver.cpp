@@ -87,10 +87,6 @@ void Solver::run() {
     Move *move = pickMove();
     Move::Status status = move->run();
 
-    if (status == Move::Status::Improvement && params_.verbosity >= 2) {
-      cout << SolutionChecker::evalPercentDensity(problem_, solution_) << "%\t" << nMoves_ << "\t" << move->name() << endl;
-    }
-
     chrono::duration<double> elapsed(chrono::system_clock::now() - start);
     if (elapsed.count() * 0.95 > params_.timeLimit)
       break;

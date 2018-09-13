@@ -65,6 +65,7 @@ void OrderingHeuristic::init(const std::vector<Item> &sequence, int begin, int e
 }
 
 void OrderingHeuristic::orderShuffle(int chunkSize) {
+  ordering_.insert(ordering_.end(), before_.begin(), before_.end());
   shuffle(leftover_.begin(), leftover_.end(), rgen_);
   while (!leftover_.empty()) {
     uniform_int_distribution<size_t> stackDist(0, leftover_.size() - 1);
@@ -81,6 +82,7 @@ void OrderingHeuristic::orderShuffle(int chunkSize) {
     if (leftover_[stackInd].empty())
       leftover_.erase(leftover_.begin() + stackInd);
   }
+  ordering_.insert(ordering_.end(), after_.begin(), after_.end());
   leftover_.clear();
   before_.clear();
   after_.clear();
