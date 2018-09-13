@@ -67,15 +67,21 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 }
 
 void Solver::init(vector<int> initial) {
-  if (params_.verbosity >= 2) {
-    cout << "Trace:" << endl;
-  }
-
   if (initial.empty()) return;
+
   solution_ = SequencePacker::run(problem_, initial);
+  bestDensity_ = SolutionChecker::evalPercentDensity(problem_, solution_);
+  bestMapped_ = SolutionChecker::evalPercentMapped(problem_, solution_);
 
   if (params_.verbosity >= 2) {
-    cout << SolutionChecker::evalPercentDensity(problem_, solution_) << "%\t0\tInitial" << endl;
+    if (params_.verbosity >= 3) {
+      cout << "Initial solution with " << bestDensity_ << "% density";
+      if (bestMapped_ < 99.9) cout << " and only " << bestMapped_ << "% mapped";
+      cout << endl;
+    }
+    else {
+      cout << bestDensity_ << "%\t0\tInitial" << endl;
+    }
   }
 }
 
@@ -96,6 +102,8 @@ void Solver::run() {
   }
 
   if (params_.verbosity >= 2) {
+    int nEvaluated = 0;
+    int nImprovement = 0;
     cout << endl << "MoveName        \tTotal\t-\t=\t+\tErr" << endl;
     for (auto &m : moves_) {
       string name = m->name();
@@ -113,10 +121,14 @@ void Solver::run() {
       else
         cout << "-";
 
+      nEvaluated += m->nDegradation() + m->nPlateau() + m->nImprovement();
+      nImprovement += m->nImprovement();
+
       cout << endl;
     }
+    cout << endl;
+    cout << nMoves_ << " moves attempted for " << nEvaluated << " evaluated and " << nImprovement << " improvements" << endl;
   }
-  cout << endl;
 }
 
 Move* Solver::pickInitializer() {

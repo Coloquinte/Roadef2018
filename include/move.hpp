@@ -36,6 +36,7 @@ class Move {
   virtual Status apply() = 0;
 
   std::vector<Item> extractSequence(const Solution &solution) const;
+  std::vector<std::vector<Item> > extractItems(const Solution &solution) const;
   std::vector<std::vector<Item> > extractRows(const Solution &solution) const;
   std::vector<std::vector<Item> > extractCuts(const Solution &solution) const;
   std::vector<std::vector<Item> > extractPlates(const Solution &solution) const;

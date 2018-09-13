@@ -70,6 +70,21 @@ vector<Item> Move::extractSequence(const Solution &solution) const {
   return sequence;
 }
 
+vector<vector<Item> > Move::extractItems(const Solution &solution) const {
+  vector<vector<Item> > items;
+  for (const PlateSolution &plate: solution.plates) {
+    for (const CutSolution &cut: plate.cuts) {
+      for (const RowSolution &row: cut.rows) {
+        for (ItemSolution item : row.items) {
+          vector<Item> itemSeq = {problem().items()[item.itemId]};
+          items.push_back(itemSeq);
+        }
+      }
+    }
+  }
+  return items;
+}
+
 vector<vector<Item> > Move::extractRows(const Solution &solution) const {
   vector<vector<Item> > rows;
   for (const PlateSolution &plate: solution.plates) {
@@ -126,13 +141,12 @@ Move::Status Move::runSequence(const vector<Item> &sequence) {
   return accept(incumbent);
 }
 
-template<typename T>
-void randomInsert(vector<T> &vec, mt19937 &rgen) {
+void randomInsert(vector<vector<Item> > &vec, mt19937 &rgen) {
   if (vec.size() <= 2)
     return;
   uniform_int_distribution<int> dist1(0, vec.size()-1);
   int pickedIndex = dist1(rgen);
-  T picked = vec[pickedIndex];
+  vector<Item> picked = vec[pickedIndex];
   vec.erase(vec.begin() + pickedIndex);
 
   uniform_int_distribution<int> dist2(0, vec.size()-2);
@@ -142,8 +156,7 @@ void randomInsert(vector<T> &vec, mt19937 &rgen) {
   vec.insert(vec.begin() + insertionPoint, picked);
 }
 
-template<typename T>
-void randomSwap(vector<T> &vec, mt19937 &rgen) {
+void randomSwap(vector<vector<Item> > &vec, mt19937 &rgen) {
   if (vec.size() <= 2)
     return;
   uniform_int_distribution<int> dist1(0, vec.size()-1);
@@ -157,8 +170,7 @@ void randomSwap(vector<T> &vec, mt19937 &rgen) {
   swap(vec[i0], vec[i1]);
 }
 
-template<typename T>
-void randomRangeSwap(vector<T> &vec, mt19937 &rgen) {
+void randomRangeSwap(vector<vector<Item> > &vec, mt19937 &rgen) {
   if (vec.size() <= 4)
     return;
   uniform_int_distribution<int> dist(0, vec.size()-1);
@@ -174,7 +186,7 @@ void randomRangeSwap(vector<T> &vec, mt19937 &rgen) {
   int b2 = lims[2];
   int e2 = lims[3];
 
-  vector<T> ret;
+  vector<vector<Item> > ret;
   for (int i = 0; i < b1; ++i)
     ret.push_back(vec[i]);
   for (int i = b2; i < e2; ++i)
@@ -189,8 +201,7 @@ void randomRangeSwap(vector<T> &vec, mt19937 &rgen) {
   swap(vec, ret);
 }
 
-template<typename T>
-void randomMirror(vector<T> &vec, mt19937 &rgen, int maxWidth) {
+void randomMirror(vector<vector<Item> > &vec, mt19937 &rgen, int maxWidth) {
   assert (maxWidth >= 3);
   if (vec.size() <= 3)
     return;
@@ -202,8 +213,7 @@ void randomMirror(vector<T> &vec, mt19937 &rgen, int maxWidth) {
   reverse(vec.begin() + begin, vec.begin() + begin + width);
 }
 
-template<typename T>
-void randomAdjacentSwap(vector<T> &vec, mt19937 &rgen) {
+void randomAdjacentSwap(vector<vector<Item> > &vec, mt19937 &rgen) {
   if (vec.size() < 2)
     return;
   uniform_int_distribution<int> dist(0, vec.size()-2);
@@ -284,12 +294,6 @@ Move::Status Move::accept(const Solution &incumbent) {
     status = Status::Plateau;
   }
 
-  if (status != Status::Degradation) {
-    solution() = incumbent;
-    bestMapped() = mapped;
-    bestDensity() = density;
-  }
-
   if (solver_->params_.verbosity >= 3) {
     if (status == Status::Improvement)      cout << "Improved";
     else if (status == Status::Degradation) cout << "Rejected";
@@ -300,6 +304,12 @@ Move::Status Move::accept(const Solution &incumbent) {
   }
   else if (status == Move::Status::Improvement && solver_->params_.verbosity >= 2) {
     cout << density << "%\t" << solver_->nMoves_ << "\t" << name() << endl;
+  }
+
+  if (status != Status::Degradation) {
+    solution() = incumbent;
+    bestMapped() = mapped;
+    bestDensity() = density;
   }
 
   return status;
@@ -327,8 +337,9 @@ string Shuffle::name() const {
 }
 
 Move::Status ItemInsert::apply() {
-  vector<Item> sequence = extractSequence(solution());
-  randomInsert(sequence, rgen());
+  vector<vector<Item> > items = extractItems(solution());
+  randomInsert(items, rgen());
+  vector<Item> sequence = merge(items);
   return runSequence(sequence);
 }
 
@@ -354,8 +365,9 @@ Move::Status PlateInsert::apply() {
 }
 
 Move::Status ItemSwap::apply() {
-  vector<Item> sequence = extractSequence(solution());
-  randomSwap(sequence, rgen());
+  vector<vector<Item> > items = extractItems(solution());
+  randomSwap(items, rgen());
+  vector<Item> sequence = merge(items);
   return runSequence(sequence);
 }
 
@@ -381,14 +393,16 @@ Move::Status PlateSwap::apply() {
 }
 
 Move::Status RangeSwap::apply() {
-  vector<Item> sequence = extractSequence(solution());
-  randomRangeSwap(sequence, rgen());
+  vector<vector<Item> > items = extractItems(solution());
+  randomRangeSwap(items, rgen());
+  vector<Item> sequence = merge(items);
   return runSequence(sequence);
 }
 
 Move::Status AdjacentItemSwap::apply() {
-  vector<Item> sequence = extractSequence(solution());
-  randomAdjacentSwap(sequence, rgen());
+  vector<vector<Item> > items = extractItems(solution());
+  randomAdjacentSwap(items, rgen());
+  vector<Item> sequence = merge(items);
   return runSequence(sequence);
 }
 
@@ -414,8 +428,9 @@ Move::Status AdjacentPlateSwap::apply() {
 }
 
 Move::Status Mirror::apply() {
-  vector<Item> sequence = extractSequence(solution());
-  randomMirror(sequence, rgen(), width_);
+  vector<vector<Item> > items = extractItems(solution());
+  randomMirror(items, rgen(), width_);
+  vector<Item> sequence = merge(items);
   return runSequence(sequence);
 }
 
