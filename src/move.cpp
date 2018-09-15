@@ -301,6 +301,24 @@ Move::Status Move::accept(const Solution &incumbent) {
     cout << " solution: " << density << "% density";
     if (mapped < 99.9) cout << " but only " << mapped << "% mapped";
     cout << " obtained by " << name() << endl;
+
+    if (solver_->params_.verbosity >= 4) {
+      int nCommonPrefix = 0;
+      int nCommonSuffix = 0;
+      for (; nCommonPrefix < incumbent.nPlates() && nCommonPrefix < solution().nPlates(); ++nCommonPrefix) {
+        if (solution().plates[nCommonPrefix].sequence() != incumbent.plates[nCommonPrefix].sequence())
+          break;
+      }
+      for (; nCommonSuffix < incumbent.nPlates(); ++nCommonSuffix) {
+        if (incumbent.nPlates() != solution().nPlates())
+          break;
+        int ind = incumbent.nPlates() - 1 - nCommonSuffix;
+        if (solution().plates[ind].sequence() != incumbent.plates[ind].sequence())
+          break;
+      }
+
+      cout << nCommonPrefix << " first plates and " << nCommonSuffix << " last plates shared with previous solution" << endl;
+    }
   }
   else if (status == Move::Status::Improvement && solver_->params_.verbosity >= 2) {
     cout << density << "%\t" << solver_->nMoves_ << "\t" << name() << endl;

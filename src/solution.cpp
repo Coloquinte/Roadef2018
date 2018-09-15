@@ -333,3 +333,37 @@ vector<int> Solution::readOrdering(string filename) {
   return sequence;
 }
 
+vector<int> RowSolution::sequence() const {
+  vector<int> seq;
+  for (const ItemSolution &item : items) {
+    seq.push_back(item.itemId);
+  }
+  return seq;
+}
+
+vector<int> CutSolution::sequence() const {
+  vector<int> seq;
+  for (const RowSolution &row : rows) {
+    vector<int> subseq = row.sequence();
+    for (int e : subseq) seq.push_back(e);
+  }
+  return seq;
+}
+
+vector<int> PlateSolution::sequence() const {
+  vector<int> seq;
+  for (const CutSolution &cut : cuts) {
+    vector<int> subseq = cut.sequence();
+    for (int e : subseq) seq.push_back(e);
+  }
+  return seq;
+}
+
+vector<int> Solution::sequence() const {
+  vector<int> seq;
+  for (const PlateSolution &plate : plates) {
+    vector<int> subseq = plate.sequence();
+    for (int e : subseq) seq.push_back(e);
+  }
+  return seq;
+}

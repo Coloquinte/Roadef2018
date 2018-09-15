@@ -27,6 +27,7 @@ struct RowSolution : Rectangle {
       items.reserve(4);
     }
   void report() const;
+  std::vector<int> sequence() const;
 
   std::vector<ItemSolution> items;
 
@@ -42,6 +43,7 @@ struct CutSolution : Rectangle {
       rows.reserve(4);
     }
   void report() const;
+  std::vector<int> sequence() const;
 
   std::vector<RowSolution> rows;
 
@@ -57,6 +59,7 @@ struct PlateSolution : Rectangle {
       cuts.reserve(4);
     }
   void report() const;
+  std::vector<int> sequence() const;
 
   std::vector<CutSolution> cuts;
 
@@ -71,6 +74,7 @@ struct Solution {
   int nPlates() const { return plates.size(); }
 
   void report() const;
+  std::vector<int> sequence() const;
   void write(std::string fileName) const;
 
   static std::vector<int> readOrdering(std::string filename);
