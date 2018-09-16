@@ -156,8 +156,6 @@ int main(int argc, char** argv) {
 
   if (vm.count("solution"))
     solution.write(vm["solution"].as<string>());
-  else if (vm.count("prefix"))
-    solution.write(vm["prefix"].as<string>() + "_solution.csv");
 
   return 0;
 }
