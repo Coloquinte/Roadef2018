@@ -13,14 +13,26 @@ class Move;
 
 class Solver {
  public:
+  enum class MoveStatus {
+    Failure,     // Inexpensive phase failed
+    Violation,   // Invalid solution returned
+    Degradation,
+    Plateau,
+    Improvement
+  };
   static Solution run(const Problem &problem, SolverParams params, std::vector<int> initial=std::vector<int>());
  
  private: 
   Solver(const Problem &problem, SolverParams params, std::vector<int> initial);
   void init(std::vector<int> initial);
   void run();
-  Move* pickMove();
-  Move* pickInitializer();
+  Move& pickMove();
+  Move& pickInitializer();
+
+  void run(Move &move);
+  MoveStatus accept(Move &move, const Solution &incumbent);
+  void updateStats(Move &move, MoveStatus status);
+  void finalReport() const;
 
  private:
   const Problem &problem_;

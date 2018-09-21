@@ -92,15 +92,140 @@ void Solver::run() {
   for (; nMoves_ < params_.initializationRuns; ++nMoves_) {
     chrono::duration<double> elapsed(chrono::system_clock::now() - start);
     if (elapsed.count() * 0.95 > params_.timeLimit) break;
-    pickInitializer()->run();
+    run(pickInitializer());
   }
 
   for (; nMoves_ < params_.moveLimit; ++nMoves_) {
     chrono::duration<double> elapsed(chrono::system_clock::now() - start);
     if (elapsed.count() * 0.95 > params_.timeLimit) break;
-    pickMove()->run();
+    run(pickMove());
+  }
+  
+  finalReport();
+}
+
+Move& Solver::pickInitializer() {
+  if  (initializers_.empty()) throw std::runtime_error("No initialization move provided.");
+  uniform_int_distribution<int> dist(0, initializers_.size()-1);
+  return *(initializers_[dist(rgen_)].get());
+}
+
+Move& Solver::pickMove() {
+  if  (moves_.empty()) throw std::runtime_error("No move provided.");
+  uniform_int_distribution<int> dist(0, moves_.size()-1);
+  return *(moves_[dist(rgen_)].get());
+}
+
+void Solver::run(Move &move) {
+  Solution incumbent = move.apply();
+  MoveStatus status = accept(move, incumbent);
+  updateStats(move, status);
+}
+
+Solver::MoveStatus Solver::accept(Move &move, const Solution &incumbent) {
+  if (incumbent.nPlates() == 0) {
+    if (params_.verbosity >= 3) {
+      cout << "No solution found by " << move.name() << endl;
+    }
+    return MoveStatus::Failure;
   }
 
+  int violations = SolutionChecker::nViolations(problem_, incumbent);
+  if (violations != 0) {
+    if (params_.verbosity >= 3) {
+      cout << "Invalid incumbent solution obtained by " << move.name() << endl;
+    }
+    if (params_.failOnViolation) {
+      incumbent.report();
+      SolutionChecker::report(problem_, incumbent);
+      exit(1);
+    }
+    return MoveStatus::Violation;
+  }
+
+  double mapped = SolutionChecker::evalPercentMapped(problem_, incumbent);
+  double density = SolutionChecker::evalPercentDensity(problem_, incumbent);
+  double prevMapped = bestMapped_;
+  double prevDensity = bestDensity_;
+
+  MoveStatus status;
+  if (mapped > prevMapped) {
+    status = MoveStatus::Improvement;
+  }
+  else if (mapped < prevMapped) {
+    status = MoveStatus::Degradation;
+  }
+  else if (density > prevDensity) {
+    solution_ = incumbent;
+    status = MoveStatus::Improvement;
+  }
+  else if (density < prevDensity) {
+    status = MoveStatus::Degradation;
+  }
+  else {
+    status = MoveStatus::Plateau;
+  }
+
+  if (params_.verbosity >= 3) {
+    if (status == MoveStatus::Improvement)      cout << "Improved";
+    else if (status == MoveStatus::Degradation) cout << "Rejected";
+    else if (status == MoveStatus::Plateau)     cout << "Accepted";
+    cout << " solution: " << density << "% density";
+    if (mapped < 99.9) cout << " but only " << mapped << "% mapped";
+    cout << " obtained by " << move.name() << endl;
+
+    if (params_.verbosity >= 4) {
+      int nCommonPrefix = 0;
+      int nCommonSuffix = 0;
+      for (; nCommonPrefix < incumbent.nPlates() && nCommonPrefix < solution_.nPlates(); ++nCommonPrefix) {
+        if (solution_.plates[nCommonPrefix].sequence() != incumbent.plates[nCommonPrefix].sequence())
+          break;
+      }
+      for (; nCommonSuffix < incumbent.nPlates(); ++nCommonSuffix) {
+        if (incumbent.nPlates() != solution_.nPlates())
+          break;
+        int ind = incumbent.nPlates() - 1 - nCommonSuffix;
+        if (solution_.plates[ind].sequence() != incumbent.plates[ind].sequence())
+          break;
+      }
+
+      cout << nCommonPrefix << " first plates and " << nCommonSuffix << " last plates shared with previous solution" << endl;
+    }
+  }
+  else if (status == MoveStatus::Improvement && params_.verbosity >= 2) {
+    cout << density << "%\t" << nMoves_ << "\t" << move.name() << endl;
+  }
+
+  if (status != MoveStatus::Degradation) {
+    solution_ = incumbent;
+    bestMapped_ = mapped;
+    bestDensity_ = density;
+  }
+  
+  return status;
+}
+
+void Solver::updateStats(Move &move, MoveStatus status) {
+  ++move.nCall_;
+  switch (status) {
+    case MoveStatus::Improvement:
+      ++move.nImprovement_;
+      break;
+    case MoveStatus::Degradation:
+      ++move.nDegradation_;
+      break;
+    case MoveStatus::Plateau:
+      ++move.nPlateau_;
+      break;
+    case MoveStatus::Violation:
+      ++move.nViolation_;
+      break;
+    case MoveStatus::Failure:
+      break;
+  }
+}
+
+void Solver::finalReport() const {
   if (params_.verbosity >= 2) {
     int nEvaluated = 0;
     int nImprovement = 0;
@@ -130,16 +255,3 @@ void Solver::run() {
     cout << nMoves_ << " moves attempted for " << nEvaluated << " evaluated and " << nImprovement << " improvements" << endl;
   }
 }
-
-Move* Solver::pickInitializer() {
-  if  (initializers_.empty()) throw std::runtime_error("No initialization move provided.");
-  uniform_int_distribution<int> dist(0, initializers_.size()-1);
-  return initializers_[dist(rgen_)].get();
-}
-
-Move* Solver::pickMove() {
-  if  (moves_.empty()) throw std::runtime_error("No move provided.");
-  uniform_int_distribution<int> dist(0, moves_.size()-1);
-  return moves_[dist(rgen_)].get();
-}
-

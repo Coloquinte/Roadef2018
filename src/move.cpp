@@ -21,38 +21,6 @@ Move::Move()
 , nPlateau_(0) {
 }
 
-Move::Status Move::run() {
-  Status status = apply();
-  updateStats(status);
-  if (status != Status::Failure)
-    return status;
-
-  if (solver_->params_.verbosity >= 3)
-      cout << "No valid solution found by " << name() << endl;
-
-  return Status::Failure;
-}
-
-void Move::updateStats(Status status) {
-  ++nCall_;
-  switch (status) {
-    case Status::Improvement:
-      ++nImprovement_;
-      break;
-    case Status::Degradation:
-      ++nDegradation_;
-      break;
-    case Status::Plateau:
-      ++nPlateau_;
-      break;
-    case Status::Violation:
-      ++nViolation_;
-      break;
-    case Status::Failure:
-      break;
-  }
-}
-
 vector<Item> Move::extractSequence(const Solution &solution) const {
   vector<Item> sequence;
   for (const PlateSolution &plate: solution.plates) {
@@ -130,18 +98,17 @@ vector<vector<Item> > Move::extractPlates(const Solution &solution) const {
   return plates;
 }
 
-Move::Status Move::mergeRepairRun(const vector<vector<Item> > &sequence) {
+Solution Move::mergeRepairRun(const vector<vector<Item> > &sequence) {
   vector<Item> merged = mergeSequence(sequence);
   repairSequence(merged);
   return runSequence(merged);
 }
 
-Move::Status Move::runSequence(const vector<Item> &sequence) {
+Solution Move::runSequence(const vector<Item> &sequence) {
   if (!sequenceValid(sequence))
-    return Status::Failure;
+    return Solution();
 
-  Solution incumbent = SequencePacker::run(problem(), sequence);
-  return accept(incumbent);
+  return SequencePacker::run(problem(), sequence);
 }
 
 void randomInsert(vector<vector<Item> > &vec, mt19937 &rgen) {
@@ -275,84 +242,7 @@ bool Move::sequenceValid(const vector<Item> &sequence) const {
   return true;
 }
 
-Move::Status Move::accept(const Solution &incumbent) {
-  int violations = SolutionChecker::nViolations(problem(), incumbent);
-
-  if (violations != 0) {
-    if (solver_->params_.verbosity >= 3) {
-      cout << "Invalid incumbent solution obtained by " << name() << endl;
-    }
-    if (solver_->params_.failOnViolation) {
-      incumbent.report();
-      SolutionChecker::report(problem(), incumbent);
-      exit(1);
-    }
-    return Status::Violation;
-  }
-
-  double mapped = SolutionChecker::evalPercentMapped(problem(), incumbent);
-  double density = SolutionChecker::evalPercentDensity(problem(), incumbent);
-  double prevMapped = bestMapped();
-  double prevDensity = bestDensity();
-
-  Status status;
-  if (mapped > prevMapped) {
-    status = Status::Improvement;
-  }
-  else if (mapped < prevMapped) {
-    status = Status::Degradation;
-  }
-  else if (density > prevDensity) {
-    solution() = incumbent;
-    status = Status::Improvement;
-  }
-  else if (density < prevDensity) {
-    status = Status::Degradation;
-  }
-  else {
-    status = Status::Plateau;
-  }
-
-  if (solver_->params_.verbosity >= 3) {
-    if (status == Status::Improvement)      cout << "Improved";
-    else if (status == Status::Degradation) cout << "Rejected";
-    else if (status == Status::Plateau)     cout << "Accepted";
-    cout << " solution: " << density << "% density";
-    if (mapped < 99.9) cout << " but only " << mapped << "% mapped";
-    cout << " obtained by " << name() << endl;
-
-    if (solver_->params_.verbosity >= 4) {
-      int nCommonPrefix = 0;
-      int nCommonSuffix = 0;
-      for (; nCommonPrefix < incumbent.nPlates() && nCommonPrefix < solution().nPlates(); ++nCommonPrefix) {
-        if (solution().plates[nCommonPrefix].sequence() != incumbent.plates[nCommonPrefix].sequence())
-          break;
-      }
-      for (; nCommonSuffix < incumbent.nPlates(); ++nCommonSuffix) {
-        if (incumbent.nPlates() != solution().nPlates())
-          break;
-        int ind = incumbent.nPlates() - 1 - nCommonSuffix;
-        if (solution().plates[ind].sequence() != incumbent.plates[ind].sequence())
-          break;
-      }
-
-      cout << nCommonPrefix << " first plates and " << nCommonSuffix << " last plates shared with previous solution" << endl;
-    }
-  }
-  else if (status == Move::Status::Improvement && solver_->params_.verbosity >= 2) {
-    cout << density << "%\t" << solver_->nMoves_ << "\t" << name() << endl;
-  }
-
-  if (status != Status::Degradation) {
-    solution() = incumbent;
-    bestMapped() = mapped;
-    bestDensity() = density;
-  }
-
-  return status;
-}
-
-Move::Status Shuffle::apply() {
+Solution Shuffle::apply() {
   vector<Item> sequence;
   if (windowSize_ == 0) {
     sequence = OrderingHeuristic::orderShuffle(problem(), rgen(), chunkSize_);
@@ -373,85 +263,85 @@ string Shuffle::name() const {
   return ss.str();
 }
 
-Move::Status ItemInsert::apply() {
+Solution ItemInsert::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomInsert(items, rgen());
   return mergeRepairRun(items);
 }
 
-Move::Status RowInsert::apply() {
+Solution RowInsert::apply() {
   vector<vector<Item> > rows = extractRows(solution());
   randomInsert(rows, rgen());
   return mergeRepairRun(rows);
 }
 
-Move::Status CutInsert::apply() {
+Solution CutInsert::apply() {
   vector<vector<Item> > cuts = extractCuts(solution());
   randomInsert(cuts, rgen());
   return mergeRepairRun(cuts);
 }
 
-Move::Status PlateInsert::apply() {
+Solution PlateInsert::apply() {
   vector<vector<Item> > plates = extractPlates(solution());
   randomInsert(plates, rgen());
   return mergeRepairRun(plates);
 }
 
-Move::Status ItemSwap::apply() {
+Solution ItemSwap::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomSwap(items, rgen());
   return mergeRepairRun(items);
 }
 
-Move::Status RowSwap::apply() {
+Solution RowSwap::apply() {
   vector<vector<Item> > rows = extractRows(solution());
   randomSwap(rows, rgen());
   return mergeRepairRun(rows);
 }
 
-Move::Status CutSwap::apply() {
+Solution CutSwap::apply() {
   vector<vector<Item> > cuts = extractCuts(solution());
   randomSwap(cuts, rgen());
   return mergeRepairRun(cuts);
 }
 
-Move::Status PlateSwap::apply() {
+Solution PlateSwap::apply() {
   vector<vector<Item> > plates = extractPlates(solution());
   randomSwap(plates, rgen());
   return mergeRepairRun(plates);
 }
 
-Move::Status RangeSwap::apply() {
+Solution RangeSwap::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomRangeSwap(items, rgen());
   return mergeRepairRun(items);
 }
 
-Move::Status AdjacentItemSwap::apply() {
+Solution AdjacentItemSwap::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomAdjacentSwap(items, rgen());
   return mergeRepairRun(items);
 }
 
-Move::Status AdjacentRowSwap::apply() {
+Solution AdjacentRowSwap::apply() {
   vector<vector<Item> > rows = extractRows(solution());
   randomAdjacentSwap(rows, rgen());
   return mergeRepairRun(rows);
 }
 
-Move::Status AdjacentCutSwap::apply() {
+Solution AdjacentCutSwap::apply() {
   vector<vector<Item> > cuts = extractCuts(solution());
   randomAdjacentSwap(cuts, rgen());
   return mergeRepairRun(cuts);
 }
 
-Move::Status AdjacentPlateSwap::apply() {
+Solution AdjacentPlateSwap::apply() {
   vector<vector<Item> > plates = extractPlates(solution());
   randomAdjacentSwap(plates, rgen());
   return mergeRepairRun(plates);
 }
 
-Move::Status Mirror::apply() {
+Solution Mirror::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomMirror(items, rgen(), width_);
   return mergeRepairRun(items);
