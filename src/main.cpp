@@ -19,7 +19,7 @@ po::options_description getOptions() {
   desc.add_options()("prefix,p", po::value<string>(),
                      "Instance name - loads <NAME>_batch.csv and <NAME>_defects.csv; writes <NAME>_solution.csv");
 
-  desc.add_options()("solution", po::value<string>(),
+  desc.add_options()("solution,o", po::value<string>(),
                      "Solution file (.csv)");
 
   desc.add_options()("time,t", po::value<double>()->default_value(3.0),
