@@ -7,6 +7,7 @@
 #include "move.hpp"
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -89,37 +90,54 @@ void Solver::run() {
   auto start = chrono::system_clock::now();
   nMoves_ = 0;
 
-  for (; nMoves_ < params_.initializationRuns; ++nMoves_) {
+  while (nMoves_ < params_.moveLimit) {
     chrono::duration<double> elapsed(chrono::system_clock::now() - start);
     if (elapsed.count() * 0.95 > params_.timeLimit) break;
-    run(pickInitializer());
-  }
-
-  for (; nMoves_ < params_.moveLimit; ++nMoves_) {
-    chrono::duration<double> elapsed(chrono::system_clock::now() - start);
-    if (elapsed.count() * 0.95 > params_.timeLimit) break;
-    run(pickMove());
+    step();
   }
   
   finalReport();
 }
 
-Move& Solver::pickInitializer() {
-  if  (initializers_.empty()) throw std::runtime_error("No initialization move provided.");
-  uniform_int_distribution<int> dist(0, initializers_.size()-1);
-  return *(initializers_[dist(rgen_)].get());
+Move* Solver::pickMove() {
+  if (nMoves_ < params_.initializationRuns) {
+    if  (initializers_.empty()) throw std::runtime_error("No initialization move provided.");
+    uniform_int_distribution<int> dist(0, initializers_.size()-1);
+    return initializers_[dist(rgen_)].get();
+  }
+  else {
+    if  (moves_.empty()) throw std::runtime_error("No move provided.");
+    uniform_int_distribution<int> dist(0, moves_.size()-1);
+    return moves_[dist(rgen_)].get();
+  }
 }
 
-Move& Solver::pickMove() {
-  if  (moves_.empty()) throw std::runtime_error("No move provided.");
-  uniform_int_distribution<int> dist(0, moves_.size()-1);
-  return *(moves_[dist(rgen_)].get());
-}
+void Solver::step() {
+  vector<Solution> incumbents(params_.nbThreads);
 
-void Solver::run(Move &move) {
-  Solution incumbent = move.apply();
-  MoveStatus status = accept(move, incumbent);
-  updateStats(move, status);
+  // Move selection
+  vector<Move*> moves(params_.nbThreads);
+  for (std::size_t i = 0; i < params_.nbThreads; ++i) {
+    moves[i] = pickMove();
+  }
+
+  // Parallel evaluation
+  auto runner = [&](std::size_t ind) {
+    incumbents[ind] = moves[ind]->apply();
+  };
+  vector<thread> threads;
+  for (std::size_t i = 0; i < params_.nbThreads; ++i) {
+    threads.push_back(thread(runner, i));
+  }
+  for (std::size_t i = 0; i < params_.nbThreads; ++i) {
+    threads[i].join();
+  }
+
+  // Sequential acceptance
+  for (std::size_t i = 0; i < params_.nbThreads; ++i, ++nMoves_) {
+    MoveStatus status = accept(*moves[i], incumbents[i]);
+    updateStats(*moves[i], status);
+  }
 }
 
 Solver::MoveStatus Solver::accept(Move &move, const Solution &incumbent) {

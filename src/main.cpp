@@ -19,6 +19,9 @@ po::options_description getOptions() {
   desc.add_options()("prefix,p", po::value<string>(),
                      "Instance name - loads <NAME>_batch.csv and <NAME>_defects.csv; writes <NAME>_solution.csv");
 
+  desc.add_options()("solution", po::value<string>(),
+                     "Solution file (.csv)");
+
   desc.add_options()("time,t", po::value<double>()->default_value(3.0),
                      "Time limit (seconds)");
 
@@ -31,14 +34,14 @@ po::options_description getOptions() {
 po::options_description getAdvancedOptions() {
   po::options_description desc("GCUT advanced options");
 
+  desc.add_options()("threads,j", po::value<size_t>()->default_value(8),
+                     "Number of threads");
+
   desc.add_options()("batch", po::value<string>(),
                      "Batch file (.csv)");
 
   desc.add_options()("defects", po::value<string>(),
                      "Defects file (.csv)");
-
-  desc.add_options()("solution", po::value<string>(),
-                     "Solution file (.csv)");
 
   desc.add_options()("initial", po::value<string>(),
                      "Initial solution file (.csv)");
@@ -139,6 +142,7 @@ int main(int argc, char** argv) {
   SolverParams params;
   params.verbosity = vm["verbosity"].as<int>();
   params.seed = vm["seed"].as<size_t>();
+  params.nbThreads = vm["threads"].as<size_t>();
   params.timeLimit = vm["time"].as<double>();
   params.failOnViolation = vm.count("check");
   params.initializationRuns = vm["init-runs"].as<size_t>();

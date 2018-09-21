@@ -7,6 +7,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Og -g")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -march=native -static -s")
 
 FIND_PACKAGE(Boost COMPONENTS system filesystem program_options unit_test_framework REQUIRED)
+FIND_PACKAGE(Threads REQUIRED)
 
 INCLUDE_DIRECTORIES(${ROADEF2018_SOURCE_DIR}/include)
 
@@ -32,6 +33,7 @@ SET (SOURCES
 add_executable(gcut ${SOURCES})
 target_link_libraries(gcut
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT}
 )
 
 enable_testing()

@@ -26,10 +26,9 @@ class Solver {
   Solver(const Problem &problem, SolverParams params, std::vector<int> initial);
   void init(std::vector<int> initial);
   void run();
-  Move& pickMove();
-  Move& pickInitializer();
+  Move* pickMove();
 
-  void run(Move &move);
+  void step();
   MoveStatus accept(Move &move, const Solution &incumbent);
   void updateStats(Move &move, MoveStatus status);
   void finalReport() const;
