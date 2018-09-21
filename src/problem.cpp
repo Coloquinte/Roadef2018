@@ -15,6 +15,7 @@ Problem::Problem(Params params, vector<Item> items, vector<Defect> defects)
 {
   buildSequences();
   buildPlates();
+  checkConsistency();
 }
 
 void Problem::buildSequences() {
@@ -39,12 +40,13 @@ void Problem::buildPlates() {
 }
 
 void Problem::checkConsistency() const {
-  for (Item item : items_) {
+  for (int i = 0; i < (int) items_.size(); ++i) {
+    Item item = items_[i];
     assert (item.width <= item.height);
+    assert (item.id == i);
+    assert (item.stack >= 0);
+    assert (item.stack < (int) stackItems_.size());
   }
-  // TODO: check IDs
-  //  * use only consecutive IDs
-  //  * convert only on read-write
 }
 
 Problem Problem::read(string nameItems, string nameDefects, string nameParams) {

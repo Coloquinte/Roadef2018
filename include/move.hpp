@@ -41,8 +41,12 @@ class Move {
   std::vector<std::vector<Item> > extractCuts(const Solution &solution) const;
   std::vector<std::vector<Item> > extractPlates(const Solution &solution) const;
 
-  bool sequenceValid(const std::vector<Item> &sequence) const;
+  Status mergeRepairRun(const std::vector<std::vector<Item> > &sequence);
   Status runSequence(const std::vector<Item> &sequence);
+
+  std::vector<Item> mergeSequence(const std::vector<std::vector<Item> > &sequence);
+  void repairSequence(std::vector<Item> &sequence) const;
+  bool sequenceValid(const std::vector<Item> &sequence) const;
   Status accept(const Solution &incumbent);
 
   const Problem&  problem  () const { return solver_->problem_; }
@@ -60,8 +64,6 @@ class Move {
   std::size_t nImprovement_;
   std::size_t nDegradation_;
   std::size_t nPlateau_;
-
-  static const int RETRY = 10;
 
  public:
   Solver *solver_;

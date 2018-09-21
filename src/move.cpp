@@ -22,14 +22,10 @@ Move::Move()
 }
 
 Move::Status Move::run() {
-  ++nCall_;
-
-  for (int i = 0; i < RETRY; ++i) {
-    Status status = apply();
-    updateStats(status);
-    if (status != Status::Failure)
-      return status;
-  }
+  Status status = apply();
+  updateStats(status);
+  if (status != Status::Failure)
+    return status;
 
   if (solver_->params_.verbosity >= 3)
       cout << "No valid solution found by " << name() << endl;
@@ -38,6 +34,7 @@ Move::Status Move::run() {
 }
 
 void Move::updateStats(Status status) {
+  ++nCall_;
   switch (status) {
     case Status::Improvement:
       ++nImprovement_;
@@ -133,6 +130,12 @@ vector<vector<Item> > Move::extractPlates(const Solution &solution) const {
   return plates;
 }
 
+Move::Status Move::mergeRepairRun(const vector<vector<Item> > &sequence) {
+  vector<Item> merged = mergeSequence(sequence);
+  repairSequence(merged);
+  return runSequence(merged);
+}
+
 Move::Status Move::runSequence(const vector<Item> &sequence) {
   if (!sequenceValid(sequence))
     return Status::Failure;
@@ -221,7 +224,7 @@ void randomAdjacentSwap(vector<vector<Item> > &vec, mt19937 &rgen) {
   swap(vec[i], vec[i + 1]);
 }
 
-vector<Item> merge(const vector<vector<Item> > &vecvec) {
+vector<Item> Move::mergeSequence(const vector<vector<Item> > &vecvec) {
   vector<Item> ret;
   for (const vector<Item> &vec : vecvec) {
     for (Item item : vec) {
@@ -231,9 +234,25 @@ vector<Item> merge(const vector<vector<Item> > &vecvec) {
   return ret;
 }
 
+void Move::repairSequence(vector<Item> &sequence) const {
+  // Reorder the items in each stack so they meet the precedence constraints
+  vector<Item> result;
+
+  std::vector<int> stackCounts(problem().stackItems().size(), 0);
+  for (Item item : sequence) {
+    int stack = item.stack;
+    int index = stackCounts[stack]++;
+    assert (index < (int) problem().stackItems()[stack].size());
+    result.push_back(problem().stackItems()[stack][index]);
+  }
+
+  swap(sequence, result);
+}
+
 bool Move::sequenceValid(const vector<Item> &sequence) const {
-  if (sequence.empty())
+  if (sequence.size() != problem().items().size())
     return false;
+
   unordered_map<int, int> itemPositions;
   int pos = 0;
   for (Item item : sequence) {
@@ -357,99 +376,85 @@ string Shuffle::name() const {
 Move::Status ItemInsert::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomInsert(items, rgen());
-  vector<Item> sequence = merge(items);
-  return runSequence(sequence);
+  return mergeRepairRun(items);
 }
 
 Move::Status RowInsert::apply() {
   vector<vector<Item> > rows = extractRows(solution());
   randomInsert(rows, rgen());
-  vector<Item> sequence = merge(rows);
-  return runSequence(sequence);
+  return mergeRepairRun(rows);
 }
 
 Move::Status CutInsert::apply() {
   vector<vector<Item> > cuts = extractCuts(solution());
   randomInsert(cuts, rgen());
-  vector<Item> sequence = merge(cuts);
-  return runSequence(sequence);
+  return mergeRepairRun(cuts);
 }
 
 Move::Status PlateInsert::apply() {
   vector<vector<Item> > plates = extractPlates(solution());
   randomInsert(plates, rgen());
-  vector<Item> sequence = merge(plates);
-  return runSequence(sequence);
+  return mergeRepairRun(plates);
 }
 
 Move::Status ItemSwap::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomSwap(items, rgen());
-  vector<Item> sequence = merge(items);
-  return runSequence(sequence);
+  return mergeRepairRun(items);
 }
 
 Move::Status RowSwap::apply() {
   vector<vector<Item> > rows = extractRows(solution());
   randomSwap(rows, rgen());
-  vector<Item> sequence = merge(rows);
-  return runSequence(sequence);
+  return mergeRepairRun(rows);
 }
 
 Move::Status CutSwap::apply() {
   vector<vector<Item> > cuts = extractCuts(solution());
   randomSwap(cuts, rgen());
-  vector<Item> sequence = merge(cuts);
-  return runSequence(sequence);
+  return mergeRepairRun(cuts);
 }
 
 Move::Status PlateSwap::apply() {
   vector<vector<Item> > plates = extractPlates(solution());
   randomSwap(plates, rgen());
-  vector<Item> sequence = merge(plates);
-  return runSequence(sequence);
+  return mergeRepairRun(plates);
 }
 
 Move::Status RangeSwap::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomRangeSwap(items, rgen());
-  vector<Item> sequence = merge(items);
-  return runSequence(sequence);
+  return mergeRepairRun(items);
 }
 
 Move::Status AdjacentItemSwap::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomAdjacentSwap(items, rgen());
-  vector<Item> sequence = merge(items);
-  return runSequence(sequence);
+  return mergeRepairRun(items);
 }
 
 Move::Status AdjacentRowSwap::apply() {
   vector<vector<Item> > rows = extractRows(solution());
   randomAdjacentSwap(rows, rgen());
-  vector<Item> sequence = merge(rows);
-  return runSequence(sequence);
+  return mergeRepairRun(rows);
 }
 
 Move::Status AdjacentCutSwap::apply() {
   vector<vector<Item> > cuts = extractCuts(solution());
   randomAdjacentSwap(cuts, rgen());
-  vector<Item> sequence = merge(cuts);
-  return runSequence(sequence);
+  return mergeRepairRun(cuts);
 }
 
 Move::Status AdjacentPlateSwap::apply() {
   vector<vector<Item> > plates = extractPlates(solution());
   randomAdjacentSwap(plates, rgen());
-  vector<Item> sequence = merge(plates);
-  return runSequence(sequence);
+  return mergeRepairRun(plates);
 }
 
 Move::Status Mirror::apply() {
   vector<vector<Item> > items = extractItems(solution());
   randomMirror(items, rgen(), width_);
-  vector<Item> sequence = merge(items);
-  return runSequence(sequence);
+  return mergeRepairRun(items);
 }
 
 string Mirror::name() const {
