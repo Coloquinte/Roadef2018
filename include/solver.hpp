@@ -43,7 +43,7 @@ class Solver {
   double bestMapped_;
   double bestDensity_;
 
-  std::mt19937 rgen_;
+  std::vector<std::mt19937> rgens_;
   std::size_t nMoves_;
 
   friend class Move;

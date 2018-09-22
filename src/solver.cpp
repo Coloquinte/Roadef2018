@@ -22,8 +22,14 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 , params_(params)
 , bestMapped_(0.0)
 , bestDensity_(0.0)
-, rgen_(params.seed)
 , nMoves_(0) {
+
+  vector<size_t> seeds(params_.nbThreads);
+  seed_seq seq { params_.seed };
+  seq.generate(seeds.begin(), seeds.end());
+  for (std::size_t i = 0; i < params_.nbThreads; ++i) {
+    rgens_.push_back(std::mt19937(seeds[i]));
+  }
 
   // Shuffle everything
   initializers_.emplace_back(make_unique<Shuffle>( 1));
@@ -107,12 +113,12 @@ Move* Solver::pickMove() {
   if (nMoves_ < params_.initializationRuns) {
     if  (initializers_.empty()) throw std::runtime_error("No initialization move provided.");
     uniform_int_distribution<int> dist(0, initializers_.size()-1);
-    return initializers_[dist(rgen_)].get();
+    return initializers_[dist(rgens_[0])].get();
   }
   else {
     if  (moves_.empty()) throw std::runtime_error("No move provided.");
     uniform_int_distribution<int> dist(0, moves_.size()-1);
-    return moves_[dist(rgen_)].get();
+    return moves_[dist(rgens_[0])].get();
   }
 }
 
@@ -127,7 +133,7 @@ void Solver::step() {
 
   // Parallel evaluation
   auto runner = [&](std::size_t ind) {
-    incumbents[ind] = moves[ind]->apply();
+    incumbents[ind] = moves[ind]->apply(rgens_[ind]);
   };
   vector<thread> threads;
   for (std::size_t i = 0; i < params_.nbThreads; ++i) {

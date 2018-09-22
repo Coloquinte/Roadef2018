@@ -11,7 +11,7 @@
 class Move {
  public:
   Move();
-  virtual Solution apply() = 0;
+  virtual Solution apply(std::mt19937& rgen) = 0;
   virtual std::string name() const =0;
   virtual ~Move() {}
 
@@ -38,11 +38,9 @@ class Move {
 
   const Problem&  problem  () const { return solver_->problem_; }
   const Solution& solution () const { return solver_->solution_; }
-  Solution&       solution ()       { return solver_->solution_; }
-  std::mt19937&   rgen     ()       { return solver_->rgen_; }
 
-  double& bestMapped  () { return solver_->bestMapped_; }
-  double& bestDensity () { return solver_->bestDensity_; }
+  double bestMapped  () { return solver_->bestMapped_; }
+  double bestDensity () { return solver_->bestDensity_; }
 
 
  protected:
@@ -53,13 +51,13 @@ class Move {
   std::size_t nPlateau_;
 
  public:
-  Solver *solver_;
+  const Solver *solver_;
 
   friend class Solver;
 };
 
 struct Shuffle : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const;
   Shuffle(int chunkSize, int windowSize=0)
     : chunkSize_(chunkSize)
@@ -70,72 +68,72 @@ struct Shuffle : Move {
 };
 
 struct ItemInsert : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "ItemInsert"; }
 };
 
 struct RowInsert : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "RowInsert"; }
 };
 
 struct CutInsert : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "CutInsert"; }
 };
 
 struct PlateInsert : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "PlateInsert"; }
 };
 
 struct ItemSwap : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "ItemSwap"; }
 };
 
 struct RowSwap : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "RowSwap"; }
 };
 
 struct CutSwap : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "CutSwap"; }
 };
 
 struct PlateSwap : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "PlateSwap"; }
 };
 
 struct RangeSwap : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "RangeSwap"; }
 };
 
 struct AdjacentItemSwap : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "AdjacentItemSwap"; }
 };
 
 struct AdjacentRowSwap : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "AdjacentRowSwap"; }
 };
 
 struct AdjacentCutSwap : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "AdjacentCutSwap"; }
 };
 
 struct AdjacentPlateSwap : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const { return "AdjacentPlateSwap"; }
 };
 
 struct Mirror : Move {
-  virtual Solution apply();
+  virtual Solution apply(std::mt19937& rgen);
   virtual std::string name() const;
   Mirror(int width)
     : width_(width) {

@@ -242,13 +242,13 @@ bool Move::sequenceValid(const vector<Item> &sequence) const {
   return true;
 }
 
-Solution Shuffle::apply() {
+Solution Shuffle::apply(std::mt19937& rgen) {
   vector<Item> sequence;
   if (windowSize_ == 0) {
-    sequence = OrderingHeuristic::orderShuffle(problem(), rgen(), chunkSize_);
+    sequence = OrderingHeuristic::orderShuffle(problem(), rgen, chunkSize_);
   } else {
     vector<Item> initial = extractSequence(solution());
-    sequence = OrderingHeuristic::orderShuffle(problem(), rgen(),
+    sequence = OrderingHeuristic::orderShuffle(problem(), rgen,
         initial, chunkSize_, windowSize_);
   }
   return runSequence(sequence);
@@ -263,87 +263,87 @@ string Shuffle::name() const {
   return ss.str();
 }
 
-Solution ItemInsert::apply() {
+Solution ItemInsert::apply(std::mt19937& rgen) {
   vector<vector<Item> > items = extractItems(solution());
-  randomInsert(items, rgen());
+  randomInsert(items, rgen);
   return mergeRepairRun(items);
 }
 
-Solution RowInsert::apply() {
+Solution RowInsert::apply(std::mt19937& rgen) {
   vector<vector<Item> > rows = extractRows(solution());
-  randomInsert(rows, rgen());
+  randomInsert(rows, rgen);
   return mergeRepairRun(rows);
 }
 
-Solution CutInsert::apply() {
+Solution CutInsert::apply(std::mt19937& rgen) {
   vector<vector<Item> > cuts = extractCuts(solution());
-  randomInsert(cuts, rgen());
+  randomInsert(cuts, rgen);
   return mergeRepairRun(cuts);
 }
 
-Solution PlateInsert::apply() {
+Solution PlateInsert::apply(std::mt19937& rgen) {
   vector<vector<Item> > plates = extractPlates(solution());
-  randomInsert(plates, rgen());
+  randomInsert(plates, rgen);
   return mergeRepairRun(plates);
 }
 
-Solution ItemSwap::apply() {
+Solution ItemSwap::apply(std::mt19937& rgen) {
   vector<vector<Item> > items = extractItems(solution());
-  randomSwap(items, rgen());
+  randomSwap(items, rgen);
   return mergeRepairRun(items);
 }
 
-Solution RowSwap::apply() {
+Solution RowSwap::apply(std::mt19937& rgen) {
   vector<vector<Item> > rows = extractRows(solution());
-  randomSwap(rows, rgen());
+  randomSwap(rows, rgen);
   return mergeRepairRun(rows);
 }
 
-Solution CutSwap::apply() {
+Solution CutSwap::apply(std::mt19937& rgen) {
   vector<vector<Item> > cuts = extractCuts(solution());
-  randomSwap(cuts, rgen());
+  randomSwap(cuts, rgen);
   return mergeRepairRun(cuts);
 }
 
-Solution PlateSwap::apply() {
+Solution PlateSwap::apply(std::mt19937& rgen) {
   vector<vector<Item> > plates = extractPlates(solution());
-  randomSwap(plates, rgen());
+  randomSwap(plates, rgen);
   return mergeRepairRun(plates);
 }
 
-Solution RangeSwap::apply() {
+Solution RangeSwap::apply(std::mt19937& rgen) {
   vector<vector<Item> > items = extractItems(solution());
-  randomRangeSwap(items, rgen());
+  randomRangeSwap(items, rgen);
   return mergeRepairRun(items);
 }
 
-Solution AdjacentItemSwap::apply() {
+Solution AdjacentItemSwap::apply(std::mt19937& rgen) {
   vector<vector<Item> > items = extractItems(solution());
-  randomAdjacentSwap(items, rgen());
+  randomAdjacentSwap(items, rgen);
   return mergeRepairRun(items);
 }
 
-Solution AdjacentRowSwap::apply() {
+Solution AdjacentRowSwap::apply(std::mt19937& rgen) {
   vector<vector<Item> > rows = extractRows(solution());
-  randomAdjacentSwap(rows, rgen());
+  randomAdjacentSwap(rows, rgen);
   return mergeRepairRun(rows);
 }
 
-Solution AdjacentCutSwap::apply() {
+Solution AdjacentCutSwap::apply(std::mt19937& rgen) {
   vector<vector<Item> > cuts = extractCuts(solution());
-  randomAdjacentSwap(cuts, rgen());
+  randomAdjacentSwap(cuts, rgen);
   return mergeRepairRun(cuts);
 }
 
-Solution AdjacentPlateSwap::apply() {
+Solution AdjacentPlateSwap::apply(std::mt19937& rgen) {
   vector<vector<Item> > plates = extractPlates(solution());
-  randomAdjacentSwap(plates, rgen());
+  randomAdjacentSwap(plates, rgen);
   return mergeRepairRun(plates);
 }
 
-Solution Mirror::apply() {
+Solution Mirror::apply(std::mt19937& rgen) {
   vector<vector<Item> > items = extractItems(solution());
-  randomMirror(items, rgen(), width_);
+  randomMirror(items, rgen, width_);
   return mergeRepairRun(items);
 }
 
