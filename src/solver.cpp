@@ -32,10 +32,11 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
   }
 
   // Shuffle everything
-  initializers_.emplace_back(make_unique<Shuffle>( 1));
-  initializers_.emplace_back(make_unique<Shuffle>( 4));
-  initializers_.emplace_back(make_unique<Shuffle>(16));
-  initializers_.emplace_back(make_unique<Shuffle>(64));
+  initializers_.emplace_back(make_unique<Shuffle>(  1));
+  initializers_.emplace_back(make_unique<Shuffle>(  4));
+  initializers_.emplace_back(make_unique<Shuffle>( 16));
+  initializers_.emplace_back(make_unique<Shuffle>( 64));
+  initializers_.emplace_back(make_unique<Shuffle>(128));
 
   // Shuffle a range
   moves_.emplace_back(make_unique<Shuffle>(1,  8));
