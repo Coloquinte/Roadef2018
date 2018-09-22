@@ -259,7 +259,13 @@ void Solver::finalReport() const {
     int nEvaluated = 0;
     int nImprovement = 0;
     cout << endl << "MoveName        \tTotal\t-\t=\t+\tErr" << endl;
-    for (auto &m : moves_) {
+
+    std::vector<Move*> allMoves;
+    for (auto &m : initializers_)
+      allMoves.push_back(m.get());
+    for (auto &m : moves_)
+      allMoves.push_back(m.get());
+    for (Move *m : allMoves) {
       string name = m->name();
       while (name.size() < 16)
         name.append(" ");
