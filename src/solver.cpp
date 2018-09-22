@@ -26,11 +26,15 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 , nMoves_(0) {
 
   // Shuffle everything
+  initializers_.emplace_back(make_unique<Shuffle>( 1));
   initializers_.emplace_back(make_unique<Shuffle>( 4));
   initializers_.emplace_back(make_unique<Shuffle>(16));
   initializers_.emplace_back(make_unique<Shuffle>(64));
 
   // Shuffle a range
+  moves_.emplace_back(make_unique<Shuffle>(1,  8));
+  moves_.emplace_back(make_unique<Shuffle>(1, 16));
+  moves_.emplace_back(make_unique<Shuffle>(1, 32));
   moves_.emplace_back(make_unique<Shuffle>(4,  8));
   moves_.emplace_back(make_unique<Shuffle>(4, 16));
   moves_.emplace_back(make_unique<Shuffle>(4, 32));
@@ -38,14 +42,14 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
   // Insertions
   moves_.emplace_back(make_unique<ItemInsert>());
   moves_.emplace_back(make_unique<RowInsert>());
-  moves_.emplace_back(make_unique<CutInsert>());
-  moves_.emplace_back(make_unique<PlateInsert>());
+  //moves_.emplace_back(make_unique<CutInsert>());
+  //moves_.emplace_back(make_unique<PlateInsert>());
 
   // Swaps
   moves_.emplace_back(make_unique<ItemSwap>());
   moves_.emplace_back(make_unique<RowSwap>());
   moves_.emplace_back(make_unique<CutSwap>());
-  moves_.emplace_back(make_unique<PlateSwap>());
+  //moves_.emplace_back(make_unique<PlateSwap>());
 
   // Local swaps
   moves_.emplace_back(make_unique<AdjacentItemSwap>());
@@ -59,7 +63,7 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
   moves_.emplace_back(make_unique<Mirror>(16));
 
   // Swap two ranges
-  moves_.emplace_back(make_unique<RangeSwap>());
+  //moves_.emplace_back(make_unique<RangeSwap>());
 
   for (const unique_ptr<Move> &m : initializers_) m->solver_ = this;
   for (const unique_ptr<Move> &m : moves_) m->solver_ = this;
