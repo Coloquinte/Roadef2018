@@ -66,14 +66,14 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
     CutSolution cutSolution = packCut(previousItems, beginCoord, endCoord);
 
     int maxUsed = cutSolution.maxUsedX();
+    // All solutions with "maxUsed + minWaste_ <= end" are considered dominated
     if (maxUsed + minWaste_ < endCoord) {
-      // All solutions with "maxUsed + minWaste_ <= end" are considered dominated
-      endCoord = maxUsed + minWaste_;
-      // Solve the packed case; sometimes, an item fits perfectly where it didn't
-      CutSolution packed = packCut(previousItems, beginCoord, endCoord);
-      // But that's not entirely sure since the algorithm does not handle all cornercases
-      if (packed.nItems() >= cutSolution.nItems())
+      // Solve the packed case, which might contain more items in cornercases
+      CutSolution packed = packCut(previousItems, beginCoord, maxUsed + minWaste_);
+      if (packed.nItems() >= cutSolution.nItems()) {
         cutSolution = packed;
+        endCoord = maxUsed + minWaste_;
+      }
     }
     if (endCoord <= maxEndCoord)
       front_.insert(beginCoord, endCoord, previousItems + cutSolution.nItems(), previousFront);
@@ -103,6 +103,7 @@ void PlatePacker::propagateBreakpoints(int after) {
     int prev = 0;
     for (; prev < front_.size(); ++prev) {
       // Can we extend the previous row?
+      // TODO: a row may already include some waste
       if (front_[prev].end + minWaste_ > bp)
         break;
       // Can we create a row before?

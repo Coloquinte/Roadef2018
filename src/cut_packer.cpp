@@ -55,14 +55,14 @@ void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) 
     RowPacker::Quality result = countRow(previousItems, beginCoord, endCoord);
 
     int maxUsed = result.maxUsedY;
+    // All solutions with "maxUsed + minWaste_ <= end" are considered dominated
     if (maxUsed + minWaste_ < endCoord) {
-      // All solutions with "maxUsed + minWaste_ <= end" are considered dominated
-      endCoord = maxUsed + minWaste_;
-      // Solve the packed case; sometimes, an item fits perfectly where it didn't
-      RowPacker::Quality packed = countRow(previousItems, beginCoord, endCoord);
-      // But that's not entirely sure since the algorithm does not handle all cornercases
-      if (packed.nItems >= result.nItems)
+      // Solve the packed case, which might contain more items in cornercases
+      RowPacker::Quality packed = countRow(previousItems, beginCoord, maxUsed + minWaste_);
+      if (packed.nItems >= result.nItems) {
+        endCoord = maxUsed + minWaste_;
         result = packed;
+      }
     }
     front_.insert(beginCoord, endCoord, previousItems + result.nItems, previousFront);
 
@@ -91,6 +91,7 @@ void CutPacker::propagateBreakpoints(int after) {
     int prev = 0;
     for (; prev < front_.size(); ++prev) {
       // Can we extend the previous row?
+      // TODO: a row may already include some waste
       if (front_[prev].end + minWaste_ > bp)
         break;
       // Can we create a row before?
