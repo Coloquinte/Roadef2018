@@ -62,7 +62,7 @@ po::options_description getHiddenOptions() {
   desc.add_options()("moves", po::value<size_t>()->default_value(1000000000llu),
                      "Move limit");
 
-  desc.add_options()("init-runs", po::value<size_t>()->default_value(1000llu),
+  desc.add_options()("init-runs", po::value<size_t>()->default_value(5000llu),
                      "Initialization runs");
 
   return desc;
