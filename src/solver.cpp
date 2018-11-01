@@ -107,7 +107,7 @@ void Solver::run() {
 
   while (nMoves_ < params_.moveLimit) {
     chrono::duration<double> elapsed(chrono::system_clock::now() - start);
-    if (elapsed.count() * 0.95 > params_.timeLimit) break;
+    if (elapsed.count() > 0.98 * params_.timeLimit) break;
     step();
   }
   
