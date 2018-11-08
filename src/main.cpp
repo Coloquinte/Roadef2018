@@ -122,8 +122,8 @@ po::variables_map parseArguments(int argc, char **argv) {
 }
 
 int main(int argc, char** argv) {
-  cout << fixed << setw(4) << setprecision(4);
-  cerr << fixed << setw(4) << setprecision(4);
+  cout << fixed << setw(4) << setprecision(2);
+  cerr << fixed << setw(4) << setprecision(2);
   po::variables_map vm = parseArguments(argc, argv);
 
   string batchFile;

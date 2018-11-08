@@ -18,46 +18,47 @@ class SolutionChecker {
   static double evalPercentDensity(const Problem &problem, const Solution &solution);
 
  private:
-  SolutionChecker(const Problem &problem, const Solution &solution);
-  void check();
+  SolutionChecker(const Problem &problem);
+  const Problem& problem() const { return problem_; }
+  const Params& params() const { return problem().params(); }
 
   int nViolations();
-  long long evalAreaViolation();
-  long long evalAreaUsage();
-  long long evalAreaMapped();
+  long long evalAreaUsage(const Solution &solution);
+  long long evalAreaMapped(const Solution &solution);
   long long evalTotalArea();
+  long long evalPlateArea();
 
   int nItems();
-  int nMappedItems();
+  int nMappedItems(const Solution &solution);
 
-  void checkPlate(const PlateSolution &plate);
+  void checkSolution(const Solution &solution);
+  void checkPlate(const PlateSolution &plate, bool lastPlate = false);
   void checkCut(const CutSolution &cut);
   void checkRow(const RowSolution &row);
   void checkItem(const ItemSolution &row);
 
-  void checkPlateDivision(const PlateSolution &plate);
+  void checkPlateDivision(const PlateSolution &plate, bool lastPlate);
   void checkCutDivision(const CutSolution &cut);
   void checkRowDivision(const RowSolution &row);
 
   void checkCutSize(const CutSolution &cut);
   void checkRowSize(const RowSolution &row);
 
-  void checkItemUnicity();
-  void checkSequences();
+  void checkItemUnicity(const Solution &solution);
+  void checkSequences(const Solution &solution);
 
   bool fitsMinWaste(int a, int b) const;
   bool vCutIntersects(int x, const Defect &defect, int minY, int maxY) const;
   bool hCutIntersects(int y, const Defect &defect, int minX, int maxX) const;
 
   void reportErrors();
-  void reportQuality();
+  void reportQuality(const Solution &solution);
 
   template<typename ... Args>
   void error(const std::string& type, const std::string& format, Args ... args );
 
  private:
   const Problem &problem_;
-  const Solution &solution_;
 
   int plateId_;
   int cutId_;

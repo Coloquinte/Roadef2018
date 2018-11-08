@@ -24,7 +24,7 @@ class Problem {
   const std::vector<Defect>& defects() const { return defects_; }
   const std::vector<std::vector<Defect> >& plateDefects() const { return plateDefects_; }
 
-  const Params params() const { return params_; }
+  const Params& params() const { return params_; }
 
   void checkConsistency() const;
 

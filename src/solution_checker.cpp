@@ -13,14 +13,28 @@ using namespace std;
 template<typename ... Args>
 void SolutionChecker::error(const string& type, const string& format, Args ... args ) {
     stringstream header;
-    if (plateId_ >= 0)
+    if (plateId_ >= 0) {
       header << "Plate #" << plateId_;
-    if (cutId_ >= 0)
-      header << ", cut #" << cutId_;
-    if (rowId_ >= 0)
-      header << ", row #" << rowId_;
-    if (plateId_ >= 0)
+    }
+    if (cutId_ >= 0) {
+      if (plateId_ >= 0) {
+        header << ", cut #" << cutId_;
+      }
+      else {
+        header << "Cut #" << cutId_;
+      }
+    }
+    if (rowId_ >= 0) {
+      if (cutId_ >= 0) {
+        header << ", row #" << rowId_;
+      }
+      else {
+        header << "Row #" << rowId_;
+      }
+    }
+    if (plateId_ >= 0 || cutId_ >= 0 || rowId_ >= 0) {
       header << ": ";
+    }
 
     size_t size = snprintf( nullptr, 0, format.c_str(), args ... ) + 1;
     unique_ptr<char[]> buf( new char[ size ] );
@@ -30,31 +44,30 @@ void SolutionChecker::error(const string& type, const string& format, Args ... a
 }
 
 void SolutionChecker::report(const Problem &problem, const Solution &solution) {
-  SolutionChecker checker(problem, solution);
-  checker.check();
+  SolutionChecker checker(problem);
+  checker.checkSolution(solution);
   checker.reportErrors();
-  checker.reportQuality();
+  checker.reportQuality(solution);
 }
 
 int SolutionChecker::nViolations(const Problem &problem, const Solution &solution) {
-  SolutionChecker checker(problem, solution);
-  checker.check();
+  SolutionChecker checker(problem);
+  checker.checkSolution(solution);
   return checker.nViolations();
 }
 
 double SolutionChecker::evalPercentMapped(const Problem &problem, const Solution &solution) {
-  SolutionChecker checker(problem, solution);
-  return 100.0 * checker.evalAreaMapped() / checker.evalTotalArea();
+  SolutionChecker checker(problem);
+  return 100.0 * checker.evalAreaMapped(solution) / checker.evalTotalArea();
 }
 
 double SolutionChecker::evalPercentDensity(const Problem &problem, const Solution &solution) {
-  SolutionChecker checker(problem, solution);
-  return 100.0 * checker.evalAreaMapped() / checker.evalAreaUsage();
+  SolutionChecker checker(problem);
+  return 100.0 * checker.evalAreaMapped(solution) / checker.evalAreaUsage(solution);
 }
 
-SolutionChecker::SolutionChecker(const Problem &problem, const Solution &solution)
+SolutionChecker::SolutionChecker(const Problem &problem)
 : problem_(problem)
-, solution_(solution)
 , plateId_(-1)
 , cutId_(-1)
 , rowId_(-1) {
@@ -64,17 +77,18 @@ SolutionChecker::SolutionChecker(const Problem &problem, const Solution &solutio
   errors_["Defect"].clear();
 }
 
-void SolutionChecker::check() {
-  checkItemUnicity();
-  checkSequences();
+void SolutionChecker::checkSolution(const Solution &solution) {
+  checkItemUnicity(solution);
+  checkSequences(solution);
 
-  if (problem_.params().nPlates < (int) solution_.plates.size())
+  if (params().nPlates < (int) solution.plates.size())
     error("Critical", "Too many plates in the solution");
 
-  for (int i = 0; i < (int) solution_.plates.size(); ++i) {
+  for (int i = 0; i < (int) solution.plates.size(); ++i) {
     plateId_ = i;
-    const PlateSolution &plate = solution_.plates[i];
-    checkPlate(plate);
+    bool lastPlate = i + 1 == (int) solution.plates.size();
+    const PlateSolution &plate = solution.plates[i];
+    checkPlate(plate, lastPlate);
   }
   plateId_ = -1;
 }
@@ -87,18 +101,14 @@ int SolutionChecker::nViolations() {
   return violations;
 }
 
-long long SolutionChecker::evalAreaViolation() {
-  return evalTotalArea() - evalAreaMapped();
-}
-
-long long SolutionChecker::evalAreaUsage() {
-  long long heightPlates = problem_.params().heightPlates;
-  long long widthPlates = problem_.params().widthPlates;
+long long SolutionChecker::evalAreaUsage(const Solution &solution) {
+  long long heightPlates = params().heightPlates;
+  long long widthPlates = params().widthPlates;
   long long areaPlates = widthPlates * heightPlates;
 
-  int nbFull = solution_.plates.size() - 1;
+  int nbFull = solution.plates.size() - 1;
   for (; nbFull >= 0; --nbFull) {
-    const PlateSolution &plate = solution_.plates[nbFull];
+    const PlateSolution &plate = solution.plates[nbFull];
     if (plate.cuts.empty()) continue;
 
     int usedOnPlate = heightPlates * plate.cuts.back().maxX();
@@ -107,9 +117,9 @@ long long SolutionChecker::evalAreaUsage() {
   return 0;
 }
 
-long long SolutionChecker::evalAreaMapped() {
+long long SolutionChecker::evalAreaMapped(const Solution &solution) {
   long long areaMapped = 0;
-  for (const PlateSolution &plate : solution_.plates) {
+  for (const PlateSolution &plate : solution.plates) {
     for (const CutSolution &cut: plate.cuts) {
       for (const RowSolution &row: cut.rows) {
         for (const ItemSolution &sol: row.items) {
@@ -130,13 +140,17 @@ long long SolutionChecker::evalTotalArea() {
   return areaTotal;
 }
 
+long long SolutionChecker::evalPlateArea() {
+  return params().widthPlates * params().heightPlates;
+}
+
 int SolutionChecker::nItems() {
   return problem_.items().size();
 }
 
-int SolutionChecker::nMappedItems() {
+int SolutionChecker::nMappedItems(const Solution &solution) {
   unordered_set<int> visitedItems;
-  for (const PlateSolution &plate : solution_.plates) {
+  for (const PlateSolution &plate : solution.plates) {
     for (const CutSolution &cut: plate.cuts) {
       for (const RowSolution &row: cut.rows) {
         for (const ItemSolution &item: row.items) {
@@ -148,8 +162,8 @@ int SolutionChecker::nMappedItems() {
   return visitedItems.size();
 }
 
-void SolutionChecker::checkPlate(const PlateSolution &plate) {
-  checkPlateDivision(plate);
+void SolutionChecker::checkPlate(const PlateSolution &plate, bool lastPlate) {
+  checkPlateDivision(plate, lastPlate);
   for (int i = 0; i < (int) plate.cuts.size(); ++i) {
     cutId_ = i;
     const CutSolution &cut = plate.cuts[i];
@@ -158,18 +172,18 @@ void SolutionChecker::checkPlate(const PlateSolution &plate) {
   cutId_ = -1;
 }
 
-void SolutionChecker::checkPlateDivision(const PlateSolution &plate) {
+void SolutionChecker::checkPlateDivision(const PlateSolution &plate, bool lastPlate) {
   if (plate.minX() != 0 || plate.minY() != 0)
     error("Critical", "Lower left is not at (0,0)");
-  if (plate.maxX() != problem_.params().widthPlates
-      || plate.maxY() != problem_.params().heightPlates)
-    error("Critical", "Upper right is not at (%d,%d)", problem_.params().widthPlates, problem_.params().heightPlates);
+  if (plate.maxX() != params().widthPlates || plate.maxY() != params().heightPlates)
+    error("Critical", "Upper right is not at (%d,%d)", params().widthPlates, params().heightPlates);
 
   if (plate.cuts.empty()) return;
 
   if (plate.cuts.front().minX() != plate.minX())
     error("Critical", "First cut doesn't start at %d", plate.minX());
-  if (plateId_ != solution_.nPlates() - 1 && plate.cuts.back().maxX() != plate.maxX())
+  // TODO: handle the last plate in particular
+  if (!lastPlate && plate.cuts.back().maxX() != plate.maxX())
     error("Critical", "Last cut doesn't end at %d", plate.maxX());
   else if (plate.cuts.back().maxX() > plate.maxX())
     error("Critical", "Last cut ends after %d", plate.maxX());
@@ -205,7 +219,7 @@ void SolutionChecker::checkCut(const CutSolution &cut) {
 }
 
 void SolutionChecker::checkCutSize(const CutSolution &cut) {
-  Params p = problem_.params();
+  Params p = params();
   if (cut.width() > p.maxXX)
       error("Critical", "Cut is %d-wide, which is larger than the maximum allowed value %d", cut.width(), p.maxXX);
   if (cut.width() < p.minXX)
@@ -251,7 +265,7 @@ void SolutionChecker::checkRow(const RowSolution &row) {
 }
 
 void SolutionChecker::checkRowSize(const RowSolution &row) {
-  Params p = problem_.params();
+  Params p = params();
   if (row.height() < p.minYY)
       error("Critical", "Row is %d-high, which is smaller than the minimum allowed value %d", row.height(), p.minYY);
 }
@@ -267,7 +281,7 @@ void SolutionChecker::checkRowDivision(const RowSolution &row) {
     if (!fitsMinWaste(item.maxY(), row.maxY()))
       error("MinWaste", "Above item #%d", item.itemId);
     if (item.maxY() != row.maxY() && item.minY() != row.minY())
-      error("Critical", "Item #%d would require two 4-cuts", item.itemId);
+      error("Critical", "Cutting item #%d would require two 4-cuts", item.itemId);
   }
 
   if (!fitsMinWaste(row.minX(), row.items.front().minX()))
@@ -315,9 +329,9 @@ void SolutionChecker::checkItem(const ItemSolution &sol) {
   }
 }
 
-void SolutionChecker::checkItemUnicity() {
+void SolutionChecker::checkItemUnicity(const Solution &solution) {
   unordered_set<int> visitedItems;
-  for (const PlateSolution &plate : solution_.plates) {
+  for (const PlateSolution &plate : solution.plates) {
     for (const CutSolution &cut: plate.cuts) {
       for (const RowSolution &row: cut.rows) {
         for (const ItemSolution &item: row.items) {
@@ -330,10 +344,10 @@ void SolutionChecker::checkItemUnicity() {
   }
 }
 
-void SolutionChecker::checkSequences() {
+void SolutionChecker::checkSequences(const Solution &solution) {
   unordered_map<int, int> itemPositions;
   int pos = 0;
-  for (const PlateSolution &plate : solution_.plates) {
+  for (const PlateSolution &plate : solution.plates) {
     for (const CutSolution &cut: plate.cuts) {
       for (const RowSolution &row: cut.rows) {
         for (const ItemSolution &item: row.items) {
@@ -395,20 +409,28 @@ void SolutionChecker::reportErrors() {
     cout << "No violation detected" << endl;
 }
 
-void SolutionChecker::reportQuality() {
-  if (nMappedItems() != nItems()) {
-    cout << "Only " << nMappedItems() << " out of " << nItems() << " items are cut" << endl;
-    cout << "That is " << 100.0 * evalAreaMapped() / evalTotalArea() << "% of the area" << endl;
+void SolutionChecker::reportQuality(const Solution &solution) {
+  cout << nItems() << " items to cut" << endl;
+  long long used = evalAreaUsage(solution);
+  long long mapped = evalAreaMapped(solution);
+  long long total = evalTotalArea();
+  long long plate = evalPlateArea();
+  long long wasted = used - mapped;
+  if (nMappedItems(solution) != nItems()) {
+    cout << "Only " << nMappedItems(solution) << " out of " << nItems() << " items are cut" << endl;
+    cout << "That is " << 100.0 * mapped / total << "% of the area" << endl;
   }
-  else
-    cout << "Every item has been cut" << endl;
-  cout << 100.0 * evalAreaMapped() / evalAreaUsage() << "% density" << endl;
+  cout << 100.0 * mapped / used << "% density" << endl;
+  cout << 100.0 * wasted / used << "% wasted" << endl;
+  cout << 1.0 * used / plate << " jumbos used" << endl;
+  cout << 1.0 * wasted / plate << " jumbos wasted" << endl;
+  cout << total << " item area" << endl;
+  cout << wasted << " objective value" << endl;
   cout << endl;
 }
 
 bool SolutionChecker::fitsMinWaste(int a, int b) const {
-  return a == b
-    || a <= b - problem_.params().minWaste;
+  return a == b || a <= b - params().minWaste;
 }
 
 bool SolutionChecker::vCutIntersects(int x, const Defect &defect, int minY, int maxY) const {
