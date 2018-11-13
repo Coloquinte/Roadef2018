@@ -11,11 +11,18 @@
 
 class SolutionChecker {
  public:
-  static void report(const Problem &problem, const Solution &solution);
+  // Whole solution checking and reporting
   static int nViolations(const Problem &problem, const Solution &solution);
+  static void report(const Problem &problem, const Solution &solution);
 
+  // Statistics for solution quality evaluation
   static double evalPercentMapped(const Problem &problem, const Solution &solution);
   static double evalPercentDensity(const Problem &problem, const Solution &solution);
+
+  // Partial solution checking for tests ; throws an exception if the solution is invalid
+  static void checkPlate(const Problem &problem, int plateId, const PlateSolution &plate);
+  static void checkCut(const Problem &problem, int plateId, const CutSolution &cut);
+  static void checkRow(const Problem &problem, int plateId, const RowSolution &row);
 
  private:
   SolutionChecker(const Problem &problem);

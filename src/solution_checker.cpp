@@ -66,6 +66,38 @@ double SolutionChecker::evalPercentDensity(const Problem &problem, const Solutio
   return 100.0 * checker.evalAreaMapped(solution) / checker.evalAreaUsage(solution);
 }
 
+void SolutionChecker::checkPlate(const Problem &problem, int plateId, const PlateSolution &plate) {
+  SolutionChecker checker(problem);
+  checker.plateId_ = plateId;
+  checker.checkPlate(plate);
+  if (checker.nViolations() != 0) {
+    plate.report();
+    checker.reportErrors();
+    throw std::runtime_error("The solution for the plate was invalid.");
+  }
+}
+
+void SolutionChecker::checkCut(const Problem &problem, int plateId, const CutSolution &cut) {
+  SolutionChecker checker(problem);
+  checker.checkCut(cut);
+  if (checker.nViolations() != 0) {
+    cut.report();
+    checker.reportErrors();
+    throw std::runtime_error("The solution for the cut was invalid.");
+  }
+}
+
+void SolutionChecker::checkRow(const Problem &problem, int plateId, const RowSolution &row) {
+  SolutionChecker checker(problem);
+  checker.checkRow(row);
+  if (checker.nViolations() != 0) {
+    row.report();
+    checker.reportErrors();
+    throw std::runtime_error("The solution for the row was invalid.");
+  }
+}
+
+
 SolutionChecker::SolutionChecker(const Problem &problem)
 : problem_(problem)
 , plateId_(-1)
@@ -411,6 +443,7 @@ void SolutionChecker::reportErrors() {
 
 void SolutionChecker::reportQuality(const Solution &solution) {
   cout << nItems() << " items to cut" << endl;
+  cout << problem_.stackItems().size() << " stacks" << endl;
   long long used = evalAreaUsage(solution);
   long long mapped = evalAreaMapped(solution);
   long long total = evalTotalArea();
@@ -422,8 +455,8 @@ void SolutionChecker::reportQuality(const Solution &solution) {
   }
   cout << 100.0 * mapped / used << "% density" << endl;
   cout << 100.0 * wasted / used << "% wasted" << endl;
-  cout << 1.0 * used / plate << " jumbos used" << endl;
-  cout << 1.0 * wasted / plate << " jumbos wasted" << endl;
+  cout << 1.0 * used / plate << " plates used" << endl;
+  cout << 1.0 * wasted / plate << " plates wasted" << endl;
   cout << total << " item area" << endl;
   cout << wasted << " objective value" << endl;
   cout << endl;
