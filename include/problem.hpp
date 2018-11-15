@@ -13,9 +13,9 @@ class Solution;
 
 class Problem {
  public:
-  Problem(Params params, std::vector<Item> items, std::vector<Defect> defects);
+  Problem(std::vector<Item> items, std::vector<Defect> defects);
 
-  static Problem read(std::string nameItems, std::string nameDefects = std::string(), std::string nameParams = std::string());
+  static Problem read(std::string nameItems, std::string nameDefects = std::string());
   void write(std::string nameItems, std::string nameDefects = std::string(), std::string nameParams = std::string()) const;
 
   const std::vector<Item>& items() const{ return items_; }
@@ -23,8 +23,6 @@ class Problem {
 
   const std::vector<Defect>& defects() const { return defects_; }
   const std::vector<std::vector<Defect> >& plateDefects() const { return plateDefects_; }
-
-  const Params& params() const { return params_; }
 
   void checkConsistency() const;
 
@@ -38,8 +36,6 @@ class Problem {
 
   std::vector<Defect> defects_;
   std::vector<std::vector<Defect> > plateDefects_;
-
-  Params params_;
 };
 
 #endif

@@ -8,10 +8,9 @@
 
 using namespace std;
 
-Problem::Problem(Params params, vector<Item> items, vector<Defect> defects)
+Problem::Problem(vector<Item> items, vector<Defect> defects)
 : items_(items)
 , defects_(defects)
-, params_(params)
 {
   buildSequences();
   buildPlates();
@@ -31,9 +30,9 @@ void Problem::buildSequences() {
 }
 
 void Problem::buildPlates() {
-  plateDefects_.resize(params_.nPlates);
+  plateDefects_.resize(Params::nPlates);
   for (Defect d : defects_) {
-    if (d.plate_id < 0 || d.plate_id >= params_.nPlates)
+    if (d.plate_id < 0 || d.plate_id >= Params::nPlates)
       continue;
     plateDefects_[d.plate_id].push_back(d);
   }
@@ -49,8 +48,8 @@ void Problem::checkConsistency() const {
   }
 }
 
-Problem Problem::read(string nameItems, string nameDefects, string nameParams) {
-  IOProblem io(nameItems, nameDefects, nameParams);
+Problem Problem::read(string nameItems, string nameDefects) {
+  IOProblem io(nameItems, nameDefects, string());
   return io.read();
 }
 

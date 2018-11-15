@@ -2,6 +2,7 @@
 #include "solution_checker.hpp"
 #include "problem.hpp"
 #include "solution.hpp"
+#include "utils.hpp"
 
 #include <unordered_set>
 #include <unordered_map>
@@ -113,7 +114,7 @@ void SolutionChecker::checkSolution(const Solution &solution) {
   checkItemUnicity(solution);
   checkSequences(solution);
 
-  if (params().nPlates < (int) solution.plates.size())
+  if (Params::nPlates < (int) solution.plates.size())
     error("Critical", "Too many plates in the solution");
 
   for (int i = 0; i < (int) solution.plates.size(); ++i) {
@@ -134,8 +135,8 @@ int SolutionChecker::nViolations() {
 }
 
 long long SolutionChecker::evalAreaUsage(const Solution &solution) {
-  long long heightPlates = params().heightPlates;
-  long long widthPlates = params().widthPlates;
+  long long heightPlates = Params::heightPlates;
+  long long widthPlates = Params::widthPlates;
   long long areaPlates = widthPlates * heightPlates;
 
   int nbFull = solution.plates.size() - 1;
@@ -173,7 +174,7 @@ long long SolutionChecker::evalTotalArea() {
 }
 
 long long SolutionChecker::evalPlateArea() {
-  return params().widthPlates * params().heightPlates;
+  return Params::widthPlates * Params::heightPlates;
 }
 
 int SolutionChecker::nItems() {
@@ -207,8 +208,8 @@ void SolutionChecker::checkPlate(const PlateSolution &plate, bool lastPlate) {
 void SolutionChecker::checkPlateDivision(const PlateSolution &plate, bool lastPlate) {
   if (plate.minX() != 0 || plate.minY() != 0)
     error("Critical", "Lower left is not at (0,0)");
-  if (plate.maxX() != params().widthPlates || plate.maxY() != params().heightPlates)
-    error("Critical", "Upper right is not at (%d,%d)", params().widthPlates, params().heightPlates);
+  if (plate.maxX() != Params::widthPlates || plate.maxY() != Params::heightPlates)
+    error("Critical", "Upper right is not at (%d,%d)", Params::widthPlates, Params::heightPlates);
 
   if (plate.cuts.empty()) return;
 
@@ -251,11 +252,10 @@ void SolutionChecker::checkCut(const CutSolution &cut) {
 }
 
 void SolutionChecker::checkCutSize(const CutSolution &cut) {
-  Params p = params();
-  if (cut.width() > p.maxXX)
-      error("Critical", "Cut is %d-wide, which is larger than the maximum allowed value %d", cut.width(), p.maxXX);
-  if (cut.width() < p.minXX)
-      error("Critical", "Cut is %d-wide, which is smaller than the minimum allowed value %d", cut.width(), p.minXX);
+  if (cut.width() > Params::maxXX)
+      error("Critical", "Cut is %d-wide, which is larger than the maximum allowed value %d", cut.width(), Params::maxXX);
+  if (cut.width() < Params::minXX)
+      error("Critical", "Cut is %d-wide, which is smaller than the minimum allowed value %d", cut.width(), Params::minXX);
 }
 
 void SolutionChecker::checkCutDivision(const CutSolution &cut) {
@@ -297,9 +297,8 @@ void SolutionChecker::checkRow(const RowSolution &row) {
 }
 
 void SolutionChecker::checkRowSize(const RowSolution &row) {
-  Params p = params();
-  if (row.height() < p.minYY)
-      error("Critical", "Row is %d-high, which is smaller than the minimum allowed value %d", row.height(), p.minYY);
+  if (row.height() < Params::minYY)
+      error("Critical", "Row is %d-high, which is smaller than the minimum allowed value %d", row.height(), Params::minYY);
 }
 
 void SolutionChecker::checkRowDivision(const RowSolution &row) {
@@ -308,17 +307,17 @@ void SolutionChecker::checkRowDivision(const RowSolution &row) {
   for (const ItemSolution &item : row.items) {
     if (!row.contains(item))
       error("Critical", "Item #%d not contained in the row", item.itemId);
-    if (!fitsMinWaste(row.minY(), item.minY()))
+    if (!utils::fitsMinWaste(row.minY(), item.minY()))
       error("MinWaste", "Below item #%d", item.itemId);
-    if (!fitsMinWaste(item.maxY(), row.maxY()))
+    if (!utils::fitsMinWaste(item.maxY(), row.maxY()))
       error("MinWaste", "Above item #%d", item.itemId);
     if (item.maxY() != row.maxY() && item.minY() != row.minY())
       error("Critical", "Cutting item #%d would require two 4-cuts", item.itemId);
   }
 
-  if (!fitsMinWaste(row.minX(), row.items.front().minX()))
+  if (!utils::fitsMinWaste(row.minX(), row.items.front().minX()))
     error("MinWaste", "Before item #%d", row.items.front().itemId);
-  if (!fitsMinWaste(row.items.back().maxX(), row.maxX()))
+  if (!utils::fitsMinWaste(row.items.back().maxX(), row.maxX()))
     error("MinWaste", "After item #%d", row.items.back().itemId);
 
   for (int i = 0; i+1 < (int) row.items.size(); ++i) {
@@ -327,7 +326,7 @@ void SolutionChecker::checkRowDivision(const RowSolution &row) {
     if (item1.maxX() > item2.minX())
       error("Critical", "Items #%d and #%d overlap",
           item1.itemId, item2.itemId);
-    else if (!fitsMinWaste(item1.maxX(), item2.minX()))
+    else if (!utils::fitsMinWaste(item1.maxX(), item2.minX()))
       error("MinWaste", "Between items #%d and #%d",
           item1.itemId, item2.itemId);
 
@@ -460,10 +459,6 @@ void SolutionChecker::reportQuality(const Solution &solution) {
   cout << total << " item area" << endl;
   cout << wasted << " objective value" << endl;
   cout << endl;
-}
-
-bool SolutionChecker::fitsMinWaste(int a, int b) const {
-  return a == b || a <= b - params().minWaste;
 }
 
 bool SolutionChecker::vCutIntersects(int x, const Defect &defect, int minY, int maxY) const {

@@ -24,8 +24,7 @@ PlatePacker::PlatePacker(const Problem &problem, const vector<Item> &sequence)
 }
 
 PlateSolution PlatePacker::run(int plateId, int start) {
-  Params p = problem_.params();
-  Rectangle plate = Rectangle::FromCoordinates(0, 0, p.widthPlates, p.heightPlates);
+  Rectangle plate = Rectangle::FromCoordinates(0, 0, Params::widthPlates, Params::heightPlates);
   init(plate, start, problem_.plateDefects()[plateId]);
   sort(defects_.begin(), defects_.end(),
         [](const Defect &a, const Defect &b) {
@@ -61,25 +60,25 @@ CutSolution PlatePacker::packCut(int start, int minX, int maxX) {
 }
 
 void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord) {
-  int maxEndCoord = min(region_.maxX(), beginCoord + maxXX_);
-  for (int endCoord = maxEndCoord + minWaste_; endCoord >= beginCoord + minXX_; --endCoord) {
+  int maxEndCoord = min(region_.maxX(), beginCoord + Params::maxXX);
+  for (int endCoord = maxEndCoord + Params::minWaste; endCoord >= beginCoord + Params::minXX; --endCoord) {
     CutSolution cutSolution = packCut(previousItems, beginCoord, endCoord);
 
     int maxUsed = cutSolution.maxUsedX();
-    // All solutions with "maxUsed + minWaste_ <= end" are considered dominated
-    if (maxUsed + minWaste_ < endCoord) {
+    // All solutions with "maxUsed + Params::minWaste <= end" are considered dominated
+    if (maxUsed + Params::minWaste < endCoord) {
       // Solve the packed case, which might contain more items in cornercases
-      CutSolution packed = packCut(previousItems, beginCoord, maxUsed + minWaste_);
+      CutSolution packed = packCut(previousItems, beginCoord, maxUsed + Params::minWaste);
       if (packed.nItems() >= cutSolution.nItems()) {
         cutSolution = packed;
-        endCoord = maxUsed + minWaste_;
+        endCoord = maxUsed + Params::minWaste;
       }
     }
     if (endCoord <= maxEndCoord)
       front_.insert(beginCoord, endCoord, previousItems + cutSolution.nItems(), previousFront);
 
     if (maxUsed < endCoord) {
-      // Try the tight case too, else the first minWaste_ iterations could short-circuit it
+      // Try the tight case too, else the first minWaste iterations could short-circuit it
       // TODO: handle this case in another manner (for example start after maxX)
       cutSolution = packCut(previousItems, beginCoord, maxUsed);
       front_.insert(beginCoord, maxUsed, previousItems + cutSolution.nItems(), previousFront);
@@ -104,10 +103,10 @@ void PlatePacker::propagateBreakpoints(int after) {
     for (; prev < front_.size(); ++prev) {
       // Can we extend the previous row?
       // TODO: a row may already include some waste
-      if (front_[prev].end + minWaste_ > bp)
+      if (front_[prev].end + Params::minWaste > bp)
         break;
       // Can we create a row before?
-      if (prev == 0 && front_[prev].end + minXX_ > bp)
+      if (prev == 0 && front_[prev].end + Params::minXX > bp)
         break;
     }
     --prev;
@@ -127,10 +126,10 @@ PlateSolution PlatePacker::backtrack() {
   int cur = front_.size() - 1;
   while (cur != 0) {
     auto elt = front_[cur];
-    if (elt.begin + minXX_ > slices_.back())
+    if (elt.begin + Params::minXX > slices_.back())
       continue;
-    while (elt.begin + maxXX_ < slices_.back())
-      slices_.push_back(slices_.back() - maxXX_ + minXX_);
+    while (elt.begin + Params::maxXX < slices_.back())
+      slices_.push_back(slices_.back() - Params::maxXX + Params::minXX);
 
     // Keep residual on the last plate
     if (elt.valeur == nItems()) {
@@ -142,8 +141,8 @@ PlateSolution PlatePacker::backtrack() {
     slices_.push_back(elt.begin);
     cur = elt.previous;
   }
-  while (region_.minX() + maxXX_ < slices_.back())
-    slices_.push_back(slices_.back() - maxXX_ + minXX_);
+  while (region_.minX() + Params::maxXX < slices_.back())
+    slices_.push_back(slices_.back() - Params::maxXX + Params::minXX);
   if (slices_.back() != region_.minX())
     slices_.push_back(region_.minX());
   reverse(slices_.begin(), slices_.end());
@@ -155,8 +154,8 @@ PlateSolution PlatePacker::backtrack() {
       break;
     CutSolution solution = packCut(nPacked, slices_[i], slices_[i+1]);
     nPacked += solution.nItems();
-    assert (solution.width() >= minXX_);
-    assert (solution.width() <= maxXX_);
+    assert (solution.width() >= Params::minXX);
+    assert (solution.width() <= Params::maxXX);
     plateSolution.cuts.push_back(solution);
   }
 

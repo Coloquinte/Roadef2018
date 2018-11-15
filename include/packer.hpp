@@ -9,29 +9,16 @@ class Packer {
  protected:
   Packer(const std::vector<Item> &sequence)
   : start_(0)
-  , sequence_(sequence)
-  , minWaste_(0)
-  , minXX_(0)
-  , maxXX_(0)
-  , minYY_(0) {
+  , sequence_(sequence) {
   }
 
   Packer(const Problem &problem, const std::vector<Item> &sequence)
   : sequence_(sequence) {
-    Params p = problem.params();
-    minXX_ = p.minXX;
-    maxXX_ = p.maxXX;
-    minYY_ = p.minYY;
-    minWaste_ = p.minWaste;
     start_ = 0;
   }
 
   int nItems() const {
     return sequence_.size();
-  }
-
-  bool fitsMinWaste(int a, int b) const {
-      return a <= b - minWaste_ || a == b;
   }
 
   void init(Rectangle region, int start, const std::vector<Defect> &defects) {
@@ -50,10 +37,6 @@ class Packer {
   std::vector<Defect> defects_;
 
   const std::vector<Item> &sequence_;
-  int minWaste_;
-  int minXX_;
-  int maxXX_;
-  int minYY_;
 
   friend class RowPacker;
   friend class CutPacker;

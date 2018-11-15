@@ -26,7 +26,6 @@ SET (SOURCES
   src/ordering_heuristic.cpp
   src/solver.cpp
   src/move.cpp
-  src/utils.cpp
   src/main.cpp
 )
 

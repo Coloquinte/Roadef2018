@@ -14,21 +14,15 @@ IOProblem::IOProblem(string nameItems, string nameDefects, string nameParams)
 }
 
 Problem IOProblem::read() {
-  Params params = readParams();
   vector<Item> items = readItems();
   vector<Defect> defects = readDefects();
-  return Problem(params, items, defects);
+  return Problem(items, defects);
 }
 
 void IOProblem::write(const Problem &pb) {
-  writeParams(pb.params());
+  writeParams();
   writeItems(pb.items());
   writeDefects(pb.defects());
-}
-
-Params IOProblem::readParams() {
-  // TODO
-  return Params();
 }
 
 string IOProblem::nameItems() const {
@@ -124,16 +118,16 @@ vector<string> IOProblem::readCSVLine(const string &s) {
   return ret;
 }
 
-void IOProblem::writeParams(const Params &params) {
+void IOProblem::writeParams() {
   ofstream f(nameParams().c_str());
   f << "NAME;VALUE" << endl;
-  f << "nPlates;" << params.nPlates << endl;
-  f << "widthPlates;" << params.widthPlates << endl;
-  f << "heightPlates;" << params.heightPlates << endl;
-  f << "minXX;" << params.minXX<< endl;
-  f << "maxXX;" << params.maxXX<< endl;
-  f << "minYY;" << params.minYY<< endl;
-  f << "minWaste;" << params.minWaste<< endl;
+  f << "nPlates;" << Params::nPlates << endl;
+  f << "widthPlates;" << Params::widthPlates << endl;
+  f << "heightPlates;" << Params::heightPlates << endl;
+  f << "minXX;" << Params::minXX << endl;
+  f << "maxXX;" << Params::maxXX << endl;
+  f << "minYY;" << Params::minYY << endl;
+  f << "minWaste;" << Params::minWaste << endl;
 }
 
 void IOProblem::writeItems(const vector<Item> &items) {

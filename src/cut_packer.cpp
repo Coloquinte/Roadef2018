@@ -51,23 +51,23 @@ RowSolution CutPacker::packRow(int start, int minY, int maxY) {
 }
 
 void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) {
-  for (int endCoord = region_.maxY(); endCoord >= beginCoord + minYY_; --endCoord) {
+  for (int endCoord = region_.maxY(); endCoord >= beginCoord + Params::minYY; --endCoord) {
     RowPacker::Quality result = countRow(previousItems, beginCoord, endCoord);
 
     int maxUsed = result.maxUsedY;
-    // All solutions with "maxUsed + minWaste_ <= end" are considered dominated
-    if (maxUsed + minWaste_ < endCoord) {
+    // All solutions with "maxUsed + Params::minWaste <= end" are considered dominated
+    if (maxUsed + Params::minWaste < endCoord) {
       // Solve the packed case, which might contain more items in cornercases
-      RowPacker::Quality packed = countRow(previousItems, beginCoord, maxUsed + minWaste_);
+      RowPacker::Quality packed = countRow(previousItems, beginCoord, maxUsed + Params::minWaste);
       if (packed.nItems >= result.nItems) {
-        endCoord = maxUsed + minWaste_;
+        endCoord = maxUsed + Params::minWaste;
         result = packed;
       }
     }
     front_.insert(beginCoord, endCoord, previousItems + result.nItems, previousFront);
 
     if (maxUsed < endCoord) {
-      // Try the tight case too, else the first minWaste_ iterations could short-circuit it
+      // Try the tight case too, else the first Params::minWaste iterations could short-circuit it
       // TODO: handle this case in another manner (for example start after maxY)
       result = countRow(previousItems, beginCoord, maxUsed);
       front_.insert(beginCoord, maxUsed, previousItems + result.nItems, previousFront);
@@ -92,10 +92,10 @@ void CutPacker::propagateBreakpoints(int after) {
     for (; prev < front_.size(); ++prev) {
       // Can we extend the previous row?
       // TODO: a row may already include some waste
-      if (front_[prev].end + minWaste_ > bp)
+      if (front_[prev].end + Params::minWaste > bp)
         break;
       // Can we create a row before?
-      if (prev == 0 && front_[prev].end + minYY_ > bp)
+      if (prev == 0 && front_[prev].end + Params::minYY > bp)
         break;
     }
     --prev;
@@ -115,7 +115,7 @@ CutSolution CutPacker::backtrack() {
   int cur = front_.size() - 1;
   while (cur != 0) {
     auto elt = front_[cur];
-    if (elt.begin + minYY_ > slices_.back())
+    if (elt.begin + Params::minYY > slices_.back())
       continue;
     assert (elt.previous < cur);
     assert (elt.begin < slices_.back());
@@ -131,7 +131,7 @@ CutSolution CutPacker::backtrack() {
   for (size_t i = 0; i + 1 < slices_.size(); ++i) {
     RowSolution solution = packRow(nPacked, slices_[i], slices_[i+1]);
     nPacked += solution.nItems();
-    assert (solution.height() >= minYY_);
+    assert (solution.height() >= Params::minYY);
     cutSolution.rows.push_back(solution);
   }
 
@@ -142,7 +142,7 @@ int CutPacker::countBacktrack() {
   int cur = front_.size() - 1;
   while (cur != 0) {
     auto elt = front_[cur];
-    if (elt.begin + minYY_ > slices_.back())
+    if (elt.begin + Params::minYY > slices_.back())
       continue;
     assert (elt.previous < cur);
     cur = elt.previous;

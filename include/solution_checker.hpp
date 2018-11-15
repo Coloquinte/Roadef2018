@@ -27,7 +27,6 @@ class SolutionChecker {
  private:
   SolutionChecker(const Problem &problem);
   const Problem& problem() const { return problem_; }
-  const Params& params() const { return problem().params(); }
 
   int nViolations();
   long long evalAreaUsage(const Solution &solution);
@@ -54,7 +53,6 @@ class SolutionChecker {
   void checkItemUnicity(const Solution &solution);
   void checkSequences(const Solution &solution);
 
-  bool fitsMinWaste(int a, int b) const;
   bool vCutIntersects(int x, const Defect &defect, int minY, int maxY) const;
   bool hCutIntersects(int y, const Defect &defect, int minX, int maxX) const;
 

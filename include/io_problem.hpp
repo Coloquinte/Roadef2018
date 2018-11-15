@@ -11,11 +11,10 @@ class IOProblem {
   void write(const Problem &pb);
 
  private:
-  Params readParams();
   std::vector<Item> readItems();
   std::vector<Defect> readDefects();
 
-  void writeParams(const Params &params);
+  void writeParams();
   void writeItems(const std::vector<Item> &items);
   void writeDefects(const std::vector<Defect> &defects);
 

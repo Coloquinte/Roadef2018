@@ -1,5 +1,6 @@
 
 #include "row_packer.hpp"
+#include "utils.hpp"
 
 #include <cassert>
 
@@ -92,9 +93,9 @@ RowPacker::Quality RowPacker::count(Rectangle row, int start, const std::vector<
 }
 
 bool RowPacker::fitsDimensionsAt(int minX, int width, int height) const {
-  if (!fitsMinWaste(height, region_.height()))
+  if (!utils::fitsMinWaste(height, region_.height()))
     return false;
-  if (!fitsMinWaste(minX + width, region_.maxX()))
+  if (!utils::fitsMinWaste(minX + width, region_.maxX()))
     return false;
   return true;
 }
@@ -122,7 +123,7 @@ int RowPacker::earliestFit(int minX, int width, int height) const {
     }
     if (!hasDefect)
       return cur;
-    cur = max(minX + minWaste_, cur);
+    cur = max(minX + Params::minWaste, cur);
   }
 }
 

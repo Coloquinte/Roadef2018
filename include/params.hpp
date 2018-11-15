@@ -3,23 +3,13 @@
 #define PARAMS_HPP
 
 struct Params {
-  int nPlates;
-  int widthPlates;
-  int heightPlates;
-  int minXX;
-  int maxXX;
-  int minYY;
-  int minWaste;
-
-  Params() {
-    nPlates = 100;
-    widthPlates = 6000;
-    heightPlates = 3210;
-    minXX = 100;
-    maxXX = 3500;
-    minYY = 100;
-    minWaste = 20;
-  }
+  static constexpr int nPlates = 100;
+  static constexpr int widthPlates = 6000;
+  static constexpr int heightPlates = 3210;
+  static constexpr int minXX = 100;
+  static constexpr int maxXX = 3500;
+  static constexpr int minYY = 100;
+  static constexpr int minWaste = 20;
 };
 
 #endif

@@ -38,7 +38,7 @@ SequencePacker::SequencePacker(const Problem &problem, const vector<Item> &seque
 }
 
 void SequencePacker::run() {
-  for (int i = 0; i < problem_.params().nPlates; ++i) {
+  for (int i = 0; i < Params::nPlates; ++i) {
     if (packedItems_ == (int) sequence_.size()) break;
     PlateSolution plate = PlatePacker::run(problem_, i, sequence_, packedItems_);
     packedItems_ += plate.nItems();
