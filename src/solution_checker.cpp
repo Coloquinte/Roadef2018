@@ -67,38 +67,6 @@ double SolutionChecker::evalPercentDensity(const Problem &problem, const Solutio
   return 100.0 * checker.evalAreaMapped(solution) / checker.evalAreaUsage(solution);
 }
 
-void SolutionChecker::checkPlate(const Problem &problem, int plateId, const PlateSolution &plate) {
-  SolutionChecker checker(problem);
-  checker.plateId_ = plateId;
-  checker.checkPlate(plate);
-  if (checker.nViolations() != 0) {
-    plate.report();
-    checker.reportErrors();
-    throw std::runtime_error("The solution for the plate was invalid.");
-  }
-}
-
-void SolutionChecker::checkCut(const Problem &problem, int plateId, const CutSolution &cut) {
-  SolutionChecker checker(problem);
-  checker.checkCut(cut);
-  if (checker.nViolations() != 0) {
-    cut.report();
-    checker.reportErrors();
-    throw std::runtime_error("The solution for the cut was invalid.");
-  }
-}
-
-void SolutionChecker::checkRow(const Problem &problem, int plateId, const RowSolution &row) {
-  SolutionChecker checker(problem);
-  checker.checkRow(row);
-  if (checker.nViolations() != 0) {
-    row.report();
-    checker.reportErrors();
-    throw std::runtime_error("The solution for the row was invalid.");
-  }
-}
-
-
 SolutionChecker::SolutionChecker(const Problem &problem)
 : problem_(problem)
 , plateId_(-1)

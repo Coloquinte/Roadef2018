@@ -19,11 +19,6 @@ class SolutionChecker {
   static double evalPercentMapped(const Problem &problem, const Solution &solution);
   static double evalPercentDensity(const Problem &problem, const Solution &solution);
 
-  // Partial solution checking for tests ; throws an exception if the solution is invalid
-  static void checkPlate(const Problem &problem, int plateId, const PlateSolution &plate);
-  static void checkCut(const Problem &problem, int plateId, const CutSolution &cut);
-  static void checkRow(const Problem &problem, int plateId, const RowSolution &row);
-
  private:
   SolutionChecker(const Problem &problem);
   const Problem& problem() const { return problem_; }
