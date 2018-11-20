@@ -75,6 +75,8 @@ class RowPackerNg {
 
   // Computation helper
   void fillYData(RowDescription &description) const;
+  bool fitsDimensionsAt(int minX, int width, int height) const;
+  int earliestFit(int minX, int width, int height) const;
 
  private:
   Rectangle row_;
