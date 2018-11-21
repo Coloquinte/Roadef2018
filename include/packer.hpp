@@ -5,6 +5,21 @@
 #include "problem.hpp"
 #include "solution.hpp"
 
+struct PlacementDescription {
+  int maxUsedX;
+  int maxUsedY;
+  // Whether a minWaste gap is needed
+  bool tightX;
+  bool tightY;
+
+  PlacementDescription() {
+    maxUsedX = 0;
+    maxUsedY = 0;
+    tightX = true;
+    tightY = true;
+  }
+};
+
 class Packer {
  protected:
   Packer(const std::vector<Item> &sequence)
@@ -19,6 +34,10 @@ class Packer {
 
   int nItems() const {
     return sequence_.size();
+  }
+
+  int nDefects() const {
+    return defects_.size();
   }
 
   void init(Rectangle region, int start, const std::vector<Defect> &defects) {

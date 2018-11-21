@@ -40,7 +40,7 @@ void CutPacker::runCommon(Rectangle cut, int start, const std::vector<Defect> &d
   front_.checkConsistency();
 }
 
-RowPacker::Quality CutPacker::countRow(int start, int minY, int maxY) {
+RowPacker::RowDescription CutPacker::countRow(int start, int minY, int maxY) {
   Rectangle row = Rectangle::FromCoordinates(region_.minX(), minY, region_.maxX(), maxY);
   return rowPacker_.count(row, start, defects_);
 }
@@ -52,25 +52,27 @@ RowSolution CutPacker::packRow(int start, int minY, int maxY) {
 
 void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) {
   for (int endCoord = region_.maxY(); endCoord >= beginCoord + Params::minYY; --endCoord) {
-    RowPacker::Quality result = countRow(previousItems, beginCoord, endCoord);
+    RowPacker::RowDescription result = countRow(previousItems, beginCoord, endCoord);
 
     int maxUsed = result.maxUsedY;
     // All solutions with "maxUsed + Params::minWaste <= end" are considered dominated
     if (maxUsed + Params::minWaste < endCoord) {
       // Solve the packed case, which might contain more items in cornercases
-      RowPacker::Quality packed = countRow(previousItems, beginCoord, maxUsed + Params::minWaste);
+      RowPacker::RowDescription packed = countRow(previousItems, beginCoord, maxUsed + Params::minWaste);
       if (packed.nItems >= result.nItems) {
         endCoord = maxUsed + Params::minWaste;
         result = packed;
       }
     }
-    front_.insert(beginCoord, endCoord, previousItems + result.nItems, previousFront);
+    if (result.nItems > 0)
+      front_.insert(beginCoord, endCoord, previousItems + result.nItems, previousFront);
 
     if (maxUsed < endCoord) {
       // Try the tight case too, else the first Params::minWaste iterations could short-circuit it
       // TODO: handle this case in another manner (for example start after maxY)
       result = countRow(previousItems, beginCoord, maxUsed);
-      front_.insert(beginCoord, maxUsed, previousItems + result.nItems, previousFront);
+      if (result.nItems > 0)
+        front_.insert(beginCoord, maxUsed, previousItems + result.nItems, previousFront);
     }
   }
 }

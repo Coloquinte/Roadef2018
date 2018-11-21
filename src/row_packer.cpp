@@ -8,33 +8,129 @@ using namespace std;
 
 RowPacker::RowPacker(const Problem &problem, const vector<Item> &sequence)
 : Packer(problem, sequence) {
-  currentX_ = 0;
+  widths_.reset(new int[sequence.size()]);
+  heights_.reset(new int[sequence.size()]);
+  placements_.reset(new int[sequence.size()]);
 }
 
-RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &defects) {
-  init(row, start, defects);
-  currentX_ = region_.minX();
-  // Greedy placement
-  // Attempt to place the item with the least possible usage
-  // Not actually 100% correct due to the minWaste parameter at the end
-  // The optimal solution involves the orientation of all items
-  // And we'd need dynamic programming or brute-force for that
-  RowSolution solution(region_);
-
+RowPacker::RowDescription RowPacker::fitNoDefectsSimple() {
+  const int width = region_.width();
+  const int height = region_.height();
+  int left = width;
+  RowDescription description;
   for (int i = start_; i < nItems(); ++i) {
-    Item item = sequence_[i];
+    Item item = sequence_[i];;
+    if (utils::fitsMinWaste(item.height, height)
+     && utils::fitsMinWaste(item.width, left)) {
+      left -= item.width;
+      heights_[i] = item.height;
+    }
+    else if (utils::fitsMinWaste(item.width, height)
+          && utils::fitsMinWaste(item.height, left)) {
+      left -= item.height;
+      heights_[i] = item.width;
+    }
+    else {
+      break;
+    }
+    ++description.nItems;
+  }
+  description.maxUsedX = region_.maxX() - left;
+  description.tightX = true;
+  fillYData(description);
+  return description;
+}
+
+RowSolution RowPacker::solNoDefectsSimple() {
+  RowSolution solution(region_);
+  int width = region_.width();
+  int height = region_.height();
+  int left = width;
+  for (int i = start_; i < nItems(); ++i) {
+    Item item = sequence_[i];;
+    if (utils::fitsMinWaste(item.height, height)
+     && utils::fitsMinWaste(item.width, left)) {
+      Rectangle r = Rectangle::FromDimensions(region_.maxX() - left, region_.minY(), item.width, item.height);
+      solution.items.emplace_back(r, item.id);
+      left -= item.width;
+    }
+    else if (utils::fitsMinWaste(item.width, height)
+          && utils::fitsMinWaste(item.height, left)) {
+      Rectangle r = Rectangle::FromDimensions(region_.maxX() - left, region_.minY(), item.height, item.width);
+      solution.items.emplace_back(r, item.id);
+      left -= item.height;
+    }
+    else {
+      break;
+    }
+  }
+
+  checkSolution(solution);
+  return solution;
+}
+
+RowPacker::RowDescription RowPacker::fitAsideDefectsSimple() {
+  if (nDefects() == 0) return fitNoDefectsSimple();
+
+  int currentX = region_.minX();
+  RowDescription description;
+  for (int i = start_; i < nItems(); ++i) {
+    Item item = sequence_[i];;
     int height = item.height;
     int width = item.width;
-    assert (height >= width /* precondition */ );
 
-    int placement = earliestFit(currentX_, width, height);
-    bool fits = fitsDimensionsAt(placement, width, height);
+    int placement = earliestFit(currentX, item.width, item.height);
+    bool fits = fitsDimensionsAt(placement, item.width, item.height);
 
-    if (!fits || placement + width > currentX_ + height) {
-      int rotatedX  = earliestFit(currentX_, height, width);
-      bool fitsRotated = fitsDimensionsAt(rotatedX, height, width);
+    if (!fits || placement + item.width > currentX + item.height) {
+      int rotatedX  = earliestFit(currentX, item.height, item.width);
+      bool fitsRotated = fitsDimensionsAt(rotatedX, item.height, item.width);
 
-      bool rotatedBetter = placement + width > rotatedX + height;
+      bool rotatedBetter = placement + item.width > rotatedX + item.height;
+      if (fitsRotated && (!fits || rotatedBetter)) {
+        placement = rotatedX;
+        swap(width, height);
+        fits = true;
+      }
+    }
+
+    if (!fits)
+      break;
+
+    heights_[i] = height;
+    currentX = placement + width;
+    ++description.nItems;
+  }
+
+  description.maxUsedX = currentX;
+  description.tightX = true;
+  fillYData(description);
+  assert (description.maxUsedX >= region_.minX());
+  assert (description.maxUsedY >= region_.minY());
+  assert (description.maxUsedX <= region_.maxX());
+  assert (description.maxUsedY <= region_.maxY());
+
+  return description;
+}
+
+RowSolution RowPacker::solAsideDefectsSimple() {
+  if (nDefects() == 0) return solNoDefectsSimple();
+
+  int currentX = region_.minX();
+  RowSolution solution(region_);
+  for (int i = start_; i < nItems(); ++i) {
+    Item item = sequence_[i];;
+    int height = item.height;
+    int width = item.width;
+
+    int placement = earliestFit(currentX, item.width, item.height);
+    bool fits = fitsDimensionsAt(placement, item.width, item.height);
+
+    if (!fits || placement + item.width > currentX + item.height) {
+      int rotatedX  = earliestFit(currentX, item.height, item.width);
+      bool fitsRotated = fitsDimensionsAt(rotatedX, item.height, item.width);
+
+      bool rotatedBetter = placement + item.width > rotatedX + item.height;
       if (fitsRotated && (!fits || rotatedBetter)) {
         placement = rotatedX;
         swap(width, height);
@@ -46,50 +142,28 @@ RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &
       break;
 
     Rectangle r = Rectangle::FromDimensions(placement, region_.minY(), width, height);
-    solution.items.emplace_back(ItemSolution(r, item.id));
-    currentX_ = placement + width;
+    solution.items.emplace_back(r, item.id);
+    currentX = placement + width;
   }
 
   return solution;
 }
 
-RowPacker::Quality RowPacker::count(Rectangle row, int start, const std::vector<Defect> &defects) {
-  init(row, start, defects);
-  currentX_ = region_.minX();
-  int maxUsedY = region_.minY();
-
-  int i = start_;
-  for (; i < nItems(); ++i) {
-    Item item = sequence_[i];
-    int height = item.height;
-    int width = item.width;
-
-    int placement = earliestFit(currentX_, width, height);
-    bool fits = fitsDimensionsAt(placement, width, height);
-
-    if (!fits || placement + width > currentX_ + height) {
-      int rotatedX  = earliestFit(currentX_, height, width);
-      bool fitsRotated = fitsDimensionsAt(rotatedX, height, width);
-
-      bool rotatedBetter = placement + width > rotatedX + height;
-      if (fitsRotated && (!fits || rotatedBetter)) {
-        placement = rotatedX;
-        swap(width, height);
-        fits = true;
-      }
-    }
-
-    if (!fits)
-      break;
-
-    maxUsedY = max(maxUsedY, region_.minY() + height);
-    currentX_ = placement + width;
+void RowPacker::fillYData(RowDescription &description) const {
+  int maxHeight = 0;
+  for (int i = start_; i < start_ + description.nItems; ++i) {
+    maxHeight = max(heights_[i], maxHeight);
   }
-
-  return Quality {
-    i - start_,
-    maxUsedY
-  };
+  description.maxUsedY = region_.minY() + maxHeight;
+  description.tightY = true;
+  for (int i = start_; i < start_ + description.nItems; ++i) {
+    if (heights_[i] == maxHeight)
+      continue;
+    if (heights_[i] + Params::minWaste > maxHeight)
+      description.tightY = false;
+  }
+  if (!description.tightY) description.maxUsedY += Params::minWaste;
+  // TODO: extend the cut so that it does not go through a defect
 }
 
 bool RowPacker::fitsDimensionsAt(int minX, int width, int height) const {
@@ -101,8 +175,6 @@ bool RowPacker::fitsDimensionsAt(int minX, int width, int height) const {
 }
 
 int RowPacker::earliestFit(int minX, int width, int height) const {
-  // TODO: optimize this part
-  // TODO: place above/below a defect whenever possible
   int cur = minX;
   while (true) {
     Rectangle place = Rectangle::FromDimensions(cur, region_.minY(), width, height);
@@ -125,5 +197,92 @@ int RowPacker::earliestFit(int minX, int width, int height) const {
       return cur;
     cur = max(minX + Params::minWaste, cur);
   }
+}
+
+void RowPacker::checkConsistency() const {
+  checkItems();
+  checkDefects();
+}
+
+void RowPacker::checkItems() const {
+  for (int i = 0; i < nItems(); ++i) {
+    assert (sequence_[i].height >= sequence_[i].width);
+  }
+}
+
+void RowPacker::checkDefects() const {
+  for (Defect defect : defects_) {
+    assert (region_.contains(defect));
+  }
+}
+
+void RowPacker::checkSolution(const RowSolution &row) {
+  if (row.items.empty()) return;
+
+  for (const ItemSolution &item : row.items) {
+    assert (row.contains(item));
+    assert (utils::fitsMinWaste(row.minY(), item.minY()));
+    assert (utils::fitsMinWaste(item.maxY(), row.maxY()));
+    assert (item.maxY() == row.maxY() || item.minY() == row.minY());
+    for (Defect defect : defects_) {
+      assert (!defect.intersectsVerticalLine(item.minX()));
+      assert (!defect.intersectsVerticalLine(item.maxX()));
+    }
+  }
+
+  assert (utils::fitsMinWaste(row.minX(), row.items.front().minX()));
+  assert (utils::fitsMinWaste(row.items.back().maxX(), row.maxX()));
+
+  for (int i = 0; i+1 < (int) row.items.size(); ++i) {
+    ItemSolution item1 = row.items[i];
+    ItemSolution item2 = row.items[i+1];
+    assert (item1.maxX() >= item2.minX());
+    assert (utils::fitsMinWaste(item1.maxX(), item2.minX()));
+  }
+}
+
+void RowPacker::checkEquivalent(const RowDescription &description, const RowSolution &solution) {
+  assert (description.nItems == (int) solution.items.size());
+
+  if (solution.items.empty()) {
+    assert (description.tightX);
+    assert (description.tightY);
+    assert (description.maxUsedX == solution.minX());
+    assert (description.maxUsedY == solution.minY());
+    return;
+  }
+
+  assert (description.maxUsedX == solution.items.back().maxX());
+
+  int maxUsedY = solution.minY();
+  for (ItemSolution item : solution.items) {
+    maxUsedY = max(maxUsedY, item.maxY());
+  }
+
+  // Do not check tightness on X because there are corner cases when defects are present
+  bool tightY = true;
+  for (ItemSolution item : solution.items) {
+    if (item.maxY() == maxUsedY)
+      continue;
+    if (item.maxY() + Params::minWaste > maxUsedY)
+      tightY = false;
+  }
+  if (!tightY) maxUsedY += Params::minWaste;
+
+  assert (description.tightY == tightY);
+  assert (description.maxUsedY == maxUsedY);
+}
+
+RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &defects) {
+  init(row, start, defects);
+  return solAsideDefectsSimple();
+}
+
+RowPacker::RowDescription RowPacker::count(Rectangle row, int start, const std::vector<Defect> &defects) {
+  init(row, start, defects);
+  RowDescription ret = fitAsideDefectsSimple();
+  RowSolution sol = solAsideDefectsSimple();
+  checkEquivalent(ret, sol);
+  return ret;
 }
 

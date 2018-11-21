@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 PROJECT(ROADEF2018)
 
 SET(CMAKE_CXX_FLAGS "-Wall -std=c++14 -g")
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Og")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -march=native")
 
 FIND_PACKAGE(Boost COMPONENTS system filesystem program_options unit_test_framework REQUIRED)
@@ -22,7 +22,6 @@ SET (SOURCES
   src/plate_packer.cpp
   src/cut_packer.cpp
   src/row_packer.cpp
-  src/row_packer_ng.cpp
   src/packer_front.cpp
   src/ordering_heuristic.cpp
   src/solver.cpp

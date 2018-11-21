@@ -22,10 +22,11 @@ class CutPacker : Packer {
   CutSolution backtrack();
   int countBacktrack();
 
-  RowPacker::Quality countRow(int start, int minY, int maxY);
+  RowPacker::RowDescription countRow(int start, int minY, int maxY);
   RowSolution packRow(int start, int minY, int maxY);
 
   bool isAdmissibleCutLine(int y) const;
+  int nDefectsPresent(Rectangle row);
 
  private:
   PackerFront front_;
