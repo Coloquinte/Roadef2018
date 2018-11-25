@@ -53,27 +53,9 @@ RowSolution CutPacker::packRow(int start, int minY, int maxY) {
 void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) {
   for (int endCoord = region_.maxY(); endCoord >= beginCoord + Params::minYY; --endCoord) {
     RowPacker::RowDescription result = countRow(previousItems, beginCoord, endCoord);
-
-    int maxUsed = result.maxUsedY;
-    // All solutions with "maxUsed + Params::minWaste <= end" are considered dominated
-    if (maxUsed + Params::minWaste < endCoord) {
-      // Solve the packed case, which might contain more items in cornercases
-      RowPacker::RowDescription packed = countRow(previousItems, beginCoord, maxUsed + Params::minWaste);
-      if (packed.nItems >= result.nItems) {
-        endCoord = maxUsed + Params::minWaste;
-        result = packed;
-      }
-    }
     if (result.nItems > 0)
-      front_.insert(beginCoord, endCoord, previousItems + result.nItems, previousFront);
-
-    if (maxUsed < endCoord) {
-      // Try the tight case too, else the first Params::minWaste iterations could short-circuit it
-      // TODO: handle this case in another manner (for example start after maxY)
-      result = countRow(previousItems, beginCoord, maxUsed);
-      if (result.nItems > 0)
-        front_.insert(beginCoord, maxUsed, previousItems + result.nItems, previousFront);
-    }
+      front_.insert(beginCoord, result.maxUsedY, previousItems + result.nItems, previousFront);
+    endCoord = min(endCoord, result.tightY ? result.maxUsedY + Params::minWaste : result.maxUsedY);
   }
 }
 
