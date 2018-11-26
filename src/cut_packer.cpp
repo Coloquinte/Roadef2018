@@ -72,6 +72,7 @@ void CutPacker::propagateBreakpoints(int after) {
       continue;
     if (after + 1 < front_.size() && bp >= front_[after+1].end)
       continue;
+    while (!isAdmissibleCutLine(bp)) ++bp;
     // Find the previous front element we can extend
     int prev = 0;
     for (; prev < front_.size(); ++prev) {

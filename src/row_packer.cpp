@@ -220,6 +220,7 @@ int RowPacker::lowestHorizontalCut(int minY, bool tightY) const {
 }
 
 void RowPacker::checkConsistency() const {
+  assert (region_.height() >= Params::minYY);
   checkItems();
   checkDefects();
 }

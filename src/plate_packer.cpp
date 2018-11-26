@@ -62,6 +62,7 @@ CutSolution PlatePacker::packCut(int start, int minX, int maxX) {
 void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord) {
   int maxEndCoord = min(region_.maxX(), beginCoord + Params::maxXX);
   for (int endCoord = maxEndCoord + Params::minWaste; endCoord >= beginCoord + Params::minXX; --endCoord) {
+    if (!isAdmissibleCutLine(endCoord)) continue;
     CutSolution cutSolution = packCut(previousItems, beginCoord, endCoord);
 
     int maxUsed = cutSolution.maxUsedX();
@@ -74,10 +75,10 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
         endCoord = maxUsed + Params::minWaste;
       }
     }
-    if (endCoord <= maxEndCoord)
+    if (endCoord <= maxEndCoord && isAdmissibleCutLine(endCoord))
       front_.insert(beginCoord, endCoord, previousItems + cutSolution.nItems(), previousFront);
 
-    if (maxUsed < endCoord) {
+    if (maxUsed < endCoord && isAdmissibleCutLine(maxUsed)) {
       // Try the tight case too, else the first minWaste iterations could short-circuit it
       // TODO: handle this case in another manner (for example start after maxX)
       cutSolution = packCut(previousItems, beginCoord, maxUsed);
@@ -98,6 +99,7 @@ void PlatePacker::propagateBreakpoints(int after) {
       continue;
     if (after + 1 < front_.size() && bp >= front_[after+1].end)
       continue;
+    while(!isAdmissibleCutLine(bp)) ++bp;
     // Find the previous front element we can extend
     int prev = 0;
     for (; prev < front_.size(); ++prev) {
