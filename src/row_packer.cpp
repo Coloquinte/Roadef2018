@@ -163,7 +163,11 @@ void RowPacker::fillYData(RowDescription &description) const {
       description.tightY = false;
   }
   if (!description.tightY) description.maxUsedY += Params::minWaste;
-  // TODO: extend the cut so that it does not go through a defect
+  int lowestCut = lowestHorizontalCut(description.maxUsedY, description.tightY);
+  if (lowestCut != description.maxUsedY) {
+    description.maxUsedY = lowestCut;
+    description.tightY = false;
+  }
 }
 
 bool RowPacker::fitsDimensionsAt(int minX, int width, int height) const {
@@ -199,6 +203,22 @@ int RowPacker::earliestFit(int minX, int width, int height) const {
   }
 }
 
+int RowPacker::lowestHorizontalCut(int minY, bool tightY) const {
+  int cur = minY;
+  while (true) {
+    bool hasDefect = false;
+    for (Defect d : defects_) {
+      if (d.intersectsHorizontalLine(cur)) {
+        cur = max(d.maxY() + 1, cur);
+        hasDefect = true;
+      }
+    }
+    if (!hasDefect)
+      return cur;
+    cur = max(tightY ? minY + Params::minWaste : minY, cur);
+  }
+}
+
 void RowPacker::checkConsistency() const {
   checkItems();
   checkDefects();
@@ -229,6 +249,12 @@ void RowPacker::checkSolution(const RowSolution &row) {
       assert (!defect.intersectsVerticalLine(item.maxX()));
     }
   }
+  for (Defect defect : defects_) {
+    assert (!defect.intersectsHorizontalLine(row.minY()));
+    assert (!defect.intersectsHorizontalLine(row.maxY()));
+    assert (!defect.intersectsVerticalLine(row.minX()));
+    assert (!defect.intersectsVerticalLine(row.maxX()));
+  }
 
   assert (utils::fitsMinWaste(row.minX(), row.items.front().minX()));
   assert (utils::fitsMinWaste(row.items.back().maxX(), row.maxX()));
@@ -243,34 +269,7 @@ void RowPacker::checkSolution(const RowSolution &row) {
 
 void RowPacker::checkEquivalent(const RowDescription &description, const RowSolution &solution) {
   assert (description.nItems == (int) solution.items.size());
-
-  if (solution.items.empty()) {
-    assert (description.tightX);
-    assert (description.tightY);
-    assert (description.maxUsedX == solution.minX());
-    assert (description.maxUsedY == solution.minY());
-    return;
-  }
-
-  assert (description.maxUsedX == solution.items.back().maxX());
-
-  int maxUsedY = solution.minY();
-  for (ItemSolution item : solution.items) {
-    maxUsedY = max(maxUsedY, item.maxY());
-  }
-
-  // Do not check tightness on X because there are corner cases when defects are present
-  bool tightY = true;
-  for (ItemSolution item : solution.items) {
-    if (item.maxY() == maxUsedY)
-      continue;
-    if (item.maxY() + Params::minWaste > maxUsedY)
-      tightY = false;
-  }
-  if (!tightY) maxUsedY += Params::minWaste;
-
-  assert (description.tightY == tightY);
-  assert (description.maxUsedY == maxUsedY);
+  // No other check here since the defects mess it up
 }
 
 RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &defects) {
@@ -280,9 +279,6 @@ RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &
 
 RowPacker::RowDescription RowPacker::count(Rectangle row, int start, const std::vector<Defect> &defects) {
   init(row, start, defects);
-  RowDescription ret = fitAsideDefectsSimple();
-  RowSolution sol = solAsideDefectsSimple();
-  checkEquivalent(ret, sol);
-  return ret;
+  return fitAsideDefectsSimple();
 }
 

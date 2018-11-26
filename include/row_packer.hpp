@@ -28,6 +28,7 @@ class RowPacker : Packer {
   void fillYData(RowDescription &description) const;
   bool fitsDimensionsAt(int minX, int width, int height) const;
   int earliestFit(int minX, int width, int height) const;
+  int lowestHorizontalCut(int minY, bool tightY) const;
 
   RowDescription fitNoDefectsSimple();
   RowSolution solNoDefectsSimple();

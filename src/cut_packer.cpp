@@ -52,6 +52,7 @@ RowSolution CutPacker::packRow(int start, int minY, int maxY) {
 
 void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) {
   for (int endCoord = region_.maxY(); endCoord >= beginCoord + Params::minYY; --endCoord) {
+    if (!isAdmissibleCutLine(endCoord)) continue;
     RowPacker::RowDescription result = countRow(previousItems, beginCoord, endCoord);
     if (result.nItems > 0)
       front_.insert(beginCoord, result.maxUsedY, previousItems + result.nItems, previousFront);
