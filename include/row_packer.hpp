@@ -10,25 +10,32 @@
 
 class RowPacker : Packer {
  public:
-  struct RowDescription : PlacementDescription {
+  struct RowDescription {
     int nItems;
+    int maxUsedX;
+    int maxUsedY;
+    bool tightX;
+    bool tightY;
 
     RowDescription() {
       nItems = 0;
+      maxUsedX = 0;
+      maxUsedY = 0;
+      tightX = true;
+      tightY = true;
     }
   };
 
  public:
   RowPacker(const Problem &problem, const std::vector<Item> &sequence);
-
   RowSolution run(Rectangle row, int start, const std::vector<Defect> &defects);
   RowDescription count(Rectangle row, int start, const std::vector<Defect> &defects);
 
  private:
+  void fillXData(RowDescription &description, int maxUsedX) const;
   void fillYData(RowDescription &description) const;
   bool fitsDimensionsAt(int minX, int width, int height) const;
   int earliestFit(int minX, int width, int height) const;
-  int lowestHorizontalCut(int minY, bool tightY) const;
 
   RowDescription fitNoDefectsSimple();
   RowSolution solNoDefectsSimple();

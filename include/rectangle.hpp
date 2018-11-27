@@ -44,6 +44,13 @@ class Rectangle {
         && maxY_ >= o.maxY_;
   }
 
+  bool containsStrictly(const Rectangle &o) const {
+    return minX_ < o.minX_
+        && maxX_ > o.maxX_
+        && minY_ < o.minY_
+        && maxY_ > o.maxY_;
+  }
+
   bool intersects(const Rectangle &o) const {
     return minX_ <= o.maxX_
         && maxX_ >= o.minX_

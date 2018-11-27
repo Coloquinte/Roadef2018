@@ -22,6 +22,7 @@ SET (SOURCES
   src/plate_packer.cpp
   src/cut_packer.cpp
   src/row_packer.cpp
+  src/packer.cpp
   src/packer_front.cpp
   src/ordering_heuristic.cpp
   src/solver.cpp

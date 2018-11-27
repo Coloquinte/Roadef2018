@@ -35,8 +35,7 @@ RowPacker::RowDescription RowPacker::fitNoDefectsSimple() {
     }
     ++description.nItems;
   }
-  description.maxUsedX = region_.maxX() - left;
-  description.tightX = true;
+  fillXData(description, region_.maxX() - left);
   fillYData(description);
   return description;
 }
@@ -102,13 +101,14 @@ RowPacker::RowDescription RowPacker::fitAsideDefectsSimple() {
     ++description.nItems;
   }
 
-  description.maxUsedX = currentX;
-  description.tightX = true;
+  fillXData(description, currentX);
   fillYData(description);
+
   assert (description.maxUsedX >= region_.minX());
   assert (description.maxUsedY >= region_.minY());
   assert (description.maxUsedX <= region_.maxX());
   assert (description.maxUsedY <= region_.maxY());
+  assert (!description.tightY || utils::fitsMinWaste(description.maxUsedY, region_.maxY()));
 
   return description;
 }
@@ -149,10 +149,22 @@ RowSolution RowPacker::solAsideDefectsSimple() {
   return solution;
 }
 
+void RowPacker::fillXData(RowDescription &description, int maxUsedX) const {
+  if (maxUsedX < region_.minX() + Params::minXX) {
+    description.maxUsedX = max(maxUsedX + Params::minWaste, region_.minX() + Params::minXX);
+    description.tightX = false;
+  }
+  else {
+    description.maxUsedX = maxUsedX;
+    description.tightX = true;
+  }
+}
+
 void RowPacker::fillYData(RowDescription &description) const {
   int maxHeight = 0;
   for (int i = start_; i < start_ + description.nItems; ++i) {
     maxHeight = max(heights_[i], maxHeight);
+    assert (utils::fitsMinWaste(heights_[i], region_.height()));
   }
   description.maxUsedY = region_.minY() + maxHeight;
   description.tightY = true;
@@ -203,24 +215,9 @@ int RowPacker::earliestFit(int minX, int width, int height) const {
   }
 }
 
-int RowPacker::lowestHorizontalCut(int minY, bool tightY) const {
-  int cur = minY;
-  while (true) {
-    bool hasDefect = false;
-    for (Defect d : defects_) {
-      if (d.intersectsHorizontalLine(cur)) {
-        cur = max(d.maxY() + 1, cur);
-        hasDefect = true;
-      }
-    }
-    if (!hasDefect)
-      return cur;
-    cur = max(tightY ? minY + Params::minWaste : minY, cur);
-  }
-}
-
 void RowPacker::checkConsistency() const {
   assert (region_.height() >= Params::minYY);
+  assert (region_.width() >= Params::minXX);
   checkItems();
   checkDefects();
 }
@@ -233,7 +230,7 @@ void RowPacker::checkItems() const {
 
 void RowPacker::checkDefects() const {
   for (Defect defect : defects_) {
-    assert (region_.contains(defect));
+    assert (region_.containsStrictly(defect));
   }
 }
 
@@ -275,11 +272,13 @@ void RowPacker::checkEquivalent(const RowDescription &description, const RowSolu
 
 RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &defects) {
   init(row, start, defects);
+  checkConsistency();
   return solAsideDefectsSimple();
 }
 
 RowPacker::RowDescription RowPacker::count(Rectangle row, int start, const std::vector<Defect> &defects) {
   init(row, start, defects);
+  checkConsistency();
   return fitAsideDefectsSimple();
 }
 

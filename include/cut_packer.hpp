@@ -26,7 +26,6 @@ class CutPacker : Packer {
   RowSolution packRow(int start, int minY, int maxY);
 
   bool isAdmissibleCutLine(int y) const;
-  int nDefectsPresent(Rectangle row);
 
  private:
   PackerFront front_;

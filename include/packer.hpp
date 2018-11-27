@@ -5,21 +5,6 @@
 #include "problem.hpp"
 #include "solution.hpp"
 
-struct PlacementDescription {
-  int maxUsedX;
-  int maxUsedY;
-  // Whether a minWaste gap is needed
-  bool tightX;
-  bool tightY;
-
-  PlacementDescription() {
-    maxUsedX = 0;
-    maxUsedY = 0;
-    tightX = true;
-    tightY = true;
-  }
-};
-
 class Packer {
  protected:
   Packer(const std::vector<Item> &sequence)
@@ -49,6 +34,9 @@ class Packer {
         defects_.push_back(d);
     }
   }
+
+  int lowestVerticalCut(int minX, bool tightX) const;
+  int lowestHorizontalCut(int minY, bool tightY) const;
 
  protected:
   Rectangle region_;
