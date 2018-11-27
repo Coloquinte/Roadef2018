@@ -13,6 +13,7 @@ class SolutionChecker {
  public:
   // Whole solution checking and reporting
   static int nViolations(const Problem &problem, const Solution &solution);
+  static void report(const Problem &problem);
   static void report(const Problem &problem, const Solution &solution);
 
   // Statistics for solution quality evaluation
@@ -52,6 +53,7 @@ class SolutionChecker {
   bool hCutIntersects(int y, const Defect &defect, int minX, int maxX) const;
 
   void reportErrors();
+  void reportProblem();
   void reportQuality(const Solution &solution);
 
   template<typename ... Args>

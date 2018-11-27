@@ -44,10 +44,16 @@ void SolutionChecker::error(const string& type, const string& format, Args ... a
     errors_.at(type).push_back(header.str() + msg);
 }
 
+void SolutionChecker::report(const Problem &problem) {
+  SolutionChecker checker(problem);
+  checker.reportProblem();
+}
+
 void SolutionChecker::report(const Problem &problem, const Solution &solution) {
   SolutionChecker checker(problem);
   checker.checkSolution(solution);
   checker.reportErrors();
+  checker.reportProblem();
   checker.reportQuality(solution);
 }
 
@@ -408,9 +414,18 @@ void SolutionChecker::reportErrors() {
     cout << "No violation detected" << endl;
 }
 
-void SolutionChecker::reportQuality(const Solution &solution) {
+void SolutionChecker::reportProblem() {
   cout << nItems() << " items to cut" << endl;
   cout << problem_.stackItems().size() << " stacks" << endl;
+  int maxDim = 0;
+  for (Item item : problem_.items()) maxDim = max(maxDim, item.height);
+  cout << maxDim << " maximum size" << endl;
+  int minDim = maxDim;
+  for (Item item : problem_.items()) minDim = min(minDim, item.width);
+  cout << minDim << " minimum size" << endl;
+}
+
+void SolutionChecker::reportQuality(const Solution &solution) {
   long long used = evalAreaUsage(solution);
   long long mapped = evalAreaMapped(solution);
   long long total = evalTotalArea();

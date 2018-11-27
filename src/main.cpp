@@ -46,6 +46,8 @@ po::options_description getAdvancedOptions() {
   desc.add_options()("initial", po::value<string>(),
                      "Initial solution file (.csv)");
 
+  desc.add_options()("stats", "Simply report statistics");
+
   return desc;
 }
 
@@ -122,8 +124,8 @@ po::variables_map parseArguments(int argc, char **argv) {
 }
 
 int main(int argc, char** argv) {
-  cout << fixed << setw(4) << setprecision(2);
-  cerr << fixed << setw(4) << setprecision(2);
+  cout << fixed << setprecision(2);
+  cerr << fixed << setprecision(2);
   po::variables_map vm = parseArguments(argc, argv);
 
   string batchFile;
@@ -138,6 +140,10 @@ int main(int argc, char** argv) {
   }
 
   Problem pb = Problem::read(batchFile, defectFile);
+  if (vm.count("stats")) {
+    SolutionChecker::report(pb);
+    return 0;
+  }
 
   SolverParams params;
   params.verbosity = vm["verbosity"].as<int>();
