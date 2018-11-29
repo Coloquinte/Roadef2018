@@ -24,6 +24,7 @@ int CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defect
 
 void CutPacker::runCommon(Rectangle cut, int start, const std::vector<Defect> &defects) {
   init(cut, start, defects);
+  checkConsistency();
   sort(defects_.begin(), defects_.end(),
         [](const Defect &a, const Defect &b) {
           return a.maxY() < b.maxY();

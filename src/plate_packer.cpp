@@ -61,7 +61,7 @@ CutSolution PlatePacker::packCut(int start, int minX, int maxX) {
 
 void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord) {
   int maxEndCoord = min(region_.maxX(), beginCoord + Params::maxXX);
-  for (int endCoord = maxEndCoord + Params::minWaste; endCoord >= beginCoord + Params::minXX; --endCoord) {
+  for (int endCoord = maxEndCoord; endCoord >= beginCoord + Params::minXX; --endCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
     CutSolution cutSolution = packCut(previousItems, beginCoord, endCoord);
 

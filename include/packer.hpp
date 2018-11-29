@@ -38,6 +38,10 @@ class Packer {
   int lowestVerticalCut(int minX, bool tightX) const;
   int lowestHorizontalCut(int minY, bool tightY) const;
 
+  void checkConsistency() const;
+  void checkItems() const;
+  void checkDefects() const;
+
  protected:
   Rectangle region_;
   int start_;

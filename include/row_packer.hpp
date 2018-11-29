@@ -46,9 +46,6 @@ class RowPacker : Packer {
   RowDescription fitAsideDefectsExact();
   RowSolution solAsideDefectsExact();
 
-  void checkConsistency() const;
-  void checkItems() const;
-  void checkDefects() const;
   void checkSolution(const RowSolution &solution);
   void checkEquivalent(const RowDescription &description, const RowSolution &solution);
 

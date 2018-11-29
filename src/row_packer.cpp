@@ -215,25 +215,6 @@ int RowPacker::earliestFit(int minX, int width, int height) const {
   }
 }
 
-void RowPacker::checkConsistency() const {
-  assert (region_.height() >= Params::minYY);
-  assert (region_.width() >= Params::minXX);
-  checkItems();
-  checkDefects();
-}
-
-void RowPacker::checkItems() const {
-  for (int i = 0; i < nItems(); ++i) {
-    assert (sequence_[i].height >= sequence_[i].width);
-  }
-}
-
-void RowPacker::checkDefects() const {
-  for (Defect defect : defects_) {
-    assert (region_.containsStrictly(defect));
-  }
-}
-
 void RowPacker::checkSolution(const RowSolution &row) {
   if (row.items.empty()) return;
 
