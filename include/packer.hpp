@@ -35,8 +35,8 @@ class Packer {
     }
   }
 
-  int lowestVerticalCut(int minX, bool tightX) const;
-  int lowestHorizontalCut(int minY, bool tightY) const;
+  int firstValidVerticalCut(int minX, bool tightX) const;
+  int firstValidHorizontalCut(int minY, bool tightY) const;
 
   void checkConsistency() const;
   void checkItems() const;

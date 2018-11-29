@@ -5,39 +5,48 @@
 
 using namespace std;
 
-int Packer::lowestHorizontalCut(int minY, bool tightY) const {
-  int cur = minY;
+int Packer::firstValidVerticalCut(int minX, bool tightX) const {
+  int minNonTight = tightX ? minX + Params::minWaste : minX;
+  if (minX < region_.minX() + Params::minXX) {
+    minX = max(region_.minX() + Params::minXX, minNonTight);
+    tightX = false;
+  }
   while (true) {
     bool hasDefect = false;
     for (Defect d : defects_) {
-      if (d.intersectsHorizontalLine(cur)) {
-        cur = max(d.maxY() + 1, cur);
+      if (d.intersectsVerticalLine(minX)) {
+        minX = max(d.maxX() + 1, minX);
         hasDefect = true;
       }
     }
-    assert (cur <= region_.maxY());
+    assert (minX <= region_.maxX());
     if (!hasDefect)
-      return cur;
-    cur = max(tightY ? minY + Params::minWaste : minY, cur);
+      return minX;
+    minX = max(minNonTight, minX);
   }
 }
 
-int Packer::lowestVerticalCut(int minX, bool tightX) const {
-  int cur = minX;
+int Packer::firstValidHorizontalCut(int minY, bool tightY) const {
+  int minNonTight = tightY ? minY + Params::minWaste : minY;
+  if (minY < region_.minY() + Params::minYY) {
+    minY = max(region_.minY() + Params::minYY, minNonTight);
+    tightY = false;
+  }
   while (true) {
     bool hasDefect = false;
     for (Defect d : defects_) {
-      if (d.intersectsVerticalLine(cur)) {
-        cur = max(d.maxX() + 1, cur);
+      if (d.intersectsHorizontalLine(minY)) {
+        minY = max(d.maxY() + 1, minY);
         hasDefect = true;
       }
     }
-    assert (cur <= region_.maxX());
+    assert (minY <= region_.maxY());
     if (!hasDefect)
-      return cur;
-    cur = max(tightX ? minX + Params::minWaste : minX, cur);
+      return minY;
+    minY = max(minNonTight, minY);
   }
 }
+
 
 void Packer::checkConsistency() const {
   assert (region_.height() >= Params::minYY);

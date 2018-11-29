@@ -150,14 +150,8 @@ RowSolution RowPacker::solAsideDefectsSimple() {
 }
 
 void RowPacker::fillXData(RowDescription &description, int maxUsedX) const {
-  if (maxUsedX < region_.minX() + Params::minXX) {
-    description.maxUsedX = max(maxUsedX + Params::minWaste, region_.minX() + Params::minXX);
-    description.tightX = false;
-  }
-  else {
-    description.maxUsedX = maxUsedX;
-    description.tightX = true;
-  }
+  description.maxUsedX = firstValidVerticalCut(maxUsedX, true /* always assumed tight */);
+  description.tightX = description.maxUsedX == maxUsedX;
 }
 
 void RowPacker::fillYData(RowDescription &description) const {
@@ -175,9 +169,9 @@ void RowPacker::fillYData(RowDescription &description) const {
       description.tightY = false;
   }
   if (!description.tightY) description.maxUsedY += Params::minWaste;
-  int lowestCut = lowestHorizontalCut(description.maxUsedY, description.tightY);
-  if (lowestCut != description.maxUsedY) {
-    description.maxUsedY = lowestCut;
+  int firstCut = firstValidHorizontalCut(description.maxUsedY, description.tightY);
+  if (firstCut != description.maxUsedY) {
+    description.maxUsedY = firstCut;
     description.tightY = false;
   }
 }
