@@ -10,17 +10,31 @@
 
 class CutPacker : Packer {
  public:
+  struct CutDescription {
+    int nItems;
+    int maxUsedX;
+    bool tightX;
+
+    CutDescription() {
+      nItems = 0;
+      maxUsedX = 0;
+      tightX = true;
+    }
+  };
+
+ public:
   CutPacker(const Problem &problem, const std::vector<Item> &sequence);
   CutSolution run(Rectangle cut, int start, const std::vector<Defect> &defects);
-  int count(Rectangle cut, int start, const std::vector<Defect> &defects);
+  CutDescription count(Rectangle cut, int start, const std::vector<Defect> &defects);
 
  private:
   void runCommon(Rectangle cut, int start, const std::vector<Defect> &defects);
   void propagate(int previousFront, int previousItems, int beginCoord);
   void propagateBreakpoints(int after);
 
+  void buildSlices();
   CutSolution backtrack();
-  int countBacktrack();
+  CutDescription countBacktrack();
 
   RowPacker::RowDescription countRow(int start, int minY, int maxY);
   RowSolution packRow(int start, int minY, int maxY);

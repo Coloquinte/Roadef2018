@@ -17,7 +17,7 @@ CutSolution CutPacker::run(Rectangle cut, int start, const std::vector<Defect> &
   return backtrack();
 }
 
-int CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defects) {
+CutPacker::CutDescription CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defects) {
   runCommon(cut, start, defects);
   return countBacktrack();
 }
@@ -95,7 +95,7 @@ void CutPacker::propagateBreakpoints(int after) {
   }
 }
 
-CutSolution CutPacker::backtrack() {
+void CutPacker::buildSlices() {
   slices_.clear();
   slices_.push_back(region_.maxY());
 
@@ -112,7 +112,10 @@ CutSolution CutPacker::backtrack() {
   if (slices_.back() != region_.minY())
     slices_.push_back(region_.minY());
   reverse(slices_.begin(), slices_.end());
+}
 
+CutSolution CutPacker::backtrack() {
+  buildSlices();
   int nPacked = start_;
   CutSolution cutSolution(region_);
   for (size_t i = 0; i + 1 < slices_.size(); ++i) {
@@ -121,20 +124,37 @@ CutSolution CutPacker::backtrack() {
     assert (solution.height() >= Params::minYY);
     cutSolution.rows.push_back(solution);
   }
-
+  assert (cutSolution.nItems() == countBacktrack().nItems);
   return cutSolution;
 }
 
-int CutPacker::countBacktrack() {
-  int cur = front_.size() - 1;
-  while (cur != 0) {
-    auto elt = front_[cur];
-    if (elt.begin + Params::minYY > slices_.back())
-      continue;
-    assert (elt.previous < cur);
-    cur = elt.previous;
+CutPacker::CutDescription CutPacker::countBacktrack() {
+  buildSlices();
+  CutDescription description;
+  std::vector<RowPacker::RowDescription> rows;
+  for (size_t i = 0; i + 1 < slices_.size(); ++i) {
+    RowPacker::RowDescription row = countRow(start_ + description.nItems, slices_[i], slices_[i+1]);
+    rows.push_back(row);
+    description.nItems += row.nItems;
   }
-  return front_[cur].valeur;
+  description.maxUsedX = region_.minX();
+  for (RowPacker::RowDescription row : rows) {
+    description.maxUsedX = max(description.maxUsedX, row.maxUsedX);
+  }
+  description.tightX = true;
+  for (RowPacker::RowDescription row : rows) {
+    if (row.maxUsedX == description.maxUsedX)
+      continue;
+    if (row.maxUsedX + Params::minWaste > description.maxUsedX)
+      description.tightX = false;
+  }
+  if (!description.tightX) description.maxUsedX += Params::minWaste;
+  int firstCut = firstValidVerticalCut(description.maxUsedX, description.tightX);
+  if (firstCut != description.maxUsedX) {
+    description.maxUsedX = firstCut;
+    description.tightX = false;
+  }
+  return description;
 }
 
 bool CutPacker::isAdmissibleCutLine(int y) const {

@@ -22,7 +22,7 @@ class PlatePacker : Packer {
   void propagateBreakpoints(int after);
   PlateSolution backtrack();
 
-  int countCut(int start, int minX, int maxX);
+  CutPacker::CutDescription countCut(int start, int minX, int maxX);
   CutSolution packCut(int start, int minX, int maxX);
 
   bool isAdmissibleCutLine(int x) const;

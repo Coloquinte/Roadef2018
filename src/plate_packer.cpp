@@ -49,7 +49,7 @@ int PlatePacker::count(int plateId, int start) {
   return run(plateId, start).nItems();
 }
 
-int PlatePacker::countCut(int start, int minX, int maxX) {
+CutPacker::CutDescription PlatePacker::countCut(int start, int minX, int maxX) {
   Rectangle cut = Rectangle::FromCoordinates(minX, region_.minY(), maxX, region_.maxY());
   return cutPacker_.count(cut, start, defects_);
 }
@@ -160,6 +160,7 @@ PlateSolution PlatePacker::backtrack() {
     assert (solution.width() <= Params::maxXX);
     plateSolution.cuts.push_back(solution);
   }
+  assert (nPacked == nItems() || slices_.back() == region_.maxX());
 
   return plateSolution;
 }
