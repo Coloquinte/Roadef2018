@@ -63,27 +63,10 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
   int maxEndCoord = min(region_.maxX(), beginCoord + Params::maxXX);
   for (int endCoord = maxEndCoord + Params::minWaste; endCoord >= beginCoord + Params::minXX; --endCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
-    CutSolution cutSolution = packCut(previousItems, beginCoord, endCoord);
-
-    int maxUsed = cutSolution.maxUsedX();
-    // All solutions with "maxUsed + Params::minWaste <= end" are considered dominated
-    if (maxUsed + Params::minWaste < endCoord) {
-      // Solve the packed case, which might contain more items in cornercases
-      CutSolution packed = packCut(previousItems, beginCoord, maxUsed + Params::minWaste);
-      if (packed.nItems() >= cutSolution.nItems()) {
-        cutSolution = packed;
-        endCoord = maxUsed + Params::minWaste;
-      }
-    }
-    if (endCoord <= maxEndCoord && isAdmissibleCutLine(endCoord))
-      front_.insert(beginCoord, endCoord, previousItems + cutSolution.nItems(), previousFront);
-
-    if (maxUsed < endCoord && isAdmissibleCutLine(maxUsed)) {
-      // Try the tight case too, else the first minWaste iterations could short-circuit it
-      // TODO: handle this case in another manner (for example start after maxX)
-      cutSolution = packCut(previousItems, beginCoord, maxUsed);
-      front_.insert(beginCoord, maxUsed, previousItems + cutSolution.nItems(), previousFront);
-    }
+    CutPacker::CutDescription result = countCut(previousItems, beginCoord, endCoord);
+    if (result.nItems > 0 && result.maxUsedX <= maxEndCoord)
+      front_.insert(beginCoord, result.maxUsedX, previousItems + result.nItems, previousFront);
+    endCoord = min(endCoord, result.tightX ? result.maxUsedX + Params::minWaste : result.maxUsedX);
   }
 }
 
