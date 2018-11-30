@@ -104,8 +104,8 @@ RowPacker::RowDescription RowPacker::fitAsideDefectsSimple() {
   fillXData(description, currentX);
   fillYData(description);
 
-  assert (description.maxUsedX >= region_.minX());
-  assert (description.maxUsedY >= region_.minY());
+  assert (description.maxUsedX >= region_.minX() + Params::minXX);
+  assert (description.maxUsedY >= region_.minY() + Params::minYY);
   assert (description.maxUsedX <= region_.maxX());
   assert (description.maxUsedY <= region_.maxY());
   assert (!description.tightY || utils::fitsMinWaste(description.maxUsedY, region_.maxY()));
