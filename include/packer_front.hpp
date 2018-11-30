@@ -10,18 +10,18 @@ class PackerFront {
   struct Element {
     int begin;
     int end;
-    int valeur;
+    int value;
     int previous;
 
-    Element (int begin, int end, int valeur, int previous)
+    Element (int begin, int end, int value, int previous)
     : begin(begin)
     , end(end)
-    , valeur(valeur)
+    , value(value)
     , previous(previous) {
     }
 
     bool dominates(const Element &o) const {
-      return end <= o.end && valeur >= o.valeur;
+      return end <= o.end && value >= o.value;
     }
   };
 
@@ -54,13 +54,13 @@ class PackerFront {
     return true;
   }
 
-  void init(int coord, int valeur) {
+  void init(int coord, int value) {
     assert (front_.empty());
-    insert(coord-1 /* dummy */, coord, valeur, -1 /* dummy */);
+    insert(coord-1 /* dummy */, coord, value, -1 /* dummy */);
   }
 
-  void insert(int begin, int end, int valeur, int previous) {
-    insert(Element(begin, end, valeur, previous));
+  void insert(int begin, int end, int value, int previous) {
+    insert(Element(begin, end, value, previous));
   }
 
   void insert(Element elt) {
@@ -73,7 +73,7 @@ class PackerFront {
     }
     helper_.push_back(elt);
     for (Element o : front_) {
-      if (o.end > elt.end && o.valeur > elt.valeur)
+      if (o.end > elt.end && o.value > elt.value)
         helper_.push_back(o);
     }
 

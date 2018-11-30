@@ -171,6 +171,7 @@ Solver::MoveStatus Solver::accept(Move &move, const Solution &incumbent) {
     if (params_.failOnViolation) {
       incumbent.report();
       SolutionChecker::report(problem_, incumbent);
+      incumbent.write("invalid_solution.csv");
       throw std::runtime_error("A move returned an invalid solution.");
     }
     return MoveStatus::Violation;

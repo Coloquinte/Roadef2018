@@ -37,7 +37,7 @@ PlateSolution PlatePacker::run(int plateId, int start) {
   front_.init(region_.minX(), start_);
   for (int i = 0; i < front_.size(); ++i) {
     auto elt = front_[i];
-    propagate(i, elt.valeur, elt.end);
+    propagate(i, elt.value, elt.end);
     propagateBreakpoints(i);
   }
   front_.checkConsistency();
@@ -100,7 +100,7 @@ void PlatePacker::propagateBreakpoints(int after) {
     assert (prev <= after);
 
     // Propagate from here
-    propagate(prev, front_[prev].valeur, bp);
+    propagate(prev, front_[prev].value, bp);
   }
 }
 
@@ -117,7 +117,7 @@ PlateSolution PlatePacker::backtrack() {
       slices_.push_back(slices_.back() - Params::maxXX + Params::minXX);
 
     // Keep residual on the last plate
-    if (elt.valeur == nItems()) {
+    if (elt.value == nItems()) {
       slices_.clear();
       slices_.push_back(elt.end);
     }
@@ -143,6 +143,7 @@ PlateSolution PlatePacker::backtrack() {
     assert (solution.width() <= Params::maxXX);
     plateSolution.cuts.push_back(solution);
   }
+  assert (slices_.back() <= region_.maxX());
   assert (nPacked == nItems() || slices_.back() == region_.maxX());
 
   return plateSolution;

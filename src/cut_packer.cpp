@@ -35,7 +35,7 @@ void CutPacker::runCommon(Rectangle cut, int start, const std::vector<Defect> &d
   front_.init(region_.minY(), start_);
   for (int i = 0; i < front_.size(); ++i) {
     auto elt = front_[i];
-    propagate(i, elt.valeur, elt.end);
+    propagate(i, elt.value, elt.end);
     propagateBreakpoints(i);
   }
   front_.checkConsistency();
@@ -91,7 +91,7 @@ void CutPacker::propagateBreakpoints(int after) {
     assert (prev <= after);
 
     // Propagate from here
-    propagate(prev, front_[prev].valeur, bp);
+    propagate(prev, front_[prev].value, bp);
   }
 }
 
