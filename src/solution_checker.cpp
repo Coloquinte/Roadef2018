@@ -189,7 +189,6 @@ void SolutionChecker::checkPlateDivision(const PlateSolution &plate, bool lastPl
 
   if (plate.cuts.front().minX() != plate.minX())
     error("Critical", "First cut doesn't start at %d", plate.minX());
-  // TODO: handle the last plate in particular
   if (!lastPlate && plate.cuts.back().maxX() != plate.maxX())
     error("Critical", "Last cut doesn't end at %d", plate.maxX());
   else if (plate.cuts.back().maxX() > plate.maxX())

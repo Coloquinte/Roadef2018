@@ -6,9 +6,17 @@
 using namespace std;
 
 int Packer::firstValidVerticalCut(int minX, bool tightX) const {
+  return firstValidVerticalCutFrom(region_.minX(), minX, tightX);
+}
+
+int Packer::firstValidHorizontalCut(int minY, bool tightY) const {
+  return firstValidHorizontalCutFrom(region_.minY(), minY, tightY);
+}
+
+int Packer::firstValidVerticalCutFrom(int fromX, int minX, bool tightX) const {
   int minNonTight = tightX ? minX + Params::minWaste : minX;
-  if (minX < region_.minX() + Params::minXX) {
-    minX = max(region_.minX() + Params::minXX, minNonTight);
+  if (minX < fromX + Params::minXX) {
+    minX = max(fromX + Params::minXX, minNonTight);
     tightX = false;
   }
   while (true) {
@@ -26,10 +34,10 @@ int Packer::firstValidVerticalCut(int minX, bool tightX) const {
   }
 }
 
-int Packer::firstValidHorizontalCut(int minY, bool tightY) const {
+int Packer::firstValidHorizontalCutFrom(int fromY, int minY, bool tightY) const {
   int minNonTight = tightY ? minY + Params::minWaste : minY;
-  if (minY < region_.minY() + Params::minYY) {
-    minY = max(region_.minY() + Params::minYY, minNonTight);
+  if (minY < fromY + Params::minYY) {
+    minY = max(fromY + Params::minYY, minNonTight);
     tightY = false;
   }
   while (true) {

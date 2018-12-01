@@ -63,35 +63,40 @@ void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) 
 
 void CutPacker::propagateBreakpoints(int after) {
   int from = front_[after].end;
+  int to = after + 1 < front_.size() ? front_[after+1].end : region_.maxX();
   assert (is_sorted(defects_.begin(), defects_.end(),
         [](const Defect &a, const Defect &b) {
           return a.maxY() < b.maxY();
         }));
   for (const Defect &defect : defects_) {
     int bp = defect.maxY() + 1;
+    // Only consider defects that are in between the current front elements
     if (bp <= from)
       continue;
-    if (after + 1 < front_.size() && bp >= front_[after+1].end)
+    if (bp >= to)
       continue;
-    while (!isAdmissibleCutLine(bp)) ++bp;
-    // Find the previous front element we can extend
-    int prev = 0;
-    for (; prev < front_.size(); ++prev) {
-      // Can we extend the previous row?
-      // TODO: a row may already include some waste
-      if (front_[prev].end + Params::minWaste > bp)
-        break;
-      // Can we create a row before?
-      if (prev == 0 && front_[prev].end + Params::minYY > bp)
-        break;
+    // Find the previous front elements we can extend, by cutting as early as possible after the defect
+    //    * minWaste after the maxUsedY for a row
+    //    * minYY after the start of the region
+    //    * right after the defect
+    // Note that whenever a cut is not admissible, another defect will account for a valid one (as long as it's not tight)
+    for (int i = 1; i <= after; ++i) {
+      int cutPos = front_[i].end + Params::minWaste;
+      if (cutPos > bp && isAdmissibleCutLine(cutPos))
+        propagate(i, front_[i].value, cutPos);
     }
-    --prev;
-    if (prev < 0)
-      continue;
-    assert (prev <= after);
-
-    // Propagate from here
-    propagate(prev, front_[prev].value, bp);
+    int firstCutPos = region_.minY() + Params::minYY;
+    if (bp < firstCutPos && isAdmissibleCutLine(firstCutPos)) {
+      propagate(0, start_, firstCutPos);
+    }
+    int maxValid = 0;
+    for (int i = 1; i <= after; ++i) {
+      if (front_[i].end + Params::minWaste <= bp)
+        maxValid = i;
+    }
+    if (maxValid != 0 && isAdmissibleCutLine(bp)) {
+      propagate(maxValid, front_[maxValid].value, bp);
+    }
   }
 }
 
