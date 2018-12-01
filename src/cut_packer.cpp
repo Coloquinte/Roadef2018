@@ -55,7 +55,7 @@ void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) 
   for (int endCoord = region_.maxY() + Params::minWaste; endCoord >= beginCoord + Params::minYY; --endCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
     RowPacker::RowDescription result = countRow(previousItems, beginCoord, endCoord);
-    if (result.nItems > 0 && result.maxUsedY <= region_.maxY())
+    if (result.nItems > 0 && utils::fitsMinWaste(result.maxUsedY, region_.maxY()))
       front_.insert(beginCoord, result.maxUsedY, previousItems + result.nItems, previousFront);
     endCoord = min(endCoord, result.tightY ? result.maxUsedY + Params::minWaste : result.maxUsedY);
   }
@@ -94,7 +94,7 @@ void CutPacker::propagateBreakpoints(int after) {
       if (front_[i].end + Params::minWaste <= bp)
         maxValid = i;
     }
-    if (maxValid != 0 && isAdmissibleCutLine(bp)) {
+    if (isAdmissibleCutLine(bp) && bp >= region_.minY() + Params::minYY) {
       propagate(maxValid, front_[maxValid].value, bp);
     }
   }

@@ -64,7 +64,7 @@ void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord
   for (int endCoord = maxEndCoord + Params::minWaste; endCoord >= beginCoord + Params::minXX; --endCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
     CutPacker::CutDescription result = countCut(previousItems, beginCoord, endCoord);
-    if (result.nItems > 0 && result.maxUsedX <= maxEndCoord)
+    if (result.nItems > 0 && result.maxUsedX <= maxEndCoord && utils::fitsMinWaste(result.maxUsedX, region_.maxX()))
       front_.insert(beginCoord, result.maxUsedX, previousItems + result.nItems, previousFront);
     endCoord = min(endCoord, result.tightX ? result.maxUsedX + Params::minWaste : result.maxUsedX);
   }
@@ -103,7 +103,7 @@ void PlatePacker::propagateBreakpoints(int after) {
       if (front_[i].end + Params::minWaste <= bp)
         maxValid = i;
     }
-    if (maxValid != 0 && isAdmissibleCutLine(bp)) {
+    if (isAdmissibleCutLine(bp) && bp >= region_.minX() + Params::minXX) {
       propagate(maxValid, front_[maxValid].value, bp);
     }
   }
