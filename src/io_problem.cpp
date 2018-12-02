@@ -57,7 +57,7 @@ vector<Defect> IOProblem::readDefects() {
     return vector<Defect>();
   ifstream f(nameDefects().c_str());
   if (f.fail())
-    throw runtime_error("Couldn't open file \"" + nameDefects() + "\"");
+    throw runtime_error("Couldn't open file \"" + nameDefects() + "\".");
   string line;
   getline(f, line);
 
@@ -71,7 +71,7 @@ vector<Defect> IOProblem::readDefects() {
 void IOProblem::readItem(const string &s, vector<Item> &items) {
   auto csv_fields = readCSVLine(s);
   if (csv_fields.empty()) return;
-  if (csv_fields.size() != 5) throw runtime_error("Un item a 5 paramètres");
+  if (csv_fields.size() != 5) throw runtime_error("An item must have 5 parameters but the following line was received: \"" + s + "\"");
 
   vector<int> item_fields;
   for (const string &s : csv_fields)
@@ -91,7 +91,7 @@ void IOProblem::readItem(const string &s, vector<Item> &items) {
 void IOProblem::readDefect(const string &s, vector<Defect> &defects) {
   auto csv_fields = readCSVLine(s);
   if (csv_fields.empty()) return;
-  if (csv_fields.size() != 6) throw runtime_error("Un defect a 6 paramètres");
+  if (csv_fields.size() != 6) throw runtime_error("A defect must have 6 parameters but the following line was received: \"" + s + "\"");
 
   vector<double> defect_fields;
   for (const string &s : csv_fields)
