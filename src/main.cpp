@@ -14,10 +14,8 @@ namespace po = boost::program_options;
 po::options_description getOptions() {
   po::options_description desc("GCUT options");
 
-  desc.add_options()("help,h", "Print this help");
-
   desc.add_options()("prefix,p", po::value<string>(),
-                     "Instance name - loads <NAME>_batch.csv and <NAME>_defects.csv; writes <NAME>_solution.csv");
+                     "Instance name; will load <arg>_batch.csv and <arg>_defects.csv");
 
   desc.add_options()("solution,o", po::value<string>(),
                      "Solution file (.csv)");
@@ -27,6 +25,8 @@ po::options_description getOptions() {
 
   desc.add_options()("seed,s", po::value<size_t>()->default_value(0),
                      "Random seed");
+
+  desc.add_options()("help,h", "Print this help");
 
   return desc;
 }
@@ -67,6 +67,13 @@ po::options_description getHiddenOptions() {
   desc.add_options()("init-runs", po::value<size_t>()->default_value(5000llu),
                      "Initialization runs");
 
+  desc.add_options()("exact-rows", "Solve 3-cuts exactly");
+  desc.add_options()("exact-cuts", "Solve 2-cuts exactly");
+  desc.add_options()("exact-plates", "Solve 1-cuts exactly");
+
+  desc.add_options()("diagnose-rows", "Diagnose 3-cut suboptimalities");
+  desc.add_options()("diagnose-cuts", "Diagnose 2-cut suboptimalities");
+  desc.add_options()("diagnose-plates", "Diagnose 1-cut suboptimalities");
   return desc;
 }
 
@@ -123,6 +130,26 @@ po::variables_map parseArguments(int argc, char **argv) {
   return vm;
 }
 
+SolverParams buildParams(const po::variables_map &vm) {
+  SolverParams params;
+  params.verbosity = vm["verbosity"].as<int>();
+  params.seed = vm["seed"].as<size_t>();
+  params.nbThreads = vm["threads"].as<size_t>();
+  params.timeLimit = vm["time"].as<double>();
+  params.failOnViolation = vm.count("check");
+  params.initializationRuns = vm["init-runs"].as<size_t>();
+  params.moveLimit = vm["moves"].as<size_t>();
+
+  if (vm.count("exact-rows")) params.rowPacking = PackingOption::Exact;
+  if (vm.count("diagnose-rows")) params.rowPacking = PackingOption::Diagnose;
+  if (vm.count("exact-rows")) params.rowPacking = PackingOption::Exact;
+  if (vm.count("diagnose-cuts")) params.cutPacking = PackingOption::Diagnose;
+  if (vm.count("exact-plates")) params.platePacking = PackingOption::Exact;
+  if (vm.count("diagnose-plates")) params.platePacking = PackingOption::Diagnose;
+
+  return params;
+}
+
 int main(int argc, char** argv) {
   cout << fixed << setprecision(2);
   cerr << fixed << setprecision(2);
@@ -145,14 +172,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  SolverParams params;
-  params.verbosity = vm["verbosity"].as<int>();
-  params.seed = vm["seed"].as<size_t>();
-  params.nbThreads = vm["threads"].as<size_t>();
-  params.timeLimit = vm["time"].as<double>();
-  params.failOnViolation = vm.count("check");
-  params.initializationRuns = vm["init-runs"].as<size_t>();
-  params.moveLimit = vm["moves"].as<size_t>();
+  SolverParams params = buildParams(vm);
 
   vector<int> initialOrder;
   if (vm.count("initial"))

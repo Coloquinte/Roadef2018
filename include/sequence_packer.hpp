@@ -4,14 +4,15 @@
 
 #include "problem.hpp"
 #include "solution.hpp"
+#include "solver_params.hpp"
 
 class SequencePacker {
  public:
-  static Solution run(const Problem &problem, const std::vector<Item> &sequence);
-  static Solution run(const Problem &problem, const std::vector<int> &sequence);
+  static Solution run(const Problem &problem, const std::vector<Item> &sequence, SolverParams options);
+  static Solution run(const Problem &problem, const std::vector<int> &sequence, SolverParams options);
 
  private:
-  SequencePacker(const Problem &problem, const std::vector<Item> &sequence);
+  SequencePacker(const Problem &problem, const std::vector<Item> &sequence, SolverParams options);
   void run();
 
   int nItems() const { return sequence_.size(); }
@@ -19,6 +20,7 @@ class SequencePacker {
  private:
   const Problem &problem_;
   const std::vector<Item> &sequence_;
+  SolverParams options_;
 
   Solution solution_;
   int packedItems_;

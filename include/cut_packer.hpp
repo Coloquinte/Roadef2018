@@ -23,7 +23,7 @@ class CutPacker : Packer {
   };
 
  public:
-  CutPacker(const Problem &problem, const std::vector<Item> &sequence);
+  CutPacker(const std::vector<Item> &sequence, SolverParams options);
   CutSolution run(Rectangle cut, int start, const std::vector<Defect> &defects);
   CutDescription count(Rectangle cut, int start, const std::vector<Defect> &defects);
 

@@ -4,17 +4,14 @@
 
 #include "problem.hpp"
 #include "solution.hpp"
+#include "solver_params.hpp"
 
 class Packer {
  protected:
-  Packer(const std::vector<Item> &sequence)
+  Packer(const std::vector<Item> &sequence, SolverParams options)
   : start_(0)
-  , sequence_(sequence) {
-  }
-
-  Packer(const Problem &problem, const std::vector<Item> &sequence)
-  : sequence_(sequence) {
-    start_ = 0;
+  , sequence_(sequence)
+  , options_(options) {
   }
 
   int nItems() const {
@@ -50,6 +47,7 @@ class Packer {
   std::vector<Defect> defects_;
 
   const std::vector<Item> &sequence_;
+  SolverParams options_;
 
   friend class RowPacker;
   friend class CutPacker;

@@ -10,10 +10,9 @@
 
 class PlatePacker : Packer {
  public:
-  static PlateSolution run(const Problem &problem, int plateId, const std::vector<Item> &sequence, int start);
-  static int count(const Problem &problem, int plateId, const std::vector<Item> &sequence, int start);
+  static PlateSolution run(const Problem &problem, const std::vector<Item> &sequence, SolverParams options, int plateId, int start);
 
-  PlatePacker(const Problem &problem, const std::vector<Item> &sequence);
+  PlatePacker(const Problem &problem, const std::vector<Item> &sequence, SolverParams options);
   PlateSolution run(int plateId, int start);
   int count(int plateId, int start);
 

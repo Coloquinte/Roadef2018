@@ -6,8 +6,8 @@
 
 using namespace std;
 
-RowPacker::RowPacker(const Problem &problem, const vector<Item> &sequence)
-: Packer(problem, sequence) {
+RowPacker::RowPacker(const vector<Item> &sequence, SolverParams options)
+: Packer(sequence, options) {
   widths_.reset(new int[sequence.size()]);
   heights_.reset(new int[sequence.size()]);
   placements_.reset(new int[sequence.size()]);

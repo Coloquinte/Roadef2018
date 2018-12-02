@@ -16,31 +16,32 @@
 
 using namespace std;
 
-Solution SequencePacker::run(const Problem &problem, const vector<Item> &sequence) {
-  SequencePacker packer(problem, sequence);
+Solution SequencePacker::run(const Problem &problem, const vector<Item> &sequence, SolverParams options) {
+  SequencePacker packer(problem, sequence, options);
   packer.run();
   return packer.solution_;
 }
 
-Solution SequencePacker::run(const Problem &problem, const vector<int> &sequence) {
+Solution SequencePacker::run(const Problem &problem, const vector<int> &sequence, SolverParams options) {
   vector<Item> items;
   for (int id : sequence) {
     assert (id >= 0 && id < (int) problem.items().size());
     items.push_back(problem.items()[id]);
   }
-  return run(problem, items);
+  return run(problem, items, options);
 }
 
-SequencePacker::SequencePacker(const Problem &problem, const vector<Item> &sequence)
+SequencePacker::SequencePacker(const Problem &problem, const vector<Item> &sequence, SolverParams options)
 : problem_(problem)
-, sequence_(sequence) {
+, sequence_(sequence)
+, options_(options) {
   packedItems_ = 0;
 }
 
 void SequencePacker::run() {
   for (int i = 0; i < Params::nPlates; ++i) {
     if (packedItems_ == (int) sequence_.size()) break;
-    PlateSolution plate = PlatePacker::run(problem_, i, sequence_, packedItems_);
+    PlateSolution plate = PlatePacker::run(problem_, sequence_, options_, i, packedItems_);
     packedItems_ += plate.nItems();
     solution_.plates.push_back(plate);
   }

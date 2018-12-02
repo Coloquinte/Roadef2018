@@ -4,6 +4,12 @@
 
 #include <cstddef>
 
+enum class PackingOption {
+  Approximate,
+  Exact,
+  Diagnose
+};
+
 struct SolverParams {
   int verbosity;
   std::size_t seed;
@@ -12,6 +18,9 @@ struct SolverParams {
   std::size_t moveLimit;
   double timeLimit;
   bool failOnViolation;
+  PackingOption rowPacking;
+  PackingOption cutPacking;
+  PackingOption platePacking;
 
   SolverParams() {
     verbosity = 0;
@@ -21,6 +30,9 @@ struct SolverParams {
     moveLimit = 0;
     timeLimit = 0.0;
     failOnViolation = false;
+    rowPacking = PackingOption::Approximate;
+    cutPacking = PackingOption::Approximate;
+    platePacking = PackingOption::Approximate;
   }
 };
 

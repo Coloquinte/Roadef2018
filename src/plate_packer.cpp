@@ -7,19 +7,14 @@
 
 using namespace std;
 
-PlateSolution PlatePacker::run(const Problem &problem, int plateId, const vector<Item> &sequence, int start) {
-  PlatePacker packer(problem, sequence);
+PlateSolution PlatePacker::run(const Problem &problem, const vector<Item> &sequence, SolverParams options, int plateId, int start) {
+  PlatePacker packer(problem, sequence, options);
   return packer.run(plateId, start);
 }
 
-int PlatePacker::count(const Problem &problem, int plateId, const vector<Item> &sequence, int start) {
-  PlatePacker packer(problem, sequence);
-  return packer.count(plateId, start);
-}
-
-PlatePacker::PlatePacker(const Problem &problem, const vector<Item> &sequence)
-: Packer(problem, sequence)
-, cutPacker_(problem, sequence)
+PlatePacker::PlatePacker(const Problem &problem, const vector<Item> &sequence, SolverParams options)
+: Packer(sequence, options)
+, cutPacker_(sequence, options)
 , problem_(problem) {
 }
 
@@ -42,10 +37,6 @@ PlateSolution PlatePacker::run(int plateId, int start) {
   front_.checkConsistency();
 
   return backtrack();
-}
-
-int PlatePacker::count(int plateId, int start) {
-  return run(plateId, start).nItems();
 }
 
 CutPacker::CutDescription PlatePacker::countCut(int start, int minX, int maxX) {

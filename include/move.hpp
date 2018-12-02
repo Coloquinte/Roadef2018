@@ -36,8 +36,9 @@ class Move {
   bool sequenceValid(const std::vector<Item> &sequence) const;
   Solution accept(const Solution &incumbent);
 
-  const Problem&  problem  () const { return solver_->problem_; }
-  const Solution& solution () const { return solver_->solution_; }
+  const Problem& problem() const { return solver_->problem_; }
+  const Solution& solution() const { return solver_->solution_; }
+  const SolverParams& params() const { return solver_->params_; }
 
   double bestMapped  () { return solver_->bestMapped_; }
   double bestDensity () { return solver_->bestDensity_; }

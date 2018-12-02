@@ -85,7 +85,7 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 void Solver::init(vector<int> initial) {
   if (initial.empty()) return;
 
-  solution_ = SequencePacker::run(problem_, initial);
+  solution_ = SequencePacker::run(problem_, initial, params_);
   bestDensity_ = SolutionChecker::evalPercentDensity(problem_, solution_);
   bestMapped_ = SolutionChecker::evalPercentMapped(problem_, solution_);
 

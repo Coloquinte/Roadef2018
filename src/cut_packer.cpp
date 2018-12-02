@@ -7,9 +7,9 @@
 
 using namespace std;
 
-CutPacker::CutPacker(const Problem &problem, const vector<Item> &sequence)
-: Packer(problem, sequence)
-, rowPacker_(problem, sequence) {
+CutPacker::CutPacker(const vector<Item> &sequence, SolverParams options)
+: Packer(sequence, options)
+, rowPacker_(sequence, options) {
 }
 
 CutSolution CutPacker::run(Rectangle cut, int start, const std::vector<Defect> &defects) {

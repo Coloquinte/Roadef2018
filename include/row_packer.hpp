@@ -27,7 +27,7 @@ class RowPacker : Packer {
   };
 
  public:
-  RowPacker(const Problem &problem, const std::vector<Item> &sequence);
+  RowPacker(const std::vector<Item> &sequence, SolverParams options);
   RowSolution run(Rectangle row, int start, const std::vector<Defect> &defects);
   RowDescription count(Rectangle row, int start, const std::vector<Defect> &defects);
 
