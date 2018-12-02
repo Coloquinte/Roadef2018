@@ -55,8 +55,13 @@ void CutPacker::propagate(int previousFront, int beginCoord) {
   for (int endCoord = region_.maxY() + Params::minWaste; endCoord >= beginCoord + Params::minYY; --endCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
     RowPacker::RowDescription result = countRow(previousItems, beginCoord, endCoord);
-    if (result.nItems > 0 && utils::fitsMinWaste(result.maxUsedY, region_.maxY()))
+    if (utils::fitsMinWaste(result.maxUsedY, result.tightY, region_.maxY()))
       front_.insert(beginCoord, result.maxUsedY, previousItems + result.nItems, previousFront);
+    if (!result.tightY) {
+      RowPacker::RowDescription tight = countRow(previousItems, beginCoord, result.maxUsedY);
+      if (utils::fitsMinWaste(tight.maxUsedY, tight.tightY, region_.maxY()))
+        front_.insert(beginCoord, tight.maxUsedY, previousItems + tight.nItems, previousFront);
+    }
     endCoord = min(endCoord, result.tightY ? result.maxUsedY + Params::minWaste : result.maxUsedY);
   }
 }

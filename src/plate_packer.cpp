@@ -64,8 +64,15 @@ void PlatePacker::propagate(int previousFront, int beginCoord) {
   for (int endCoord = maxEndCoord + Params::minWaste; endCoord >= beginCoord + Params::minXX; --endCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
     CutPacker::CutDescription result = countCut(previousItems, beginCoord, endCoord);
-    if (result.nItems > 0 && result.maxUsedX <= maxEndCoord && utils::fitsMinWaste(result.maxUsedX, region_.maxX()))
+    if (result.nItems == 0) break;
+    if (result.maxUsedX <= maxEndCoord && utils::fitsMinWaste(result.maxUsedX, result.tightX, region_.maxX()))
       front_.insert(beginCoord, result.maxUsedX, previousItems + result.nItems, previousFront);
+    // One more attempt, but tight this time
+    if (!result.tightX) {
+      CutPacker::CutDescription tight = countCut(previousItems, beginCoord, result.maxUsedX - Params::minWaste);
+      if (tight.maxUsedX <= maxEndCoord && utils::fitsMinWaste(tight.maxUsedX, tight.tightX, region_.maxX()))
+        front_.insert(beginCoord, tight.maxUsedX, previousItems + tight.nItems, previousFront);
+    }
     endCoord = min(endCoord, result.tightX ? result.maxUsedX + Params::minWaste : result.maxUsedX);
   }
 }
