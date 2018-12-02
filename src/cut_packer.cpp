@@ -34,8 +34,7 @@ void CutPacker::runCommon(Rectangle cut, int start, const std::vector<Defect> &d
   front_.clear();
   front_.init(region_.minY(), start_);
   for (int i = 0; i < front_.size(); ++i) {
-    auto elt = front_[i];
-    propagate(i, elt.value, elt.end);
+    propagate(i, front_[i].end);
     propagateBreakpoints(i);
   }
   front_.checkConsistency();
@@ -51,7 +50,8 @@ RowSolution CutPacker::packRow(int start, int minY, int maxY) {
   return rowPacker_.run(row, start, defects_);
 }
 
-void CutPacker::propagate(int previousFront, int previousItems, int beginCoord) {
+void CutPacker::propagate(int previousFront, int beginCoord) {
+  int previousItems = front_[previousFront].value;
   for (int endCoord = region_.maxY() + Params::minWaste; endCoord >= beginCoord + Params::minYY; --endCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
     RowPacker::RowDescription result = countRow(previousItems, beginCoord, endCoord);
@@ -83,11 +83,11 @@ void CutPacker::propagateBreakpoints(int after) {
     for (int i = 1; i <= after; ++i) {
       int cutPos = front_[i].end + Params::minWaste;
       if (cutPos > bp && isAdmissibleCutLine(cutPos))
-        propagate(i, front_[i].value, cutPos);
+        propagate(i, cutPos);
     }
     int firstCutPos = region_.minY() + Params::minYY;
     if (bp < firstCutPos && isAdmissibleCutLine(firstCutPos)) {
-      propagate(0, start_, firstCutPos);
+      propagate(0, firstCutPos);
     }
     int maxValid = 0;
     for (int i = 1; i <= after; ++i) {
@@ -95,7 +95,7 @@ void CutPacker::propagateBreakpoints(int after) {
         maxValid = i;
     }
     if (isAdmissibleCutLine(bp) && bp >= region_.minY() + Params::minYY) {
-      propagate(maxValid, front_[maxValid].value, bp);
+      propagate(maxValid, bp);
     }
   }
 }

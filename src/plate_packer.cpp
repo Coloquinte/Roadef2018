@@ -36,8 +36,7 @@ PlateSolution PlatePacker::run(int plateId, int start) {
   front_.clear();
   front_.init(region_.minX(), start_);
   for (int i = 0; i < front_.size(); ++i) {
-    auto elt = front_[i];
-    propagate(i, elt.value, elt.end);
+    propagate(i, front_[i].end);
     propagateBreakpoints(i);
   }
   front_.checkConsistency();
@@ -59,7 +58,8 @@ CutSolution PlatePacker::packCut(int start, int minX, int maxX) {
   return cutPacker_.run(cut, start, defects_);
 }
 
-void PlatePacker::propagate(int previousFront, int previousItems, int beginCoord) {
+void PlatePacker::propagate(int previousFront, int beginCoord) {
+  int previousItems = front_[previousFront].value;
   int maxEndCoord = min(region_.maxX(), beginCoord + Params::maxXX);
   for (int endCoord = maxEndCoord + Params::minWaste; endCoord >= beginCoord + Params::minXX; --endCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
@@ -92,11 +92,11 @@ void PlatePacker::propagateBreakpoints(int after) {
     for (int i = 1; i <= after; ++i) {
       int cutPos = front_[i].end + Params::minWaste;
       if (cutPos > bp && isAdmissibleCutLine(cutPos))
-        propagate(i, front_[i].value, cutPos);
+        propagate(i, cutPos);
     }
     int firstCutPos = region_.minX() + Params::minXX;
     if (bp < firstCutPos && isAdmissibleCutLine(firstCutPos)) {
-      propagate(0, start_, firstCutPos);
+      propagate(0, firstCutPos);
     }
     int maxValid = 0;
     for (int i = 1; i <= after; ++i) {
@@ -104,7 +104,7 @@ void PlatePacker::propagateBreakpoints(int after) {
         maxValid = i;
     }
     if (isAdmissibleCutLine(bp) && bp >= region_.minX() + Params::minXX) {
-      propagate(maxValid, front_[maxValid].value, bp);
+      propagate(maxValid, bp);
     }
   }
 }

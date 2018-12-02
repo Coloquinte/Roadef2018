@@ -29,7 +29,7 @@ class CutPacker : Packer {
 
  private:
   void runCommon(Rectangle cut, int start, const std::vector<Defect> &defects);
-  void propagate(int previousFront, int previousItems, int beginCoord);
+  void propagate(int previousFront, int beginCoord);
   void propagateBreakpoints(int after);
 
   void buildSlices();

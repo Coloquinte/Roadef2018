@@ -18,7 +18,7 @@ class PlatePacker : Packer {
   int count(int plateId, int start);
 
  private:
-  void propagate(int previousFront, int previousItems, int beginCoord);
+  void propagate(int previousFront, int beginCoord);
   void propagateBreakpoints(int after);
   PlateSolution backtrack();
 
