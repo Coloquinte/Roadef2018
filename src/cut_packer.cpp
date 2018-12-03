@@ -14,11 +14,13 @@ CutPacker::CutPacker(const vector<Item> &sequence, SolverParams options)
 
 CutSolution CutPacker::run(Rectangle cut, int start, const std::vector<Defect> &defects) {
   runCommon(cut, start, defects);
+  buildSlices();
   return backtrack();
 }
 
 CutPacker::CutDescription CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defects) {
   runCommon(cut, start, defects);
+  buildSlices();
   return countBacktrack();
 }
 
@@ -125,7 +127,6 @@ void CutPacker::buildSlices() {
 }
 
 CutSolution CutPacker::backtrack() {
-  buildSlices();
   int nPacked = start_;
   CutSolution cutSolution(region_);
   for (size_t i = 0; i + 1 < slices_.size(); ++i) {
@@ -139,7 +140,6 @@ CutSolution CutPacker::backtrack() {
 }
 
 CutPacker::CutDescription CutPacker::countBacktrack() {
-  buildSlices();
   CutDescription description;
   std::vector<RowPacker::RowDescription> rows;
   for (size_t i = 0; i + 1 < slices_.size(); ++i) {

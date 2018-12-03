@@ -17,8 +17,13 @@ class PlatePacker : Packer {
   int count(int plateId, int start);
 
  private:
+  PlateSolution runApproximate();
+  PlateSolution runExact();
+  PlateSolution runDiagnostic();
+
   void propagate(int previousFront, int beginCoord);
   void propagateBreakpoints(int after);
+  void buildSlices();
   PlateSolution backtrack();
 
   CutPacker::CutDescription countCut(int start, int minX, int maxX);

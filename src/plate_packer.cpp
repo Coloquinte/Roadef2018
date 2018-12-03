@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
 
@@ -18,6 +19,73 @@ PlatePacker::PlatePacker(const Problem &problem, const vector<Item> &sequence, S
 , problem_(problem) {
 }
 
+PlateSolution PlatePacker::runExact() {
+  std::vector<int> front(Params::widthPlates + 1, -1);
+  std::vector<int> prev(Params::widthPlates + 1, -1);
+  front[0] = start_;
+  for (int j = Params::minXX; j <= Params::widthPlates; ++j) {
+    int best = -1;
+    int pred = -1;
+    if (!isAdmissibleCutLine(j)) continue;
+    for (int i = max(0, j - Params::maxXX); i <= j - Params::minXX; ++i) {
+      if (front[i] < 0) continue;
+      int cnt = front[i] + countCut(front[i], i, j).nItems;
+      if (cnt > best) {
+        best = cnt;
+        pred = i;
+      }
+      front[j] = best;
+      prev[j] = pred;
+    }
+  }
+
+  // Special case where we can finish earlier for the last plate
+  int finishLine = Params::widthPlates;
+  for (int j = Params::minXX; j <= Params::widthPlates; ++j) {
+    if (front[j] == nItems()) {
+      finishLine = j;
+      break;
+    }
+  }
+
+  // Build the slices
+  int cur = finishLine;
+  slices_.clear();
+  slices_.push_back(finishLine);
+  while (cur != 0) {
+    cur = prev[cur];
+    slices_.push_back(cur);
+  }
+  std::reverse(slices_.begin(), slices_.end());
+
+  return backtrack();
+}
+
+PlateSolution PlatePacker::runApproximate() {
+  front_.clear();
+  front_.init(region_.minX(), start_);
+  for (int i = 0; i < front_.size(); ++i) {
+    propagate(i, front_[i].end);
+    propagateBreakpoints(i);
+  }
+  front_.checkConsistency();
+
+  buildSlices();
+  return backtrack();
+}
+
+PlateSolution PlatePacker::runDiagnostic() {
+  PlateSolution approximate = runApproximate();
+  PlateSolution exact = runExact();
+  if (approximate.nItems() != exact.nItems()) {
+    cout << "Exact algorithm obtains " << exact.nItems() << " items but approximate one obtains " << approximate.nItems() << endl;
+  }
+  else if (approximate.nCuts() != 0 && exact.nCuts() != 0 && approximate.cuts.back().maxX() != exact.cuts.back().maxX()) {
+    cout << "Exact algorithm ends plate at " << exact.cuts.back().maxX() << " but approximate one obtains " << approximate.cuts.back().maxX() << endl;
+  }
+  return exact;
+}
+
 PlateSolution PlatePacker::run(int plateId, int start) {
   Rectangle plate = Rectangle::FromCoordinates(0, 0, Params::widthPlates, Params::heightPlates);
   init(plate, start, problem_.plateDefects()[plateId]);
@@ -28,15 +96,15 @@ PlateSolution PlatePacker::run(int plateId, int start) {
   assert (region_.minX() == 0);
   assert (region_.minY() == 0);
 
-  front_.clear();
-  front_.init(region_.minX(), start_);
-  for (int i = 0; i < front_.size(); ++i) {
-    propagate(i, front_[i].end);
-    propagateBreakpoints(i);
+  if (options_.platePacking == PackingOption::Approximate) {
+    return runApproximate();
   }
-  front_.checkConsistency();
-
-  return backtrack();
+  else if (options_.platePacking == PackingOption::Exact) {
+    return runExact();
+  }
+  else {
+    return runDiagnostic();
+  }
 }
 
 CutPacker::CutDescription PlatePacker::countCut(int start, int minX, int maxX) {
@@ -107,7 +175,7 @@ void PlatePacker::propagateBreakpoints(int after) {
   }
 }
 
-PlateSolution PlatePacker::backtrack() {
+void PlatePacker::buildSlices() {
   slices_.clear();
   slices_.push_back(region_.maxX());
 
@@ -134,7 +202,9 @@ PlateSolution PlatePacker::backtrack() {
   if (slices_.back() != region_.minX())
     slices_.push_back(region_.minX());
   reverse(slices_.begin(), slices_.end());
+}
 
+PlateSolution PlatePacker::backtrack() {
   int nPacked = start_;
   PlateSolution plateSolution(region_);
   for (size_t i = 0; i + 1 < slices_.size(); ++i) {
@@ -153,6 +223,8 @@ PlateSolution PlatePacker::backtrack() {
 }
 
 bool PlatePacker::isAdmissibleCutLine(int x) const {
+  if (x == region_.minX() || x == region_.maxX())
+    return true;
   for (Defect d : defects_) {
     if (d.intersectsVerticalLine(x))
       return false;
