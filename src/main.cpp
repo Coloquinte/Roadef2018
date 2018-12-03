@@ -142,7 +142,7 @@ SolverParams buildParams(const po::variables_map &vm) {
 
   if (vm.count("exact-rows")) params.rowPacking = PackingOption::Exact;
   if (vm.count("diagnose-rows")) params.rowPacking = PackingOption::Diagnose;
-  if (vm.count("exact-rows")) params.rowPacking = PackingOption::Exact;
+  if (vm.count("exact-cuts")) params.cutPacking = PackingOption::Exact;
   if (vm.count("diagnose-cuts")) params.cutPacking = PackingOption::Diagnose;
   if (vm.count("exact-plates")) params.platePacking = PackingOption::Exact;
   if (vm.count("diagnose-plates")) params.platePacking = PackingOption::Diagnose;

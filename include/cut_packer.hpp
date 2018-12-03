@@ -28,11 +28,19 @@ class CutPacker : Packer {
   CutDescription count(Rectangle cut, int start, const std::vector<Defect> &defects);
 
  private:
-  void runCommon(Rectangle cut, int start, const std::vector<Defect> &defects);
+  CutSolution runApproximate();
+  CutSolution runExact();
+  CutSolution runDiagnostic();
+  CutDescription countApproximate();
+  CutDescription countExact();
+  CutDescription countDiagnostic();
+
+  void setup(Rectangle cut, int start, const std::vector<Defect> &defects);
+  void commonApproximate();
+  void commonExact();
   void propagate(int previousFront, int beginCoord);
   void propagateBreakpoints(int after);
 
-  void buildSlices();
   CutSolution backtrack();
   CutDescription countBacktrack();
 

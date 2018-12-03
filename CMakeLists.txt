@@ -26,6 +26,7 @@ SET (SOURCES
   src/packer_front.cpp
   src/ordering_heuristic.cpp
   src/solver.cpp
+  src/params.cpp
   src/move.cpp
   src/main.cpp
 )

@@ -14,16 +14,15 @@ class PlatePacker : Packer {
 
   PlatePacker(const Problem &problem, const std::vector<Item> &sequence, SolverParams options);
   PlateSolution run(int plateId, int start);
-  int count(int plateId, int start);
 
  private:
   PlateSolution runApproximate();
   PlateSolution runExact();
   PlateSolution runDiagnostic();
 
+  void setup(int plateId, int start);
   void propagate(int previousFront, int beginCoord);
   void propagateBreakpoints(int after);
-  void buildSlices();
   PlateSolution backtrack();
 
   CutPacker::CutDescription countCut(int start, int minX, int maxX);

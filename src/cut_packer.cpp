@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
 
@@ -13,18 +14,70 @@ CutPacker::CutPacker(const vector<Item> &sequence, SolverParams options)
 }
 
 CutSolution CutPacker::run(Rectangle cut, int start, const std::vector<Defect> &defects) {
-  runCommon(cut, start, defects);
-  buildSlices();
-  return backtrack();
+  setup(cut, start, defects);
+  if (options_.cutPacking == PackingOption::Approximate) {
+    return runApproximate();
+  }
+  else if (options_.cutPacking == PackingOption::Exact) {
+    return runExact();
+  }
+  else {
+    return runDiagnostic();
+  }
 }
 
 CutPacker::CutDescription CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defects) {
-  runCommon(cut, start, defects);
-  buildSlices();
+  setup(cut, start, defects);
+  if (options_.cutPacking == PackingOption::Approximate) {
+    return countApproximate();
+  }
+  else if (options_.cutPacking == PackingOption::Exact) {
+    return countExact();
+  }
+  else {
+    return countDiagnostic();
+  }
+}
+
+CutSolution CutPacker::runApproximate() {
+  commonApproximate();
+  return backtrack();
+}
+
+CutSolution CutPacker::runExact() {
+  commonExact();
+  return backtrack();
+}
+
+CutSolution CutPacker::runDiagnostic() {
+  CutSolution approximate = runApproximate();
+  CutSolution exact = runExact();
+  if (approximate.nItems() != exact.nItems()) {
+    cout << "Exact cut algorithm obtains " << exact.nItems() << " items but approximate one obtains " << approximate.nItems() << endl;
+  }
+  return exact;
+}
+
+CutPacker::CutDescription CutPacker::countApproximate() {
+  commonApproximate();
   return countBacktrack();
 }
 
-void CutPacker::runCommon(Rectangle cut, int start, const std::vector<Defect> &defects) {
+CutPacker::CutDescription CutPacker::countExact() {
+  commonExact();
+  return countBacktrack();
+}
+
+CutPacker::CutDescription CutPacker::countDiagnostic() {
+  CutDescription approximate = countApproximate();
+  CutDescription exact = countExact(); 
+  if (approximate.nItems != exact.nItems) {
+    cout << "Exact cut algorithm obtains " << exact.nItems << " items but approximate one obtains " << approximate.nItems << endl;
+  }
+  return exact;
+}
+
+void CutPacker::setup(Rectangle cut, int start, const std::vector<Defect> &defects) {
   init(cut, start, defects);
   checkConsistency();
   sort(defects_.begin(), defects_.end(),
@@ -32,7 +85,10 @@ void CutPacker::runCommon(Rectangle cut, int start, const std::vector<Defect> &d
           return a.maxY() < b.maxY();
         });
   assert (region_.minY() == 0);
+}
 
+void CutPacker::commonApproximate() {
+  // Fill the front
   front_.clear();
   front_.init(region_.minY(), start_);
   for (int i = 0; i < front_.size(); ++i) {
@@ -40,6 +96,57 @@ void CutPacker::runCommon(Rectangle cut, int start, const std::vector<Defect> &d
     propagateBreakpoints(i);
   }
   front_.checkConsistency();
+
+  // Build the slices
+  slices_.clear();
+  slices_.push_back(region_.maxY());
+
+  int cur = front_.size() - 1;
+  while (cur != 0) {
+    auto elt = front_[cur];
+    if (elt.begin + Params::minYY > slices_.back())
+      continue;
+    assert (elt.previous < cur);
+    assert (elt.begin < slices_.back());
+    slices_.push_back(elt.begin);
+    cur = elt.previous;
+  }
+  if (slices_.back() != region_.minY())
+    slices_.push_back(region_.minY());
+  reverse(slices_.begin(), slices_.end());
+}
+
+void CutPacker::commonExact() {
+  // Fill the front
+  std::vector<int> front(Params::heightPlates + 1, -1);
+  std::vector<int> prev(Params::heightPlates + 1, -1);
+  front[0] = start_;
+  for (int j = Params::minYY; j <= Params::heightPlates; ++j) {
+    int best = -1;
+    int pred = -1;
+    if (!isAdmissibleCutLine(j)) continue;
+    if (j != Params::heightPlates && j > Params::heightPlates - Params::minYY) continue;
+    for (int i = 0; i <= j - Params::minYY; ++i) {
+      if (front[i] < 0) continue;
+      int cnt = front[i] + countRow(front[i], i, j).nItems;
+      if (cnt > best) {
+        best = cnt;
+        pred = i;
+      }
+      front[j] = best;
+      prev[j] = pred;
+    }
+  }
+
+  // Build the slices
+  int cur = Params::heightPlates;
+  slices_.clear();
+  slices_.push_back(Params::heightPlates);
+  while (cur != 0) {
+    cur = prev[cur];
+    slices_.push_back(cur);
+  }
+  reverse(slices_.begin(), slices_.end());
 }
 
 RowPacker::RowDescription CutPacker::countRow(int start, int minY, int maxY) {
@@ -105,25 +212,6 @@ void CutPacker::propagateBreakpoints(int after) {
       propagate(maxValid, bp);
     }
   }
-}
-
-void CutPacker::buildSlices() {
-  slices_.clear();
-  slices_.push_back(region_.maxY());
-
-  int cur = front_.size() - 1;
-  while (cur != 0) {
-    auto elt = front_[cur];
-    if (elt.begin + Params::minYY > slices_.back())
-      continue;
-    assert (elt.previous < cur);
-    assert (elt.begin < slices_.back());
-    slices_.push_back(elt.begin);
-    cur = elt.previous;
-  }
-  if (slices_.back() != region_.minY())
-    slices_.push_back(region_.minY());
-  reverse(slices_.begin(), slices_.end());
 }
 
 CutSolution CutPacker::backtrack() {

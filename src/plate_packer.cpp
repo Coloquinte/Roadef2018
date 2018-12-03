@@ -20,6 +20,7 @@ PlatePacker::PlatePacker(const Problem &problem, const vector<Item> &sequence, S
 }
 
 PlateSolution PlatePacker::runExact() {
+  // Fill the front
   std::vector<int> front(Params::widthPlates + 1, -1);
   std::vector<int> prev(Params::widthPlates + 1, -1);
   front[0] = start_;
@@ -56,12 +57,13 @@ PlateSolution PlatePacker::runExact() {
     cur = prev[cur];
     slices_.push_back(cur);
   }
-  std::reverse(slices_.begin(), slices_.end());
+  reverse(slices_.begin(), slices_.end());
 
   return backtrack();
 }
 
 PlateSolution PlatePacker::runApproximate() {
+  // Fill the front
   front_.clear();
   front_.init(region_.minX(), start_);
   for (int i = 0; i < front_.size(); ++i) {
@@ -70,7 +72,34 @@ PlateSolution PlatePacker::runApproximate() {
   }
   front_.checkConsistency();
 
-  buildSlices();
+  // Build the slices
+  slices_.clear();
+  slices_.push_back(region_.maxX());
+
+  int cur = front_.size() - 1;
+  while (cur != 0) {
+    auto elt = front_[cur];
+    if (elt.begin + Params::minXX > slices_.back())
+      continue;
+    while (elt.begin + Params::maxXX < slices_.back())
+      slices_.push_back(slices_.back() - Params::maxXX + Params::minXX);
+
+    // Keep residual on the last plate
+    if (elt.value == nItems()) {
+      slices_.clear();
+      slices_.push_back(elt.end);
+    }
+    assert (elt.previous < cur);
+    assert (elt.begin < slices_.back());
+    slices_.push_back(elt.begin);
+    cur = elt.previous;
+  }
+  while (region_.minX() + Params::maxXX < slices_.back())
+    slices_.push_back(slices_.back() - Params::maxXX + Params::minXX);
+  if (slices_.back() != region_.minX())
+    slices_.push_back(region_.minX());
+  reverse(slices_.begin(), slices_.end());
+
   return backtrack();
 }
 
@@ -78,15 +107,15 @@ PlateSolution PlatePacker::runDiagnostic() {
   PlateSolution approximate = runApproximate();
   PlateSolution exact = runExact();
   if (approximate.nItems() != exact.nItems()) {
-    cout << "Exact algorithm obtains " << exact.nItems() << " items but approximate one obtains " << approximate.nItems() << endl;
+    cout << "Exact plate algorithm obtains " << exact.nItems() << " items but approximate one obtains " << approximate.nItems() << endl;
   }
   else if (approximate.nCuts() != 0 && exact.nCuts() != 0 && approximate.cuts.back().maxX() != exact.cuts.back().maxX()) {
-    cout << "Exact algorithm ends plate at " << exact.cuts.back().maxX() << " but approximate one obtains " << approximate.cuts.back().maxX() << endl;
+    cout << "Exact plate algorithm ends plate at " << exact.cuts.back().maxX() << " but approximate one obtains " << approximate.cuts.back().maxX() << endl;
   }
   return exact;
 }
 
-PlateSolution PlatePacker::run(int plateId, int start) {
+void PlatePacker::setup(int plateId, int start) {
   Rectangle plate = Rectangle::FromCoordinates(0, 0, Params::widthPlates, Params::heightPlates);
   init(plate, start, problem_.plateDefects()[plateId]);
   sort(defects_.begin(), defects_.end(),
@@ -95,7 +124,10 @@ PlateSolution PlatePacker::run(int plateId, int start) {
         });
   assert (region_.minX() == 0);
   assert (region_.minY() == 0);
+}
 
+PlateSolution PlatePacker::run(int plateId, int start) {
+  setup(plateId, start);
   if (options_.platePacking == PackingOption::Approximate) {
     return runApproximate();
   }
@@ -173,35 +205,6 @@ void PlatePacker::propagateBreakpoints(int after) {
       propagate(maxValid, bp);
     }
   }
-}
-
-void PlatePacker::buildSlices() {
-  slices_.clear();
-  slices_.push_back(region_.maxX());
-
-  int cur = front_.size() - 1;
-  while (cur != 0) {
-    auto elt = front_[cur];
-    if (elt.begin + Params::minXX > slices_.back())
-      continue;
-    while (elt.begin + Params::maxXX < slices_.back())
-      slices_.push_back(slices_.back() - Params::maxXX + Params::minXX);
-
-    // Keep residual on the last plate
-    if (elt.value == nItems()) {
-      slices_.clear();
-      slices_.push_back(elt.end);
-    }
-    assert (elt.previous < cur);
-    assert (elt.begin < slices_.back());
-    slices_.push_back(elt.begin);
-    cur = elt.previous;
-  }
-  while (region_.minX() + Params::maxXX < slices_.back())
-    slices_.push_back(slices_.back() - Params::maxXX + Params::minXX);
-  if (slices_.back() != region_.minX())
-    slices_.push_back(region_.minX());
-  reverse(slices_.begin(), slices_.end());
 }
 
 PlateSolution PlatePacker::backtrack() {
