@@ -3,17 +3,37 @@
 #include "utils.hpp"
 
 #include <cassert>
+#include <algorithm>
+#include <iostream>
 
 using namespace std;
 
 RowPacker::RowPacker(const vector<Item> &sequence, SolverParams options)
 : Packer(sequence, options) {
-  widths_.reset(new int[sequence.size()]);
   heights_.reset(new int[sequence.size()]);
-  placements_.reset(new int[sequence.size()]);
 }
 
-RowPacker::RowDescription RowPacker::fitNoDefectsSimple() {
+RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &defects) {
+  init(row, start, defects);
+  checkConsistency();
+  if (options_.rowPacking == PackingOption::Approximate) {
+    return runApproximate();
+  }
+  else if (options_.rowPacking == PackingOption::Exact) {
+    return runExact();
+  }
+  else {
+    return runDiagnostic();
+  }
+}
+
+RowPacker::RowDescription RowPacker::count(Rectangle row, int start, const std::vector<Defect> &defects) {
+  init(row, start, defects);
+  checkConsistency();
+  return countApproximate();
+}
+
+RowPacker::RowDescription RowPacker::countNoDefectsSimple() {
   const int width = region_.width();
   const int height = region_.height();
   int left = width;
@@ -40,7 +60,7 @@ RowPacker::RowDescription RowPacker::fitNoDefectsSimple() {
   return description;
 }
 
-RowSolution RowPacker::solNoDefectsSimple() {
+RowSolution RowPacker::runNoDefectsSimple() {
   RowSolution solution(region_);
   int width = region_.width();
   int height = region_.height();
@@ -68,9 +88,7 @@ RowSolution RowPacker::solNoDefectsSimple() {
   return solution;
 }
 
-RowPacker::RowDescription RowPacker::fitAsideDefectsSimple() {
-  if (nDefects() == 0) return fitNoDefectsSimple();
-
+RowPacker::RowDescription RowPacker::countAsideDefectsSimple() {
   int currentX = region_.minX();
   RowDescription description;
   for (int i = start_; i < nItems(); ++i) {
@@ -113,9 +131,7 @@ RowPacker::RowDescription RowPacker::fitAsideDefectsSimple() {
   return description;
 }
 
-RowSolution RowPacker::solAsideDefectsSimple() {
-  if (nDefects() == 0) return solNoDefectsSimple();
-
+RowSolution RowPacker::runAsideDefectsSimple() {
   int currentX = region_.minX();
   RowSolution solution(region_);
   for (int i = start_; i < nItems(); ++i) {
@@ -147,6 +163,103 @@ RowSolution RowPacker::solAsideDefectsSimple() {
   }
 
   return solution;
+}
+
+RowPacker::RowDescription RowPacker::countApproximate() {
+  if (nDefects() == 0) return countNoDefectsSimple();
+  else return countAsideDefectsSimple();
+}
+
+RowSolution RowPacker::runApproximate() {
+  if (nDefects() == 0) return runNoDefectsSimple();
+  else return runAsideDefectsSimple();
+}
+
+RowSolution RowPacker::runExact() {
+  std::vector<int> front(region_.maxX() + 1, start_);
+  std::vector<int> prev(region_.maxX() + 1, 0);
+  front[region_.minX()] = start_;
+  std::vector<int> firstPresent;
+  for (int i = region_.minX(); i <= region_.maxX(); ++i) {
+    if (!isAdmissibleCutLine(i)) continue;
+    // Take an empty cut before into account
+    for (int b = firstPresent.size(); b > 0; --b) {
+      if (start_ + b > front[i] && firstPresent[b-1] + Params::minWaste <= i) {
+        front[i] = start_ + b;
+        prev[i] = firstPresent[b-1];
+      }
+    }
+    int cnt = front[i];
+    if (cnt == nItems()) continue;
+    Item item = sequence_[cnt];
+    // Try to place not rotated
+    if (i + item.width <= region_.maxX()
+     && front[i + item.width] <= cnt
+     && utils::fitsMinWaste(item.height, region_.height())
+     && isAdmissibleCutLine(i + item.width)
+     && canPlace(i, item.width, item.height)) {
+      front[i + item.width] = cnt + 1;
+      prev[i + item.width] = i;
+    }
+    // Try to place rotated
+    if (item.width != item.height
+     && i + item.height <= region_.maxX()
+     && front[i + item.height] <= cnt
+     && utils::fitsMinWaste(item.width, region_.height())
+     && isAdmissibleCutLine(i + item.height)
+     && canPlace(i, item.height, item.width)) {
+      front[i + item.height] = cnt + 1;
+      prev[i + item.height] = i;
+    }
+    // First appearance of this item
+    if (cnt - start_ > (int) firstPresent.size())
+      firstPresent.push_back(i);
+  }
+  RowSolution solution(region_);
+  int cur = region_.maxX();
+  while (cur != 0) {
+    int x = prev[cur];
+    if (front[cur] != front[x]) {
+      assert (front[x] + 1 ==  front[cur]);
+      Item item = sequence_[front[x]];
+      int width, height;
+      if (cur - x == item.width) {
+        width = item.width;
+        height = item.height;
+      }
+      else {
+        assert (cur - x == item.height);
+        width = item.height;
+        height = item.width;
+      }
+      if (canPlaceDown(x, width, height)) {
+        Rectangle place = Rectangle::FromCoordinates(x, region_.minY(), x + width, region_.minY() + height);
+        solution.items.emplace_back(place, item.id);
+      }
+      else {
+        assert (canPlaceUp(x, width, height));
+        Rectangle place = Rectangle::FromCoordinates(x, region_.maxY() - height, x + width, region_.maxY());
+        solution.items.emplace_back(place, item.id);
+      }
+    }
+    cur = x;
+  }
+  reverse(solution.items.begin(), solution.items.end());
+  return solution;
+}
+
+RowSolution RowPacker::runDiagnostic() {
+  RowSolution approximate = runApproximate();
+  RowSolution exact = runExact();
+  if (approximate.nItems() != exact.nItems()) {
+    cout << "Exact row algorithm obtains " << exact.nItems() << " items but approximate one obtains " << approximate.nItems() << endl;
+    cout << "Exact" << endl;
+    exact.report();
+    cout << "Approximate" << endl;
+    approximate.report();
+    cout << endl;
+  }
+  return exact;
 }
 
 void RowPacker::fillXData(RowDescription &description, int maxUsedX) const {
@@ -245,15 +358,38 @@ void RowPacker::checkEquivalent(const RowDescription &description, const RowSolu
   // No other check here since the defects mess it up
 }
 
-RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &defects) {
-  init(row, start, defects);
-  checkConsistency();
-  return solAsideDefectsSimple();
+bool RowPacker::canPlace(int x, int width, int height) {
+  return canPlaceDown(x, width, height)
+      || canPlaceUp(x, width, height);
 }
 
-RowPacker::RowDescription RowPacker::count(Rectangle row, int start, const std::vector<Defect> &defects) {
-  init(row, start, defects);
-  checkConsistency();
-  return fitAsideDefectsSimple();
+bool RowPacker::canPlaceDown(int x, int width, int height) {
+  Rectangle place = Rectangle::FromCoordinates(x, region_.minY(), x + width, region_.minY() + height);
+  for (Defect d : defects_) {
+    if (d.intersects(place))
+      return false;
+  }
+  return true;
+}
+
+bool RowPacker::canPlaceUp(int x, int width, int height) {
+  Rectangle place = Rectangle::FromCoordinates(x, region_.maxY() - height, x + width, region_.maxY());
+  for (Defect d : defects_) {
+    if (d.intersects(place))
+      return false;
+  }
+  return true;
+}
+
+bool RowPacker::isAdmissibleCutLine(int x) const {
+  if (x == region_.minX() || x == region_.maxX())
+    return true;
+  if (x < region_.minX() + Params::minWaste || x > region_.maxX() - Params::minWaste)
+    return false;
+  for (Defect d : defects_) {
+    if (d.intersectsVerticalLine(x))
+      return false;
+  }
+  return true;
 }
 

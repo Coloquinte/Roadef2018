@@ -108,9 +108,19 @@ PlateSolution PlatePacker::runDiagnostic() {
   PlateSolution exact = runExact();
   if (approximate.nItems() != exact.nItems()) {
     cout << "Exact plate algorithm obtains " << exact.nItems() << " items but approximate one obtains " << approximate.nItems() << endl;
+    cout << "Exact" << endl;
+    exact.report();
+    cout << "Approximate" << endl;
+    approximate.report();
+    cout << endl;
   }
   else if (approximate.nCuts() != 0 && exact.nCuts() != 0 && approximate.cuts.back().maxX() != exact.cuts.back().maxX()) {
     cout << "Exact plate algorithm ends plate at " << exact.cuts.back().maxX() << " but approximate one obtains " << approximate.cuts.back().maxX() << endl;
+    cout << "Exact" << endl;
+    exact.report();
+    cout << "Approximate" << endl;
+    approximate.report();
+    cout << endl;
   }
   return exact;
 }
@@ -124,6 +134,8 @@ void PlatePacker::setup(int plateId, int start) {
         });
   assert (region_.minX() == 0);
   assert (region_.minY() == 0);
+  assert (region_.maxX() == Params::widthPlates);
+  assert (region_.maxY() == Params::heightPlates);
 }
 
 PlateSolution PlatePacker::run(int plateId, int start) {
@@ -226,8 +238,10 @@ PlateSolution PlatePacker::backtrack() {
 }
 
 bool PlatePacker::isAdmissibleCutLine(int x) const {
-  if (x == region_.minX() || x == region_.maxX())
+  if (x == 0 || x == Params::widthPlates)
     return true;
+  if (x < Params::minXX)
+    return false;
   for (Defect d : defects_) {
     if (d.intersectsVerticalLine(x))
       return false;

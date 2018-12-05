@@ -32,27 +32,30 @@ class RowPacker : Packer {
   RowDescription count(Rectangle row, int start, const std::vector<Defect> &defects);
 
  private:
+  RowDescription countNoDefectsSimple();
+  RowSolution runNoDefectsSimple();
+  RowDescription countAsideDefectsSimple();
+  RowSolution runAsideDefectsSimple();
+
+  RowSolution runApproximate();
+  RowSolution runExact();
+  RowSolution runDiagnostic();
+  RowDescription countApproximate();
+
   void fillXData(RowDescription &description, int maxUsedX) const;
   void fillYData(RowDescription &description) const;
   bool fitsDimensionsAt(int minX, int width, int height) const;
   int earliestFit(int minX, int width, int height) const;
-
-  RowDescription fitNoDefectsSimple();
-  RowSolution solNoDefectsSimple();
-  RowDescription fitNoDefectsExact();
-  RowSolution solNoDefectsExact();
-  RowDescription fitAsideDefectsSimple();
-  RowSolution solAsideDefectsSimple();
-  RowDescription fitAsideDefectsExact();
-  RowSolution solAsideDefectsExact();
+  bool canPlace(int x, int width, int height);
+  bool canPlaceUp(int x, int width, int height);
+  bool canPlaceDown(int x, int width, int height);
+  bool isAdmissibleCutLine(int x) const;
 
   void checkSolution(const RowSolution &solution);
   void checkEquivalent(const RowDescription &description, const RowSolution &solution);
 
  private:
-  std::unique_ptr<int[]> widths_;
   std::unique_ptr<int[]> heights_;
-  std::unique_ptr<int[]> placements_;
 };
 
 #endif

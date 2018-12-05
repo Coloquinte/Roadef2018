@@ -54,6 +54,11 @@ CutSolution CutPacker::runDiagnostic() {
   CutSolution exact = runExact();
   if (approximate.nItems() != exact.nItems()) {
     cout << "Exact cut algorithm obtains " << exact.nItems() << " items but approximate one obtains " << approximate.nItems() << endl;
+    cout << "Exact" << endl;
+    exact.report();
+    cout << "Approximate" << endl;
+    approximate.report();
+    cout << endl;
   }
   return exact;
 }
@@ -70,7 +75,7 @@ CutPacker::CutDescription CutPacker::countExact() {
 
 CutPacker::CutDescription CutPacker::countDiagnostic() {
   CutDescription approximate = countApproximate();
-  CutDescription exact = countExact(); 
+  CutDescription exact = countExact();
   if (approximate.nItems != exact.nItems) {
     cout << "Exact cut algorithm obtains " << exact.nItems << " items but approximate one obtains " << approximate.nItems << endl;
   }
@@ -85,6 +90,7 @@ void CutPacker::setup(Rectangle cut, int start, const std::vector<Defect> &defec
           return a.maxY() < b.maxY();
         });
   assert (region_.minY() == 0);
+  assert (region_.maxY() == Params::heightPlates);
 }
 
 void CutPacker::commonApproximate() {
@@ -256,6 +262,10 @@ CutPacker::CutDescription CutPacker::countBacktrack() {
 }
 
 bool CutPacker::isAdmissibleCutLine(int y) const {
+  if (y == 0 || y == Params::heightPlates)
+    return true;
+  if (y < Params::minYY || y > Params::heightPlates - Params::minYY)
+    return false;
   for (Defect d : defects_) {
     if (d.intersectsHorizontalLine(y))
       return false;

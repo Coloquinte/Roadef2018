@@ -56,11 +56,11 @@ int Solution::nItems() const {
 }
 
 void ItemSolution::report() const {
-  cout << "Item at (" << minX() << ", " << maxX() << ")x(" << minY() << ", " << maxY() << ")" << endl;
+  cout << "Item at (" << minX() << ", " << maxX() << ")x(" << minY() << ", " << maxY() << ")" << "; size " << width() << "x" << height() << endl;
 }
 
 void RowSolution::report() const {
-  cout << "Row from " << minY() << " to " << maxY() << "  (" << width() << "x" << height() << ")" << endl;
+  cout << "Row at (" << minX() << ", " << maxX() << ")x(" << minY() << ", " << maxY() << ")" << "; size " << width() << "x" << height() << endl;
   for (const ItemSolution &item: items) {
     cout << "\tItem #" << item.itemId << " from " << item.minX() << " to " << item.maxX() << "  (" << item.width() << "x" << item.height() << ")" << endl;
   }
