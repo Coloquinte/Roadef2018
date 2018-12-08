@@ -170,14 +170,18 @@ void CutPacker::propagate(int previousFront, int beginCoord) {
   for (int endCoord = region_.maxY() + Params::minWaste; endCoord >= beginCoord + Params::minYY; --endCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
     RowPacker::RowDescription result = countRow(previousItems, beginCoord, endCoord);
-    if (utils::fitsMinWaste(result.maxUsedY, result.tightY, region_.maxY()))
-      front_.insert(beginCoord, result.maxUsedY, previousItems + result.nItems, previousFront);
+    if (utils::fitsMinWaste(result.maxUsedY, result.tightY, region_.maxY())) {
+      int coord = utils::extendToFit(result.maxUsedY, region_.maxY(), Params::minYY);
+      front_.insert(beginCoord, coord, previousItems + result.nItems, previousFront);
+    }
     if (!result.tightY
      && isAdmissibleCutLine(result.maxUsedY - Params::minWaste)
      && result.maxUsedY - Params::minWaste >= beginCoord + Params::minYY) {
       RowPacker::RowDescription tight = countRow(previousItems, beginCoord, result.maxUsedY - Params::minWaste);
-      if (utils::fitsMinWaste(tight.maxUsedY, tight.tightY, region_.maxY()))
-        front_.insert(beginCoord, tight.maxUsedY, previousItems + tight.nItems, previousFront);
+      if (utils::fitsMinWaste(tight.maxUsedY, tight.tightY, region_.maxY())) {
+        int coord = utils::extendToFit(tight.maxUsedY, region_.maxY(), Params::minYY);
+        front_.insert(beginCoord, coord, previousItems + tight.nItems, previousFront);
+      }
     }
     endCoord = min(endCoord, result.tightY ? result.maxUsedY + Params::minWaste : result.maxUsedY);
   }

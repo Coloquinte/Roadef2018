@@ -168,15 +168,19 @@ void PlatePacker::propagate(int previousFront, int beginCoord) {
     if (!isAdmissibleCutLine(endCoord)) continue;
     CutPacker::CutDescription result = countCut(previousItems, beginCoord, endCoord);
     if (result.nItems == 0) break;
-    if (result.maxUsedX <= maxEndCoord && utils::fitsMinWaste(result.maxUsedX, result.tightX, region_.maxX()))
-      front_.insert(beginCoord, result.maxUsedX, previousItems + result.nItems, previousFront);
+    int coord = utils::extendToFit(result.maxUsedX, region_.maxX(), Params::minWaste);
+    if (coord <= maxEndCoord && utils::fitsMinWaste(result.maxUsedX, result.tightX, region_.maxX())) {
+      front_.insert(beginCoord, coord, previousItems + result.nItems, previousFront);
+    }
     // One more attempt, but tight this time
     if (!result.tightX
      && isAdmissibleCutLine(result.maxUsedX - Params::minWaste)
      && result.maxUsedX - Params::minWaste >= beginCoord + Params::minXX) {
       CutPacker::CutDescription tight = countCut(previousItems, beginCoord, result.maxUsedX - Params::minWaste);
-      if (tight.maxUsedX <= maxEndCoord && utils::fitsMinWaste(tight.maxUsedX, tight.tightX, region_.maxX()))
-        front_.insert(beginCoord, tight.maxUsedX, previousItems + tight.nItems, previousFront);
+      int coord = utils::extendToFit(result.maxUsedX, region_.maxX(), Params::minWaste);
+      if (coord <= maxEndCoord && utils::fitsMinWaste(tight.maxUsedX, tight.tightX, region_.maxX())) {
+        front_.insert(beginCoord, coord, previousItems + tight.nItems, previousFront);
+      }
     }
     endCoord = min(endCoord, result.tightX ? result.maxUsedX + Params::minWaste : result.maxUsedX);
   }

@@ -13,6 +13,11 @@ inline bool fitsMinWaste(int a, bool tight, int b) {
   if (!tight) return a <= b;
   else return fitsMinWaste(a, b);
 }
+
+inline int extendToFit(int a, int b, int minWaste) {
+  if (a <= b - minWaste) return a;
+  else return b;
+}
 }
 
 #endif
