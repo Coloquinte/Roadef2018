@@ -30,7 +30,20 @@ RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &
 RowPacker::RowDescription RowPacker::count(Rectangle row, int start, const std::vector<Defect> &defects) {
   init(row, start, defects);
   checkConsistency();
-  return countApproximate();
+  if (options_.rowPacking != PackingOption::Approximate
+   && options_.cutPacking != PackingOption::Approximate
+   && options_.platePacking != PackingOption::Approximate) {
+    // Since maxUsedX/maxUsedY are not properly computed, only allowed whenever everything is exact
+    RowSolution solution = runExact();
+    RowDescription desc;
+    desc.nItems = solution.nItems();
+    desc.maxUsedX = region_.maxX();
+    desc.maxUsedY = region_.maxY();
+    return desc;
+  }
+  else {
+    return countApproximate();
+  }
 }
 
 RowPacker::RowDescription RowPacker::countNoDefectsSimple() {
