@@ -215,7 +215,7 @@ void PlatePacker::propagateBreakpoints(int after) {
       if (front_[i].end + Params::minWaste <= bp)
         maxValid = i;
     }
-    if (isAdmissibleCutLine(bp) && bp >= region_.minX() + Params::minXX) {
+    if (isAdmissibleCutLine(bp)) {
       propagate(maxValid, bp);
     }
   }
@@ -242,7 +242,7 @@ PlateSolution PlatePacker::backtrack() {
 bool PlatePacker::isAdmissibleCutLine(int x) const {
   if (x == 0 || x == Params::widthPlates)
     return true;
-  if (x < Params::minXX)
+  if (x < Params::minXX || x > Params::widthPlates - Params::minWaste)
     return false;
   for (Defect d : defects_) {
     if (d.intersectsVerticalLine(x))

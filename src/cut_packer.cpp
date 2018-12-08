@@ -216,7 +216,7 @@ void CutPacker::propagateBreakpoints(int after) {
       if (front_[i].end + Params::minWaste <= bp)
         maxValid = i;
     }
-    if (isAdmissibleCutLine(bp) && bp >= region_.minY() + Params::minYY) {
+    if (isAdmissibleCutLine(bp)) {
       propagate(maxValid, bp);
     }
   }

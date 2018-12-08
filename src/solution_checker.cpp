@@ -189,10 +189,15 @@ void SolutionChecker::checkPlateDivision(const PlateSolution &plate, bool lastPl
 
   if (plate.cuts.front().minX() != plate.minX())
     error("Critical", "First cut doesn't start at %d", plate.minX());
-  if (!lastPlate && plate.cuts.back().maxX() != plate.maxX())
-    error("Critical", "Last cut doesn't end at %d", plate.maxX());
-  else if (plate.cuts.back().maxX() > plate.maxX())
-    error("Critical", "Last cut ends after %d", plate.maxX());
+  if (!lastPlate) {
+    if(plate.cuts.back().maxX() != plate.maxX())
+      error("Critical", "Last cut doesn't end at %d", plate.maxX());
+  }
+  else {
+    if (plate.cuts.back().maxX() != plate.maxX()
+     && plate.cuts.back().maxX() > plate.maxX() - Params::minWaste)
+      error("Critical", "Last cut on the last plate is at %d, which is not valid", plate.cuts.back().maxX());
+  }
 
   for (const CutSolution &cut : plate.cuts) {
     if (cut.minY() != plate.minY() || cut.maxY() != plate.maxY())
@@ -411,6 +416,8 @@ void SolutionChecker::reportErrors() {
 
   if (!error)
     cout << "No violation detected" << endl;
+  else
+    cout << endl;
 }
 
 void SolutionChecker::reportProblem() {
