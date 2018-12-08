@@ -41,6 +41,7 @@ class RowPacker : Packer {
   RowSolution runExact();
   RowSolution runDiagnostic();
   RowDescription countApproximate();
+  void reportFront(const std::vector<int> &front, const std::vector<int> &prev) const;
 
   void fillXData(RowDescription &description, int maxUsedX) const;
   void fillYData(RowDescription &description) const;

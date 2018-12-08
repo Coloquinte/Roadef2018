@@ -41,6 +41,8 @@ class Packer {
   void checkItems() const;
   void checkDefects() const;
 
+  static std::vector<int> extractFrontChanges(const std::vector<int> &front);
+
  protected:
   Rectangle region_;
   int start_;

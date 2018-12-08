@@ -13,7 +13,7 @@ CutPacker::CutPacker(const vector<Item> &sequence, SolverParams options)
 , rowPacker_(sequence, options) {
 }
 
-CutSolution CutPacker::run(Rectangle cut, int start, const std::vector<Defect> &defects) {
+CutSolution CutPacker::run(Rectangle cut, int start, const vector<Defect> &defects) {
   setup(cut, start, defects);
   if (options_.cutPacking == PackingOption::Approximate) {
     return runApproximate();
@@ -26,7 +26,7 @@ CutSolution CutPacker::run(Rectangle cut, int start, const std::vector<Defect> &
   }
 }
 
-CutPacker::CutDescription CutPacker::count(Rectangle cut, int start, const std::vector<Defect> &defects) {
+CutPacker::CutDescription CutPacker::count(Rectangle cut, int start, const vector<Defect> &defects) {
   setup(cut, start, defects);
   if (options_.cutPacking == PackingOption::Approximate) {
     return countApproximate();
@@ -63,6 +63,12 @@ CutSolution CutPacker::runDiagnostic() {
   return exact;
 }
 
+void CutPacker::reportFront(const std::vector<int> &front, const std::vector<int> &prev) const {
+  if (!options_.traceParetoFronts) return;
+  vector<int> changes = extractFrontChanges(front);
+  cout << "Front changes for cut: " << changes.size() << endl;
+}
+
 CutPacker::CutDescription CutPacker::countApproximate() {
   commonApproximate();
   return countBacktrack();
@@ -82,7 +88,7 @@ CutPacker::CutDescription CutPacker::countDiagnostic() {
   return exact;
 }
 
-void CutPacker::setup(Rectangle cut, int start, const std::vector<Defect> &defects) {
+void CutPacker::setup(Rectangle cut, int start, const vector<Defect> &defects) {
   init(cut, start, defects);
   checkConsistency();
   sort(defects_.begin(), defects_.end(),
@@ -124,8 +130,8 @@ void CutPacker::commonApproximate() {
 
 void CutPacker::commonExact() {
   // Fill the front
-  std::vector<int> front(Params::heightPlates + 1, -1);
-  std::vector<int> prev(Params::heightPlates + 1, -1);
+  vector<int> front(Params::heightPlates + 1, -1);
+  vector<int> prev(Params::heightPlates + 1, -1);
   front[0] = start_;
   for (int j = Params::minYY; j <= Params::heightPlates; ++j) {
     int best = -1;
@@ -143,6 +149,8 @@ void CutPacker::commonExact() {
       prev[j] = pred;
     }
   }
+
+  reportFront(front, prev);
 
   // Build the slices
   int cur = Params::heightPlates;
@@ -241,7 +249,7 @@ CutSolution CutPacker::backtrack() {
 
 CutPacker::CutDescription CutPacker::countBacktrack() {
   CutDescription description;
-  std::vector<RowPacker::RowDescription> rows;
+  vector<RowPacker::RowDescription> rows;
   for (size_t i = 0; i + 1 < slices_.size(); ++i) {
     RowPacker::RowDescription row = countRow(start_ + description.nItems, slices_[i], slices_[i+1]);
     rows.push_back(row);

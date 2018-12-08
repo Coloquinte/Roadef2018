@@ -74,6 +74,9 @@ po::options_description getHiddenOptions() {
   desc.add_options()("diagnose-rows", "Diagnose 3-cut suboptimalities");
   desc.add_options()("diagnose-cuts", "Diagnose 2-cut suboptimalities");
   desc.add_options()("diagnose-plates", "Diagnose 1-cut suboptimalities");
+
+  desc.add_options()("trace-pareto-fronts", "Trace Pareto fronts in exact algorithms");
+
   return desc;
 }
 
@@ -146,6 +149,7 @@ SolverParams buildParams(const po::variables_map &vm) {
   if (vm.count("diagnose-cuts")) params.cutPacking = PackingOption::Diagnose;
   if (vm.count("exact-plates")) params.platePacking = PackingOption::Exact;
   if (vm.count("diagnose-plates")) params.platePacking = PackingOption::Diagnose;
+  if (vm.count("trace-pareto-fronts")) params.traceParetoFronts = true;
 
   return params;
 }

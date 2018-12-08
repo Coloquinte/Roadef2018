@@ -19,6 +19,7 @@ class PlatePacker : Packer {
   PlateSolution runApproximate();
   PlateSolution runExact();
   PlateSolution runDiagnostic();
+  void reportFront(const std::vector<int> &front, const std::vector<int> &prev) const;
 
   void setup(int plateId, int start);
   void propagate(int previousFront, int beginCoord);

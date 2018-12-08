@@ -34,6 +34,7 @@ class CutPacker : Packer {
   CutDescription countApproximate();
   CutDescription countExact();
   CutDescription countDiagnostic();
+  void reportFront(const std::vector<int> &front, const std::vector<int> &prev) const;
 
   void setup(Rectangle cut, int start, const std::vector<Defect> &defects);
   void commonApproximate();

@@ -21,8 +21,8 @@ PlatePacker::PlatePacker(const Problem &problem, const vector<Item> &sequence, S
 
 PlateSolution PlatePacker::runExact() {
   // Fill the front
-  std::vector<int> front(Params::widthPlates + 1, -1);
-  std::vector<int> prev(Params::widthPlates + 1, -1);
+  vector<int> front(Params::widthPlates + 1, -1);
+  vector<int> prev(Params::widthPlates + 1, -1);
   front[0] = start_;
   for (int j = Params::minXX; j <= Params::widthPlates; ++j) {
     int best = -1;
@@ -39,6 +39,8 @@ PlateSolution PlatePacker::runExact() {
       prev[j] = pred;
     }
   }
+
+  reportFront(front, prev);
 
   // Special case where we can finish earlier for the last plate
   int finishLine = Params::widthPlates;
@@ -123,6 +125,12 @@ PlateSolution PlatePacker::runDiagnostic() {
     cout << endl;
   }
   return exact;
+}
+
+void PlatePacker::reportFront(const std::vector<int> &front, const std::vector<int> &prev) const {
+  if (!options_.traceParetoFronts) return;
+  vector<int> changes = extractFrontChanges(front);
+  cout << "Front changes for plate: " << changes.size() << endl;
 }
 
 void PlatePacker::setup(int plateId, int start) {

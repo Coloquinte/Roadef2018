@@ -75,4 +75,12 @@ void Packer::checkDefects() const {
   }
 }
 
+vector<int> Packer::extractFrontChanges(const vector<int> &front) {
+  vector<int> changes;
+  for (size_t i = 1; i < front.size(); ++i) {
+    if (front[i] != front[i-1])
+      changes.push_back(i);
+  }
+  return changes;
+}
 

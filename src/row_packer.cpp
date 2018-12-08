@@ -13,7 +13,7 @@ RowPacker::RowPacker(const vector<Item> &sequence, SolverParams options)
   heights_.reset(new int[sequence.size()]);
 }
 
-RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &defects) {
+RowSolution RowPacker::run(Rectangle row, int start, const vector<Defect> &defects) {
   init(row, start, defects);
   checkConsistency();
   if (options_.rowPacking == PackingOption::Approximate) {
@@ -27,7 +27,7 @@ RowSolution RowPacker::run(Rectangle row, int start, const std::vector<Defect> &
   }
 }
 
-RowPacker::RowDescription RowPacker::count(Rectangle row, int start, const std::vector<Defect> &defects) {
+RowPacker::RowDescription RowPacker::count(Rectangle row, int start, const vector<Defect> &defects) {
   init(row, start, defects);
   checkConsistency();
   if (options_.rowPacking != PackingOption::Approximate
@@ -189,10 +189,11 @@ RowSolution RowPacker::runApproximate() {
 }
 
 RowSolution RowPacker::runExact() {
-  std::vector<int> front(region_.maxX() + 1, start_);
-  std::vector<int> prev(region_.maxX() + 1, 0);
+  vector<int> front(region_.maxX() + 1, start_);
+  vector<int> prev(region_.maxX() + 1, 0);
+  // Fill the front
   front[region_.minX()] = start_;
-  std::vector<int> firstPresent;
+  vector<int> firstPresent;
   for (int i = region_.minX(); i <= region_.maxX(); ++i) {
     if (!isAdmissibleCutLine(i)) continue;
     // Take an empty cut before into account
@@ -229,6 +230,10 @@ RowSolution RowPacker::runExact() {
       prev[i + item.height] = i;
     }
   }
+
+  reportFront(front, prev);
+
+  // Build the plates
   RowSolution solution(region_);
   int cur = region_.maxX();
   while (cur != 0) {
@@ -274,6 +279,12 @@ RowSolution RowPacker::runDiagnostic() {
     cout << endl;
   }
   return exact;
+}
+
+void RowPacker::reportFront(const std::vector<int> &front, const std::vector<int> &prev) const {
+  if (!options_.traceParetoFronts) return;
+  vector<int> changes = extractFrontChanges(front);
+  cout << "Front changes for row: " << changes.size() << endl;
 }
 
 void RowPacker::fillXData(RowDescription &description, int maxUsedX) const {

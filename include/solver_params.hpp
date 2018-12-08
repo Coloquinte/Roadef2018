@@ -21,6 +21,7 @@ struct SolverParams {
   PackingOption rowPacking;
   PackingOption cutPacking;
   PackingOption platePacking;
+  bool traceParetoFronts;
 
   SolverParams() {
     verbosity = 0;
@@ -33,6 +34,7 @@ struct SolverParams {
     rowPacking = PackingOption::Approximate;
     cutPacking = PackingOption::Approximate;
     platePacking = PackingOption::Approximate;
+    traceParetoFronts = false;
   }
 };
 
