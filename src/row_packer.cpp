@@ -190,6 +190,10 @@ RowSolution RowPacker::runExact() {
       }
     }
     int cnt = front[i];
+    // First appearance of this item
+    if (cnt - start_ > (int) firstPresent.size())
+      firstPresent.push_back(i);
+    // Now extend the front
     if (cnt == nItems()) continue;
     Item item = sequence_[cnt];
     // Try to place not rotated
@@ -211,9 +215,6 @@ RowSolution RowPacker::runExact() {
       front[i + item.height] = cnt + 1;
       prev[i + item.height] = i;
     }
-    // First appearance of this item
-    if (cnt - start_ > (int) firstPresent.size())
-      firstPresent.push_back(i);
   }
   RowSolution solution(region_);
   int cur = region_.maxX();
