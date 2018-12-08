@@ -34,7 +34,7 @@ po::options_description getOptions() {
 po::options_description getAdvancedOptions() {
   po::options_description desc("GCUT advanced options");
 
-  desc.add_options()("threads,j", po::value<size_t>()->default_value(8),
+  desc.add_options()("threads,j", po::value<size_t>()->default_value(4),
                      "Number of threads");
 
   desc.add_options()("batch", po::value<string>(),
