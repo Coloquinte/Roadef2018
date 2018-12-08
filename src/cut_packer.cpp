@@ -172,8 +172,10 @@ void CutPacker::propagate(int previousFront, int beginCoord) {
     RowPacker::RowDescription result = countRow(previousItems, beginCoord, endCoord);
     if (utils::fitsMinWaste(result.maxUsedY, result.tightY, region_.maxY()))
       front_.insert(beginCoord, result.maxUsedY, previousItems + result.nItems, previousFront);
-    if (!result.tightY) {
-      RowPacker::RowDescription tight = countRow(previousItems, beginCoord, result.maxUsedY);
+    if (!result.tightY
+     && isAdmissibleCutLine(result.maxUsedY - Params::minWaste)
+     && result.maxUsedY - Params::minWaste >= beginCoord + Params::minYY) {
+      RowPacker::RowDescription tight = countRow(previousItems, beginCoord, result.maxUsedY - Params::minWaste);
       if (utils::fitsMinWaste(tight.maxUsedY, tight.tightY, region_.maxY()))
         front_.insert(beginCoord, tight.maxUsedY, previousItems + tight.nItems, previousFront);
     }
