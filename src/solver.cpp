@@ -240,7 +240,6 @@ Solver::MoveStatus Solver::accept(Move &move, const Solution &incumbent) {
 }
 
 void Solver::updateStats(Move &move, MoveStatus status) {
-  ++move.nCall_;
   switch (status) {
     case MoveStatus::Improvement:
       ++move.nImprovement_;
@@ -255,6 +254,7 @@ void Solver::updateStats(Move &move, MoveStatus status) {
       ++move.nViolation_;
       break;
     case MoveStatus::Failure:
+      ++move.nFailure_;
       break;
   }
 }
@@ -263,7 +263,7 @@ void Solver::finalReport() const {
   if (params_.verbosity >= 2) {
     int nEvaluated = 0;
     int nImprovement = 0;
-    cout << endl << "MoveName        \tTotal\t-\t=\t+\tErr" << endl;
+    cout << endl << "MoveName        \tTotal\t-\t=\t+\tFail\tErr" << endl;
 
     std::vector<Move*> allMoves;
     for (auto &m : initializers_)
@@ -279,8 +279,14 @@ void Solver::finalReport() const {
       cout << "\t" << m->nDegradation();
       cout << "\t" << m->nPlateau();
       cout << "\t" << m->nImprovement();
-      cout << "\t";
 
+      cout << "\t";
+      if (m->nFailure())
+        cout << m->nFailure();
+      else
+        cout << "-";
+
+      cout << "\t";
       if (m->nViolation())
         cout << m->nViolation();
       else

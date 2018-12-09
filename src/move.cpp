@@ -14,11 +14,11 @@
 using namespace std;
 
 Move::Move()
-: nCall_(0)
-, nViolation_(0)
+: nViolation_(0)
 , nImprovement_(0)
 , nDegradation_(0)
-, nPlateau_(0) {
+, nPlateau_(0)
+, nFailure_(0) {
 }
 
 vector<Item> Move::extractSequence(const Solution &solution) const {

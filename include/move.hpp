@@ -15,11 +15,12 @@ class Move {
   virtual std::string name() const =0;
   virtual ~Move() {}
 
-  std::size_t nCall() const { return nCall_; }
+  std::size_t nCall() const { return nViolation_ + nImprovement_ + nDegradation_ + nPlateau_ + nFailure_; }
   std::size_t nViolation() const { return nViolation_; }
   std::size_t nImprovement() const { return nImprovement_; }
   std::size_t nDegradation() const { return nDegradation_; }
   std::size_t nPlateau() const { return nPlateau_; }
+  std::size_t nFailure() const { return nFailure_; }
 
  protected:
   std::vector<Item> extractSequence(const Solution &solution) const;
@@ -45,11 +46,11 @@ class Move {
 
 
  protected:
-  std::size_t nCall_;
   std::size_t nViolation_;
   std::size_t nImprovement_;
   std::size_t nDegradation_;
   std::size_t nPlateau_;
+  std::size_t nFailure_;
 
  public:
   const Solver *solver_;
