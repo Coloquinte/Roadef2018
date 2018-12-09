@@ -81,23 +81,33 @@ PlateSolution PlatePacker::runApproximate() {
   int cur = front_.size() - 1;
   while (cur != 0) {
     auto elt = front_[cur];
-    if (elt.begin + Params::minXX > slices_.back())
-      continue;
-    while (elt.begin + Params::maxXX < slices_.back())
-      slices_.push_back(slices_.back() - Params::maxXX + Params::minXX);
+    assert (elt.end <= slices_.back());
 
     // Keep residual on the last plate
     if (elt.value == nItems()) {
       slices_.clear();
       slices_.push_back(elt.end);
     }
+    // Find an intermediate cutting position if needed
+    else {
+      while (elt.begin + Params::maxXX < slices_.back()) {
+        if (elt.end + Params::maxXX < slices_.back()) {
+          slices_.push_back(findCuttingPositionTowards(slices_.back()));
+        }
+        else {
+          assert (elt.end + Params::minXX <= slices_.back());
+          slices_.push_back(elt.end);
+        }
+      }
+    }
+
     assert (elt.previous < cur);
     assert (elt.begin < slices_.back());
     slices_.push_back(elt.begin);
     cur = elt.previous;
   }
   while (region_.minX() + Params::maxXX < slices_.back())
-    slices_.push_back(slices_.back() - Params::maxXX + Params::minXX);
+    slices_.push_back(findCuttingPositionTowards(slices_.back()));
   if (slices_.back() != region_.minX())
     slices_.push_back(region_.minX());
   reverse(slices_.begin(), slices_.end());
@@ -177,21 +187,37 @@ void PlatePacker::propagate(int previousFront, int beginCoord) {
     CutPacker::CutDescription result = countCut(previousItems, beginCoord, endCoord);
     if (result.nItems == 0) break;
     int coord = utils::extendToFit(result.maxUsedX, region_.maxX(), Params::minWaste);
-    if (coord <= maxEndCoord && utils::fitsMinWaste(result.maxUsedX, result.tightX, region_.maxX())) {
-      front_.insert(beginCoord, coord, previousItems + result.nItems, previousFront);
+    bool valid = coord == result.maxUsedX || isAdmissibleCutLine(coord);
+    if (coord <= maxEndCoord && valid && utils::fitsMinWaste(result.maxUsedX, result.tightX, region_.maxX())) {
+      insertInFront(beginCoord, coord, previousItems + result.nItems, previousFront);
     }
     // One more attempt, but tight this time
     if (!result.tightX
      && isAdmissibleCutLine(result.maxUsedX - Params::minWaste)
      && result.maxUsedX - Params::minWaste >= beginCoord + Params::minXX) {
       CutPacker::CutDescription tight = countCut(previousItems, beginCoord, result.maxUsedX - Params::minWaste);
-      int coord = utils::extendToFit(result.maxUsedX, region_.maxX(), Params::minWaste);
-      if (coord <= maxEndCoord && utils::fitsMinWaste(tight.maxUsedX, tight.tightX, region_.maxX())) {
-        front_.insert(beginCoord, coord, previousItems + tight.nItems, previousFront);
+      int coord = utils::extendToFit(tight.maxUsedX, region_.maxX(), Params::minWaste);
+      bool valid = coord == tight.maxUsedX || isAdmissibleCutLine(coord);
+      if (coord <= maxEndCoord && valid && utils::fitsMinWaste(tight.maxUsedX, tight.tightX, region_.maxX())) {
+        insertInFront(beginCoord, coord, previousItems + tight.nItems, previousFront);
       }
     }
     endCoord = min(endCoord, result.tightX ? result.maxUsedX + Params::minWaste : result.maxUsedX);
   }
+}
+
+void PlatePacker::insertInFront(int begin, int end, int totalItems, int previous) {
+  // Case where it's impossible to insert an intermediate cut
+  if (front_[previous].begin + Params::maxXX < begin
+   && front_[previous].end + Params::maxXX < begin
+   && front_[previous].end + Params::minXX > begin)
+    return;
+  if (end > Params::widthPlates - Params::minXX
+   && end != Params::widthPlates
+   && totalItems != nItems()) {
+    return;
+  }
+  front_.insert(begin, end, totalItems, previous);
 }
 
 void PlatePacker::propagateBreakpoints(int after) {
@@ -261,5 +287,13 @@ bool PlatePacker::isAdmissibleCutLine(int x) const {
       return false;
   }
   return true;
+}
+
+int PlatePacker::findCuttingPositionTowards(int endPos) const {
+  int pos = endPos - Params::minXX;
+  while (!isAdmissibleCutLine(pos)) {
+    --pos;
+  }
+  return pos;
 }
 

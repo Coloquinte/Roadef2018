@@ -30,6 +30,8 @@ class PlatePacker : Packer {
   CutSolution packCut(int start, int minX, int maxX);
 
   bool isAdmissibleCutLine(int x) const;
+  int findCuttingPositionTowards(int endPos) const;
+  void insertInFront(int begin, int end, int totalItems, int previous);
 
  private:
   CutPacker cutPacker_;
