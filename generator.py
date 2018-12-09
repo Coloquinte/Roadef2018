@@ -5,7 +5,6 @@ import random
 
 Item = namedtuple('Item', ['length', 'width'])
 Defect = namedtuple('Defect', ['x', 'y', 'width', 'height'])
-Params = namedtuple('Params', ['nb_stacks', 'avg_stack_size', 'avg_defects'])
 
 min_waste = 20
 min_xx = 100
@@ -14,6 +13,13 @@ max_xx = 3500
 plate_width = 6000
 plate_height = 3210
 nb_plates = 100
+
+nb_stacks=100
+avg_stack_size=1
+avg_defects=10
+large_item_ratio=1.0
+border_defect_ratio=0.2
+no_defect_ratio=0.2
 
 def fits(a, b):
     return a == b or a + min_waste <= b
@@ -39,19 +45,18 @@ def valid_defect(defect):
     return True
 
 class ProblemGenerator(object):
-    def __init__(self, params):
+    def __init__(self):
         self.stacks = []
         self.plates = []
-        self.params = params
 
     def generate_defects(self):
         for i in range(nb_plates):
-            nb_defects = random.randint(1, 2 * params.avg_defects)
+            nb_defects = random.randint(1, 2 * avg_defects)
             self.generate_one_plate(nb_defects)
 
     def generate_items(self):
-        for i in range(params.nb_stacks):
-            nb_items = random.randint(1, 2 * params.avg_stack_size)
+        for i in range(nb_stacks):
+            nb_items = random.randint(1, 2 * avg_stack_size - 1)
             self.generate_one_stack(nb_items)
 
     def write(self, prefix):
@@ -79,29 +84,55 @@ class ProblemGenerator(object):
         self.stacks.append(stack)
 
     def generate_one_plate(self, nb_defects):
-        plate = [self.generate_one_defect() for i in range(nb_defects)]
+        plate = []
+        if (random.random() > no_defect_ratio):
+            plate = [self.generate_one_defect() for i in range(nb_defects)]
         self.plates.append(plate)
 
     def generate_one_item(self):
+        if (random.random() < large_item_ratio):
+            return self.generate_sized_item(min_xx, max_xx)
+        else:
+            return self.generate_sized_item(min_waste, min_xx * 8)
+
+    def generate_sized_item(self, sz_min, sz_max):
         while True:
-            length = random.randint(min_waste, max_xx)
-            width = random.randint(min_waste, max_xx)
+            length = random.randint(sz_min, sz_max)
+            width = random.randint(sz_min, sz_max)
             item = Item(length, width)
             if valid_item(item):
                 return item
 
     def generate_one_defect(self):
+        if (random.random() < border_defect_ratio):
+            return self.generate_any_defect()
+        else:
+            return self.generate_border_defect()
+
+    def generate_any_defect(self):
         while True:
             x = random.randint(0, plate_width)
             y = random.randint(0, plate_height)
-            width = random.randint(0, 20)
-            height = random.randint(0, 20)
+            width = random.randint(1, 20)
+            height = random.randint(1, 20)
             defect = Defect(x=x, y=y, width=width, height=height)
             if valid_defect(defect):
                 return defect
 
-params = Params(nb_stacks=300, avg_stack_size=3, avg_defects=10)
-gen = ProblemGenerator(params)
+    def generate_border_defect(self):
+        defect = self.generate_any_defect()
+        val = random.random()
+        if val < 0.25:
+            defect = defect._replace(x = 0)
+        elif val < 0.5:
+            defect = defect._replace(y = 0)
+        elif val < 0.75:
+            defect = defect._replace(x = plate_width - defect.width)
+        else:
+            defect = defect._replace(y = plate_height - defect.height)
+        return defect
+
+gen = ProblemGenerator()
 gen.generate_items()
 gen.generate_defects()
-gen.write("generated/G1")
+gen.write("dataset/G/G4")

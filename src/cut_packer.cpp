@@ -260,6 +260,7 @@ CutPacker::CutDescription CutPacker::countBacktrack() {
     description.maxUsedX = max(description.maxUsedX, row.maxUsedX);
   }
   description.tightX = true;
+  // TODO: handle tightness cases that are not taken into account yet
   for (RowPacker::RowDescription row : rows) {
     if (row.maxUsedX == description.maxUsedX)
       continue;
