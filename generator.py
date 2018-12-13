@@ -2,6 +2,7 @@
 
 from collections import namedtuple
 import random
+import sys
 
 Item = namedtuple('Item', ['length', 'width'])
 Defect = namedtuple('Defect', ['x', 'y', 'width', 'height'])
@@ -14,12 +15,13 @@ plate_width = 6000
 plate_height = 3210
 nb_plates = 100
 
-nb_stacks=100
-avg_stack_size=1
+nb_stacks=10
+avg_stack_size=30
 avg_defects=10
-large_item_ratio=1.0
+large_item_ratio=0.0
 border_defect_ratio=0.2
 no_defect_ratio=0.2
+regular = True
 
 def fits(a, b):
     return a == b or a + min_waste <= b
@@ -80,7 +82,12 @@ class ProblemGenerator(object):
                     defect_id += 1
 
     def generate_one_stack(self, nb_items):
-        stack = [self.generate_one_item() for i in range(nb_items)]
+        stack = []
+        if regular:
+            it = self.generate_one_item()
+            stack = [it for i in range(nb_items)]
+        else:
+            stack = [self.generate_one_item() for i in range(nb_items)]
         self.stacks.append(stack)
 
     def generate_one_plate(self, nb_defects):
@@ -132,7 +139,10 @@ class ProblemGenerator(object):
             defect = defect._replace(y = plate_height - defect.height)
         return defect
 
+if len(sys.argv) < 2:
+    print("Usage: generator.py PREFIX")
+    sys.exit(1)
 gen = ProblemGenerator()
 gen.generate_items()
 gen.generate_defects()
-gen.write("dataset/G/G4")
+gen.write(sys.argv[1])
