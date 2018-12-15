@@ -29,6 +29,8 @@ SET (SOURCES
   src/params.cpp
   src/move.cpp
   src/main.cpp
+  src/row_merger.cpp
+  src/merger.cpp
 )
 
 add_executable(gcut ${SOURCES})
