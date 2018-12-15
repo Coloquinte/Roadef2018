@@ -138,7 +138,7 @@ PlateSolution PlatePacker::runDiagnostic() {
 }
 
 void PlatePacker::reportFront(const std::vector<int> &front, const std::vector<int> &prev) const {
-  if (!options_.traceParetoFronts) return;
+  if (!options_.tracePackingFronts) return;
   vector<int> changes = extractFrontChanges(front);
   cout << "Front changes for plate: " << changes.size() << endl;
 }

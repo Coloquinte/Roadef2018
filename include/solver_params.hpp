@@ -18,10 +18,16 @@ struct SolverParams {
   std::size_t moveLimit;
   double timeLimit;
   bool failOnViolation;
+
   PackingOption rowPacking;
   PackingOption cutPacking;
   PackingOption platePacking;
-  bool traceParetoFronts;
+  bool tracePackingFronts;
+
+  PackingOption rowMerging;
+  PackingOption cutMerging;
+  PackingOption plateMerging;
+  bool traceMergingFronts;
 
   SolverParams() {
     verbosity = 0;
@@ -31,10 +37,16 @@ struct SolverParams {
     moveLimit = 0;
     timeLimit = 0.0;
     failOnViolation = false;
+
     rowPacking = PackingOption::Approximate;
     cutPacking = PackingOption::Approximate;
     platePacking = PackingOption::Approximate;
-    traceParetoFronts = false;
+    tracePackingFronts = false;
+
+    rowMerging = PackingOption::Approximate;
+    cutMerging = PackingOption::Approximate;
+    plateMerging = PackingOption::Approximate;
+    traceMergingFronts = false;
   }
 };
 

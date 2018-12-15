@@ -52,30 +52,41 @@ po::options_description getAdvancedOptions() {
 }
 
 po::options_description getHiddenOptions() {
-  po::options_description desc("GCUT hidden options");
+  po::options_description desc;
 
-  desc.add_options()("help-all", "Print the help for all command line arguments");
+  po::options_description dev("GCUT developer options");
+  dev.add_options()("help-all", "Print the help for all command line arguments");
+  dev.add_options()("verbosity,v", po::value<int>()->default_value(1),
+                    "Output verbosity");
+  dev.add_options()("check", "Fail and report on violation");
+  dev.add_options()("moves", po::value<size_t>()->default_value(1000000000llu),
+                    "Move limit");
+  dev.add_options()("init-runs", po::value<size_t>()->default_value(5000llu),
+                    "Initialization runs");
 
-  desc.add_options()("verbosity,v", po::value<int>()->default_value(1),
-                     "Output verbosity");
+  po::options_description pack("GCUT packing options");
+  pack.add_options()("exact-row-packings", "Solve 3-cuts packings exactly");
+  pack.add_options()("exact-cut-packings", "Solve 2-cuts packings exactly");
+  pack.add_options()("exact-plate-packings", "Solve 1-cuts packings exactly");
 
-  desc.add_options()("check", "Fail and report on violation");
+  pack.add_options()("diagnose-row-packings", "Diagnose 3-cut packings suboptimalities");
+  pack.add_options()("diagnose-cut-packings", "Diagnose 2-cut packings suboptimalities");
+  pack.add_options()("diagnose-plate-packings", "Diagnose 1-cut packings suboptimalities");
 
-  desc.add_options()("moves", po::value<size_t>()->default_value(1000000000llu),
-                     "Move limit");
+  pack.add_options()("trace-packing-fronts", "Trace Pareto fronts in exact packing algorithms");
 
-  desc.add_options()("init-runs", po::value<size_t>()->default_value(5000llu),
-                     "Initialization runs");
+  po::options_description merge("GCUT packing options");
+  merge.add_options()("exact-row-mergings", "Solve 3-cuts mergings exactly");
+  merge.add_options()("exact-cut-mergings", "Solve 2-cuts mergings exactly");
+  merge.add_options()("exact-plate-mergings", "Solve 1-cuts mergings exactly");
 
-  desc.add_options()("exact-rows", "Solve 3-cuts exactly");
-  desc.add_options()("exact-cuts", "Solve 2-cuts exactly");
-  desc.add_options()("exact-plates", "Solve 1-cuts exactly");
+  merge.add_options()("diagnose-row-mergings", "Diagnose 3-cut mergings suboptimalities");
+  merge.add_options()("diagnose-cut-mergings", "Diagnose 2-cut mergings suboptimalities");
+  merge.add_options()("diagnose-plate-mergings", "Diagnose 1-cut mergings suboptimalities");
 
-  desc.add_options()("diagnose-rows", "Diagnose 3-cut suboptimalities");
-  desc.add_options()("diagnose-cuts", "Diagnose 2-cut suboptimalities");
-  desc.add_options()("diagnose-plates", "Diagnose 1-cut suboptimalities");
+  merge.add_options()("trace-merging-fronts", "Trace Pareto fronts in exact merging algorithms");
 
-  desc.add_options()("trace-pareto-fronts", "Trace Pareto fronts in exact algorithms");
+  desc.add(dev).add(pack).add(merge);
 
   return desc;
 }
@@ -143,13 +154,21 @@ SolverParams buildParams(const po::variables_map &vm) {
   params.initializationRuns = vm["init-runs"].as<size_t>();
   params.moveLimit = vm["moves"].as<size_t>();
 
-  if (vm.count("exact-rows")) params.rowPacking = PackingOption::Exact;
-  if (vm.count("diagnose-rows")) params.rowPacking = PackingOption::Diagnose;
-  if (vm.count("exact-cuts")) params.cutPacking = PackingOption::Exact;
-  if (vm.count("diagnose-cuts")) params.cutPacking = PackingOption::Diagnose;
-  if (vm.count("exact-plates")) params.platePacking = PackingOption::Exact;
-  if (vm.count("diagnose-plates")) params.platePacking = PackingOption::Diagnose;
-  if (vm.count("trace-pareto-fronts")) params.traceParetoFronts = true;
+  if (vm.count("exact-row-packings")) params.rowPacking = PackingOption::Exact;
+  if (vm.count("diagnose-row-packings")) params.rowPacking = PackingOption::Diagnose;
+  if (vm.count("exact-cut-packings")) params.cutPacking = PackingOption::Exact;
+  if (vm.count("diagnose-cut-packings")) params.cutPacking = PackingOption::Diagnose;
+  if (vm.count("exact-plate-packings")) params.platePacking = PackingOption::Exact;
+  if (vm.count("diagnose-plate-packings")) params.platePacking = PackingOption::Diagnose;
+  if (vm.count("trace-packing-fronts")) params.tracePackingFronts = true;
+
+  if (vm.count("exact-row-mergings")) params.rowMerging = PackingOption::Exact;
+  if (vm.count("diagnose-row-mergings")) params.rowMerging = PackingOption::Diagnose;
+  if (vm.count("exact-cut-mergings")) params.cutMerging = PackingOption::Exact;
+  if (vm.count("diagnose-cut-mergings")) params.cutMerging = PackingOption::Diagnose;
+  if (vm.count("exact-plate-mergings")) params.plateMerging = PackingOption::Exact;
+  if (vm.count("diagnose-plate-mergings")) params.plateMerging = PackingOption::Diagnose;
+  if (vm.count("trace-merging-fronts")) params.traceMergingFronts = true;
 
   return params;
 }
