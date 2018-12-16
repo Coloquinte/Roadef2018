@@ -21,6 +21,8 @@ class RowMerger : Merger {
   RowSolution getSolution(std::pair<int, int> ends) const;
   std::pair<int, int> getStarts(std::pair<int, int> ends) const;
 
+  void checkConsistency() const;
+
  private:
   void buildFrontExact();
   void buildFrontApproximate();
@@ -28,6 +30,7 @@ class RowMerger : Merger {
   std::vector<std::pair<int, int> > extractFront() const;
   RowSolution extractSolution(std::pair<int, int> ends) const;
 
+  bool canPlace(int x, int width, int height) const;
   bool canPlaceDown(int x, int width, int height) const;
   bool canPlaceUp(int x, int width, int height) const;
   bool isAdmissibleCutLine(int x) const;

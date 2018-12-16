@@ -12,12 +12,12 @@ class Merger {
  public:
   struct FrontElement {
     int coord;
-    int pred;
+    int prev;
     std::pair<int, int> n;
 
-    FrontElement(int coord, int pred, std::pair<int, int> n)
+    FrontElement(int coord, int prev, std::pair<int, int> n)
     : coord(coord)
-    , pred(pred)
+    , prev(prev)
     , n(n) {
     }
   };
@@ -33,6 +33,12 @@ class Merger {
   }
 
   void init(Rectangle region, const std::vector<Defect> &defects, const std::vector<std::pair<int, int> > &starts, int coord);
+
+  void eraseDominated(int coord, int nFirst, int nSecond, int distance);
+  bool isDominated(int coord, int nFirst, int nSecond, int distance);
+
+  void insertFront(int coord, int prev, int nFirst, int nSecond);
+  void insertFrontCleanup(int coord, int prev, int nFirst, int nSecond, int distance=0);
 
   void checkConsistency() const;
 

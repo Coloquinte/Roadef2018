@@ -8,17 +8,17 @@
 using namespace std;
 
 
-RowMerger::RowMerger(SolverParams options, const std::pair<std::vector<Item>, std::vector<Item> > &sequences)
+RowMerger::RowMerger(SolverParams options, const pair<vector<Item>, vector<Item> > &sequences)
 : Merger(options, sequences) {
 }
 
-void RowMerger::init(Rectangle row, const std::vector<Defect> &defects, std::pair<int, int> starts) {
-  std::vector<std::pair<int, int> > vec;
+void RowMerger::init(Rectangle row, const vector<Defect> &defects, pair<int, int> starts) {
+  vector<pair<int, int> > vec;
   vec.push_back(starts);
   init(row, defects, vec);
 }
 
-void RowMerger::init(Rectangle row, const std::vector<Defect> &defects, const std::vector<std::pair<int, int> > &starts) {
+void RowMerger::init(Rectangle row, const vector<Defect> &defects, const vector<pair<int, int> > &starts) {
   Merger::init(row, defects, starts, row.minX());
 }
 
@@ -32,30 +32,89 @@ void RowMerger::buildFront() {
 }
 
 void RowMerger::buildFrontApproximate() {
-
+  for (int i = 0; i < (int) front_.size(); ++i) {
+    // Propagate from front element i
+    FrontElement elt = front_[i];
+    int x = elt.coord;
+    if (elt.n.first < sequences_.first.size()) {
+      Item item = sequences_.first[elt.n.first];
+      if (canPlace(x, item.width, item.height)) insertFrontCleanup(x + item.width , i, elt.n.first + 1, elt.n.second);
+      if (canPlace(x, item.height, item.width)) insertFrontCleanup(x + item.height, i, elt.n.first + 1, elt.n.second);
+    }
+    if (elt.n.second < sequences_.second.size()) {
+      Item item = sequences_.second[elt.n.second];
+      if (canPlace(x, item.width, item.height)) insertFrontCleanup(x + item.width , i, elt.n.first, elt.n.second + 1);
+      if (canPlace(x, item.height, item.width)) insertFrontCleanup(x + item.height, i, elt.n.first, elt.n.second + 1);
+    }
+    // TODO: propagate from defects
+  }
 }
 
 void RowMerger::buildFrontExact() {
-
+  // TODO
 }
 
-std::vector<std::pair<int, int> > RowMerger::getParetoFront() const {
-  std::vector<std::pair<int, int> > paretoFront;
-  for (auto elt : front_) {
+vector<pair<int, int> > RowMerger::getParetoFront() const {
+  vector<pair<int, int> > paretoFront;
+  for (FrontElement elt : front_) {
     if (elt.coord == region_.maxX())
-      paretoFront.push_back(elt.end);
+      paretoFront.push_back(elt.n);
   }
   // TODO: filter dominated elements out
   return paretoFront;
 }
 
-RowSolution RowMerger::getSolution(std::pair<int, int> ends) const {
+RowSolution RowMerger::getSolution(pair<int, int> ends) const {
   RowSolution solution(region_);
-  // TODO
+  // Find the corresponding element on the front
+  int cur = -1;
+  for (int i = 0; i < (int) front_.size(); ++i) {
+    FrontElement elt = front_[i];
+    if (elt.coord == region_.maxX() && elt.n == ends)
+      cur = i;
+  }
+  assert (cur >= 0);
+  // Backtrack
+  while (true) {
+    FrontElement curElt = front_[cur];
+    int prev = curElt.prev;
+    if (prev < 0)
+      break;
+    FrontElement prevElt = front_[prev];
+    if (curElt.n != prevElt.n) {
+      // An item needs to be placed here
+      Item item = curElt.n.first != prevElt.n.first ?
+        sequences_.first[prevElt.n.first]
+      : sequences_.second[prevElt.n.second];
+      // Now decide how to place it
+      int width = curElt.coord - prevElt.coord;
+      assert (item.width == width || item.height == width);
+      int height = item.width ^ item.height ^ width;
+      int x = prevElt.coord;
+      if (canPlaceDown(x, width, height)) {
+        Rectangle place = Rectangle::FromCoordinates(x, region_.minY(), x + width, region_.minY() + height);
+        solution.items.emplace_back(place, item.id);
+      }
+      else {
+        assert (canPlaceUp(x, width, height));
+        Rectangle place = Rectangle::FromCoordinates(x, region_.maxY() - height, x + width, region_.maxY());
+        solution.items.emplace_back(place, item.id);
+      }
+    }
+    cur = prev;
+  }
+  reverse(solution.items.begin(), solution.items.end());
   return solution;
 }
 
+bool RowMerger::canPlace(int x, int width, int height) const {
+  if (!isAdmissibleCutLine(x + width))
+    return false;
+  return canPlaceDown(x, width, height) || canPlaceUp(x, width, height);
+}
+
 bool RowMerger::canPlaceDown(int x, int width, int height) const {
+  // Attempt to place at the botton of the region
   Rectangle place = Rectangle::FromCoordinates(x, region_.minY(), x + width, region_.minY() + height);
   for (Defect d : defects_) {
     if (d.intersects(place))
@@ -65,6 +124,7 @@ bool RowMerger::canPlaceDown(int x, int width, int height) const {
 }
 
 bool RowMerger::canPlaceUp(int x, int width, int height) const {
+  // Attempt to place at the top of the region
   Rectangle place = Rectangle::FromCoordinates(x, region_.maxY() - height, x + width, region_.maxY());
   for (Defect d : defects_) {
     if (d.intersects(place))
@@ -84,4 +144,13 @@ bool RowMerger::isAdmissibleCutLine(int x) const {
   }
   return true;
 }
+
+void RowMerger::checkConsistency() const {
+  Merger::checkConsistency();
+  for (FrontElement elt : front_) {
+    assert (isAdmissibleCutLine(elt.coord));
+    assert ( (elt.coord == region_.minX()) == (elt.prev == -1));
+  }
+}
+ 
 
