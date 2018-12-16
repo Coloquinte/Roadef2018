@@ -38,7 +38,7 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
   initializers_.emplace_back(make_unique<Shuffle>( 64));
   initializers_.emplace_back(make_unique<Shuffle>(128));
 
-  // Shuffle a range
+  // Shuffle a subrange
   moves_.emplace_back(make_unique<Shuffle>(1,  8));
   moves_.emplace_back(make_unique<Shuffle>(1, 16));
   //moves_.emplace_back(make_unique<Shuffle>(1, 32));
@@ -75,6 +75,9 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 
   // Swap two ranges
   //moves_.emplace_back(make_unique<RangeSwap>());
+  
+  // Optimal sequence merging on a row
+  moves_.emplace_back(make_unique<MergeRow>());
 
   for (const unique_ptr<Move> &m : initializers_) m->solver_ = this;
   for (const unique_ptr<Move> &m : moves_) m->solver_ = this;

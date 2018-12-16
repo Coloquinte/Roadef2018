@@ -143,5 +143,25 @@ struct Mirror : Move {
   int width_;
 };
 
+struct MergeRow : Move {
+  virtual Solution apply(std::mt19937& rgen);
+  virtual std::string name() const { return "MergeRow"; }
+};
+
+struct MergeCut : Move {
+  virtual Solution apply(std::mt19937& rgen);
+  virtual std::string name() const { return "MergeCut"; }
+};
+
+struct MergePlate : Move {
+  virtual Solution apply(std::mt19937& rgen);
+  virtual std::string name() const { return "MergePlate"; }
+};
+
+struct MergeAll : Move {
+  virtual Solution apply(std::mt19937& rgen);
+  virtual std::string name() const { return "MergeAll"; }
+};
+
 #endif
 

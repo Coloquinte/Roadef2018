@@ -5,6 +5,8 @@
 #include "solution_checker.hpp"
 #include "ordering_heuristic.hpp"
 
+#include "row_merger.hpp"
+
 #include <unordered_map>
 #include <algorithm>
 #include <cassert>
@@ -352,7 +354,33 @@ string Mirror::name() const {
   ss << "Mirror-" << width_;
   return ss.str();
 }
+ 
+Solution MergeRow::apply(std::mt19937& rgen) {
+  // Extract a row solution at random with reservoir sampling
+  int nFoundRows = 0;
+  RowSolution targetRow;
+  for (const PlateSolution& plate : solution().plates) {
+    for (const CutSolution& cut: plate.cuts) {
+      for (const RowSolution& row: plate.cuts) {
+        uniform_int_distribution<int> selectionDist(0, nFoundRows);
+        bool replace = selectionDist(rgen) == 0;
+        if (replace) targetRow = row;
+      }
+    }
+  }
+  if (nFoundRows == 0) return Solution();
 
+  // Extract two mergeable sequences from it
+  pair<vector<Item>, vector<Item> > sequences;
+
+  // Merge the sequences optimally
+  RowMerger merger(params(), sequences);
+
+  // Run the whole algorithm if an improvement was found
+}
+ 
+ 
+ 
 
 
 
