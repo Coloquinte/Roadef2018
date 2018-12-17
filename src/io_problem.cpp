@@ -25,6 +25,10 @@ void IOProblem::write(const Problem &pb) {
   writeDefects(pb.defects());
 }
 
+void IOProblem::setPermissive(bool permissive) {
+  permissive_ = permissive;
+}
+
 string IOProblem::nameItems() const {
   return nameItems_;
 }
@@ -40,7 +44,7 @@ string IOProblem::nameParams() const {
 vector<Item> IOProblem::readItems() {
   ifstream f(nameItems().c_str());
   if (f.fail())
-    throw runtime_error("Couldn't open file \"" + nameItems() + "\"");
+    throw runtime_error("Couldn't open file \"" + nameItems() + "\".");
   string line;
   getline(f, line);
 
@@ -71,7 +75,7 @@ vector<Defect> IOProblem::readDefects() {
 void IOProblem::readItem(const string &s, vector<Item> &items) {
   auto csv_fields = readCSVLine(s);
   if (csv_fields.empty()) return;
-  if (csv_fields.size() != 5) throw runtime_error("An item must have 5 parameters but the following line was received: \"" + s + "\"");
+  if (csv_fields.size() != 5) throw runtime_error("An item must have 5 parameters but the following line was received: \"" + s + "\".");
 
   vector<int> item_fields;
   for (const string &s : csv_fields)
@@ -85,13 +89,36 @@ void IOProblem::readItem(const string &s, vector<Item> &items) {
   item.height = max(width, height);
   item.stack = item_fields[3];
   item.sequence = item_fields[4];
+
+  int minDim = min(item.width, item.height);
+  int maxDim = max(item.width, item.height);
+  int minMax = min(Params::maxXX, Params::heightPlates);
+  int maxMax = max(Params::maxXX, Params::heightPlates);
+
+  if (!permissive_) {
+    if (minDim < Params::minWaste)
+      throw runtime_error("One of the item's dimensions is smaller than the minimum allowed waste size. To find solutions without this item, use the --permissive option.");
+    if (maxDim > maxMax)
+      throw runtime_error("One of the item's dimensions is larger than the maximum cut size. To find solutions without this item, use the --permissive option.");
+    if (minDim > minMax)
+      throw runtime_error("Both of the item's dimensions are larger than both maximum cut size. To find solutions without this item, use the --permissive option.");
+  }
+  else {
+    if (minDim < Params::minWaste)
+      return;
+    if (maxDim > maxMax)
+      return;
+    if (minDim > minMax)
+      return;
+  }
+
   items.push_back(item);
 }
 
 void IOProblem::readDefect(const string &s, vector<Defect> &defects) {
   auto csv_fields = readCSVLine(s);
   if (csv_fields.empty()) return;
-  if (csv_fields.size() != 6) throw runtime_error("A defect must have 6 parameters but the following line was received: \"" + s + "\"");
+  if (csv_fields.size() != 6) throw runtime_error("A defect must have 6 parameters but the following line was received: \"" + s + "\".");
 
   vector<double> defect_fields;
   for (const string &s : csv_fields)

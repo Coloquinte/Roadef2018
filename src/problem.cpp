@@ -48,8 +48,9 @@ void Problem::checkConsistency() const {
   }
 }
 
-Problem Problem::read(string nameItems, string nameDefects) {
+Problem Problem::read(string nameItems, string nameDefects, bool permissive) {
   IOProblem io(nameItems, nameDefects, string());
+  io.setPermissive(permissive);
   return io.read();
 }
 

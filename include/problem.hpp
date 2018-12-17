@@ -15,7 +15,7 @@ class Problem {
  public:
   Problem(std::vector<Item> items, std::vector<Defect> defects);
 
-  static Problem read(std::string nameItems, std::string nameDefects = std::string());
+  static Problem read(std::string nameItems, std::string nameDefects = std::string(), bool permissive=false);
   void write(std::string nameItems, std::string nameDefects = std::string(), std::string nameParams = std::string()) const;
 
   const std::vector<Item>& items() const{ return items_; }

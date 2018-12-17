@@ -278,7 +278,7 @@ SolutionReader::SolutionReader(std::string name)
 vector<Node> SolutionReader::read() {
   ifstream f(name_.c_str());
   if (f.fail())
-    throw runtime_error("Couldn't open file \"" + name_ + "\"");
+    throw runtime_error("Couldn't open file \"" + name_ + "\".");
   string line;
   getline(f, line);
 
@@ -293,7 +293,7 @@ vector<Node> SolutionReader::read() {
 void SolutionReader::readNode(const string &s, vector<Node> &nodes) {
   auto csv_fields = readCSVLine(s);
   if (csv_fields.empty()) return;
-  if (csv_fields.size() < 8 || csv_fields.size() > 9) throw runtime_error("A node must have 8 or 9 parameters");
+  if (csv_fields.size() < 8 || csv_fields.size() > 9) throw runtime_error("A node must have 8 or 9 parameters.");
 
   vector<int> node_fields;
   for (const string &s : csv_fields)

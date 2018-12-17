@@ -63,6 +63,7 @@ po::options_description getHiddenOptions() {
                     "Move limit");
   dev.add_options()("init-runs", po::value<size_t>()->default_value(5000llu),
                     "Initialization runs");
+  dev.add_options()("permissive", "Tolerate infeasible problems");
 
   po::options_description pack("GCUT packing options");
   pack.add_options()("exact-row-packings", "Solve 3-cuts packings exactly");
@@ -75,7 +76,7 @@ po::options_description getHiddenOptions() {
 
   pack.add_options()("trace-packing-fronts", "Trace Pareto fronts in exact packing algorithms");
 
-  po::options_description merge("GCUT packing options");
+  po::options_description merge("GCUT merging options");
   merge.add_options()("exact-row-mergings", "Solve 3-cuts mergings exactly");
   merge.add_options()("exact-cut-mergings", "Solve 2-cuts mergings exactly");
   merge.add_options()("exact-plate-mergings", "Solve 1-cuts mergings exactly");
@@ -189,7 +190,7 @@ int main(int argc, char** argv) {
     defectFile = vm.count("defects") ? vm["defects"].as<string>() : string();
   }
 
-  Problem pb = Problem::read(batchFile, defectFile);
+  Problem pb = Problem::read(batchFile, defectFile, vm.count("permissive"));
   if (vm.count("stats")) {
     SolutionChecker::report(pb);
     return 0;

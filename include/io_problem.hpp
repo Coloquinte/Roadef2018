@@ -10,6 +10,8 @@ class IOProblem {
   Problem read();
   void write(const Problem &pb);
 
+  void setPermissive(bool permissive);
+
  private:
   std::vector<Item> readItems();
   std::vector<Defect> readDefects();
@@ -31,6 +33,7 @@ class IOProblem {
   std::string nameItems_;
   std::string nameDefects_;
   std::string nameParams_;
+  bool permissive_;
 };
 
 #endif
