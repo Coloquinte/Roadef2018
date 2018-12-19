@@ -5,8 +5,6 @@
 #include "solution_checker.hpp"
 #include "ordering_heuristic.hpp"
 
-#include "row_merger.hpp"
-
 #include <unordered_map>
 #include <algorithm>
 #include <cassert>
@@ -37,6 +35,36 @@ vector<Item> Move::extractSequence(const Solution &solution) const {
   return sequence;
 }
 
+vector<Item> Move::extractSequence(const PlateSolution &plate) const {
+  vector<Item> sequence;
+  for (const CutSolution &cut: plate.cuts) {
+    for (const RowSolution &row: cut.rows) {
+      for (ItemSolution item : row.items) {
+        sequence.push_back(problem().items()[item.itemId]);
+      }
+    }
+  }
+  return sequence;
+}
+
+vector<Item> Move::extractSequence(const CutSolution &cut) const {
+  vector<Item> sequence;
+  for (const RowSolution &row: cut.rows) {
+    for (ItemSolution item : row.items) {
+      sequence.push_back(problem().items()[item.itemId]);
+    }
+  }
+  return sequence;
+}
+
+vector<Item> Move::extractSequence(const RowSolution &row) const {
+  vector<Item> sequence;
+  for (ItemSolution item : row.items) {
+    sequence.push_back(problem().items()[item.itemId]);
+  }
+  return sequence;
+}
+
 vector<vector<Item> > Move::extractItems(const Solution &solution) const {
   vector<vector<Item> > items;
   for (const PlateSolution &plate: solution.plates) {
@@ -52,50 +80,62 @@ vector<vector<Item> > Move::extractItems(const Solution &solution) const {
   return items;
 }
 
-vector<vector<Item> > Move::extractRows(const Solution &solution) const {
+vector<vector<Item> > Move::extractRowItems(const Solution &solution) const {
   vector<vector<Item> > rows;
   for (const PlateSolution &plate: solution.plates) {
     for (const CutSolution &cut: plate.cuts) {
       for (const RowSolution &row: cut.rows) {
-        vector<Item> rowSeq;
-        for (ItemSolution item : row.items) {
-          rowSeq.push_back(problem().items()[item.itemId]);
-        }
-        rows.push_back(rowSeq);
+        rows.push_back(extractSequence(row));
       }
     }
   }
   return rows;
 }
 
-vector<vector<Item> > Move::extractCuts(const Solution &solution) const {
+vector<vector<Item> > Move::extractCutItems(const Solution &solution) const {
   vector<vector<Item> > cuts;
   for (const PlateSolution &plate: solution.plates) {
     for (const CutSolution &cut: plate.cuts) {
-      vector<Item> cutSeq;
-      for (const RowSolution &row: cut.rows) {
-        for (ItemSolution item : row.items) {
-          cutSeq.push_back(problem().items()[item.itemId]);
-        }
-      }
-      cuts.push_back(cutSeq);
+      cuts.push_back(extractSequence(cut));
     }
   }
   return cuts;
 }
 
-vector<vector<Item> > Move::extractPlates(const Solution &solution) const {
+vector<vector<Item> > Move::extractPlateItems(const Solution &solution) const {
   vector<vector<Item> > plates;
   for (const PlateSolution &plate: solution.plates) {
-    vector<Item> plateSeq;
+    plates.push_back(extractSequence(plate));
+  }
+  return plates;
+}
+
+vector<RowSolution> Move::extractRows(const Solution &solution) const {
+  vector<RowSolution> rows;
+  for (const PlateSolution &plate: solution.plates) {
     for (const CutSolution &cut: plate.cuts) {
       for (const RowSolution &row: cut.rows) {
-        for (ItemSolution item : row.items) {
-          plateSeq.push_back(problem().items()[item.itemId]);
-        }
+        rows.push_back(row);
       }
     }
-    plates.push_back(plateSeq);
+  }
+  return rows;
+}
+
+vector<CutSolution> Move::extractCuts(const Solution &solution) const {
+  vector<CutSolution> cuts;
+  for (const PlateSolution &plate: solution.plates) {
+    for (const CutSolution &cut: plate.cuts) {
+      cuts.push_back(cut);
+    }
+  }
+  return cuts;
+}
+
+vector<PlateSolution> Move::extractPlates(const Solution &solution) const {
+  vector<PlateSolution> plates;
+  for (const PlateSolution &plate: solution.plates) {
+    plates.push_back(plate);
   }
   return plates;
 }
@@ -272,19 +312,19 @@ Solution ItemInsert::apply(std::mt19937& rgen) {
 }
 
 Solution RowInsert::apply(std::mt19937& rgen) {
-  vector<vector<Item> > rows = extractRows(solution());
+  vector<vector<Item> > rows = extractRowItems(solution());
   randomInsert(rows, rgen);
   return mergeRepairRun(rows);
 }
 
 Solution CutInsert::apply(std::mt19937& rgen) {
-  vector<vector<Item> > cuts = extractCuts(solution());
+  vector<vector<Item> > cuts = extractCutItems(solution());
   randomInsert(cuts, rgen);
   return mergeRepairRun(cuts);
 }
 
 Solution PlateInsert::apply(std::mt19937& rgen) {
-  vector<vector<Item> > plates = extractPlates(solution());
+  vector<vector<Item> > plates = extractPlateItems(solution());
   randomInsert(plates, rgen);
   return mergeRepairRun(plates);
 }
@@ -296,19 +336,19 @@ Solution ItemSwap::apply(std::mt19937& rgen) {
 }
 
 Solution RowSwap::apply(std::mt19937& rgen) {
-  vector<vector<Item> > rows = extractRows(solution());
+  vector<vector<Item> > rows = extractRowItems(solution());
   randomSwap(rows, rgen);
   return mergeRepairRun(rows);
 }
 
 Solution CutSwap::apply(std::mt19937& rgen) {
-  vector<vector<Item> > cuts = extractCuts(solution());
+  vector<vector<Item> > cuts = extractCutItems(solution());
   randomSwap(cuts, rgen);
   return mergeRepairRun(cuts);
 }
 
 Solution PlateSwap::apply(std::mt19937& rgen) {
-  vector<vector<Item> > plates = extractPlates(solution());
+  vector<vector<Item> > plates = extractPlateItems(solution());
   randomSwap(plates, rgen);
   return mergeRepairRun(plates);
 }
@@ -326,19 +366,19 @@ Solution AdjacentItemSwap::apply(std::mt19937& rgen) {
 }
 
 Solution AdjacentRowSwap::apply(std::mt19937& rgen) {
-  vector<vector<Item> > rows = extractRows(solution());
+  vector<vector<Item> > rows = extractRowItems(solution());
   randomAdjacentSwap(rows, rgen);
   return mergeRepairRun(rows);
 }
 
 Solution AdjacentCutSwap::apply(std::mt19937& rgen) {
-  vector<vector<Item> > cuts = extractCuts(solution());
+  vector<vector<Item> > cuts = extractCutItems(solution());
   randomAdjacentSwap(cuts, rgen);
   return mergeRepairRun(cuts);
 }
 
 Solution AdjacentPlateSwap::apply(std::mt19937& rgen) {
-  vector<vector<Item> > plates = extractPlates(solution());
+  vector<vector<Item> > plates = extractPlateItems(solution());
   randomAdjacentSwap(plates, rgen);
   return mergeRepairRun(plates);
 }
@@ -354,33 +394,4 @@ string Mirror::name() const {
   ss << "Mirror-" << width_;
   return ss.str();
 }
- 
-Solution MergeRow::apply(std::mt19937& rgen) {
-  // Extract a row solution at random with reservoir sampling
-  int nFoundRows = 0;
-  RowSolution targetRow;
-  for (const PlateSolution& plate : solution().plates) {
-    for (const CutSolution& cut: plate.cuts) {
-      for (const RowSolution& row: plate.cuts) {
-        uniform_int_distribution<int> selectionDist(0, nFoundRows);
-        bool replace = selectionDist(rgen) == 0;
-        if (replace) targetRow = row;
-      }
-    }
-  }
-  if (nFoundRows == 0) return Solution();
-
-  // Extract two mergeable sequences from it
-  pair<vector<Item>, vector<Item> > sequences;
-
-  // Merge the sequences optimally
-  RowMerger merger(params(), sequences);
-
-  // Run the whole algorithm if an improvement was found
-}
- 
- 
- 
-
-
 

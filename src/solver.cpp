@@ -5,6 +5,7 @@
 #include "solution_checker.hpp"
 
 #include "move.hpp"
+#include "merger_move.hpp"
 #include <iostream>
 #include <chrono>
 #include <thread>

@@ -28,6 +28,7 @@ SET (SOURCES
   src/solver.cpp
   src/params.cpp
   src/move.cpp
+  src/merger_move.cpp
   src/main.cpp
   src/row_merger.cpp
   src/merger.cpp

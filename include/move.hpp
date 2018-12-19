@@ -23,11 +23,19 @@ class Move {
   std::size_t nFailure() const { return nFailure_; }
 
  protected:
-  std::vector<Item> extractSequence(const Solution &solution) const;
-  std::vector<std::vector<Item> > extractItems(const Solution &solution) const;
-  std::vector<std::vector<Item> > extractRows(const Solution &solution) const;
-  std::vector<std::vector<Item> > extractCuts(const Solution &solution) const;
-  std::vector<std::vector<Item> > extractPlates(const Solution &solution) const;
+  std::vector<Item> extractSequence(const Solution&) const;
+  std::vector<Item> extractSequence(const PlateSolution&) const;
+  std::vector<Item> extractSequence(const CutSolution&) const;
+  std::vector<Item> extractSequence(const RowSolution&) const;
+
+  std::vector<RowSolution> extractRows(const Solution&) const;
+  std::vector<CutSolution> extractCuts(const Solution&) const;
+  std::vector<PlateSolution> extractPlates(const Solution&) const;
+
+  std::vector<std::vector<Item> > extractItems(const Solution&) const;
+  std::vector<std::vector<Item> > extractRowItems(const Solution&) const;
+  std::vector<std::vector<Item> > extractCutItems(const Solution&) const;
+  std::vector<std::vector<Item> > extractPlateItems(const Solution&) const;
 
   Solution mergeRepairRun(const std::vector<std::vector<Item> > &sequence);
   Solution runSequence(const std::vector<Item> &sequence);
@@ -43,7 +51,6 @@ class Move {
 
   double bestMapped  () { return solver_->bestMapped_; }
   double bestDensity () { return solver_->bestDensity_; }
-
 
  protected:
   std::size_t nViolation_;
@@ -141,26 +148,6 @@ struct Mirror : Move {
     : width_(width) {
   }
   int width_;
-};
-
-struct MergeRow : Move {
-  virtual Solution apply(std::mt19937& rgen);
-  virtual std::string name() const { return "MergeRow"; }
-};
-
-struct MergeCut : Move {
-  virtual Solution apply(std::mt19937& rgen);
-  virtual std::string name() const { return "MergeCut"; }
-};
-
-struct MergePlate : Move {
-  virtual Solution apply(std::mt19937& rgen);
-  virtual std::string name() const { return "MergePlate"; }
-};
-
-struct MergeAll : Move {
-  virtual Solution apply(std::mt19937& rgen);
-  virtual std::string name() const { return "MergeAll"; }
 };
 
 #endif
