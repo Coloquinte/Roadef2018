@@ -68,6 +68,17 @@ class Rectangle {
         && maxY_ >= y;
   }
 
+  bool operator==(const Rectangle &o) {
+    return minX_ == o.minX_
+        && maxX_ == o.maxX_
+        && minY_ == o.minY_
+        && maxY_ == o.maxY_;
+  }
+
+  bool operator!=(const Rectangle &o) {
+    return !operator==(o);
+  }
+
  protected:
   Rectangle(int minX, int minY, int maxX, int maxY) {
     minX_ = minX;

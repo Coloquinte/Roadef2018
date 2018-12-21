@@ -91,6 +91,7 @@ RowSolution RowMerger::getSolution(pair<int, int> ends) const {
       assert (item.width == width || item.height == width);
       int height = item.width ^ item.height ^ width;
       int x = prevElt.coord;
+      assert (isAdmissibleCutLine(x));
       if (canPlaceDown(x, width, height)) {
         Rectangle place = Rectangle::FromCoordinates(x, region_.minY(), x + width, region_.minY() + height);
         solution.items.emplace_back(place, item.id);
@@ -104,16 +105,52 @@ RowSolution RowMerger::getSolution(pair<int, int> ends) const {
     cur = prev;
   }
   reverse(solution.items.begin(), solution.items.end());
+  checkSolution(solution);
   return solution;
 }
 
+void RowMerger::checkSolution(const RowSolution &row) const {
+  if (row.items.empty()) return;
+
+  for (const ItemSolution &item : row.items) {
+    assert (row.contains(item));
+    assert (utils::fitsMinWaste(row.minY(), item.minY()));
+    assert (utils::fitsMinWaste(item.maxY(), row.maxY()));
+    assert (item.maxY() == row.maxY() || item.minY() == row.minY());
+    for (Defect defect : defects_) {
+      assert (isAdmissibleCutLine(item.minX()));
+      assert (isAdmissibleCutLine(item.maxX()));
+    }
+  }
+
+  assert (utils::fitsMinWaste(row.minX(), row.items.front().minX()));
+  assert (utils::fitsMinWaste(row.items.back().maxX(), row.maxX()));
+
+  for (int i = 0; i+1 < (int) row.items.size(); ++i) {
+    ItemSolution item1 = row.items[i];
+    ItemSolution item2 = row.items[i+1];
+    assert (item1.maxX() >= item2.minX());
+    assert (utils::fitsMinWaste(item1.maxX(), item2.minX()));
+  }
+}
+
+
 bool RowMerger::canPlace(int x, int width, int height) const {
-  if (!isAdmissibleCutLine(x + width))
-    return false;
   return canPlaceDown(x, width, height) || canPlaceUp(x, width, height);
 }
 
+bool RowMerger::canFit(int x, int width, int height) const {
+  if (!utils::fitsMinWaste(height, region_.height()))
+    return false;
+  if (!utils::fitsMinWaste(x + width, region_.maxX()))
+    return false;
+  if (!isAdmissibleCutLine(x + width))
+    return false;
+  return true;
+}
 bool RowMerger::canPlaceDown(int x, int width, int height) const {
+  if (!canFit(x, width, height))
+    return false;
   // Attempt to place at the botton of the region
   Rectangle place = Rectangle::FromCoordinates(x, region_.minY(), x + width, region_.minY() + height);
   for (Defect d : defects_) {
@@ -124,6 +161,8 @@ bool RowMerger::canPlaceDown(int x, int width, int height) const {
 }
 
 bool RowMerger::canPlaceUp(int x, int width, int height) const {
+  if (!canFit(x, width, height))
+    return false;
   // Attempt to place at the top of the region
   Rectangle place = Rectangle::FromCoordinates(x, region_.maxY() - height, x + width, region_.maxY());
   for (Defect d : defects_) {

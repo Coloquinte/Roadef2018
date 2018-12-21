@@ -28,9 +28,8 @@ class Move {
   std::vector<Item> extractSequence(const CutSolution&) const;
   std::vector<Item> extractSequence(const RowSolution&) const;
 
-  std::vector<RowSolution> extractRows(const Solution&) const;
-  std::vector<CutSolution> extractCuts(const Solution&) const;
-  std::vector<PlateSolution> extractPlates(const Solution&) const;
+  RowSolution pickRandomRow(const Solution&, int plateId, std::mt19937 &rgen) const;
+  CutSolution pickRandomCut(const Solution&, int plateId, std::mt19937 &rgen) const;
 
   std::vector<std::vector<Item> > extractItems(const Solution&) const;
   std::vector<std::vector<Item> > extractRowItems(const Solution&) const;

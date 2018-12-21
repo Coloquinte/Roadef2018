@@ -110,34 +110,26 @@ vector<vector<Item> > Move::extractPlateItems(const Solution &solution) const {
   return plates;
 }
 
-vector<RowSolution> Move::extractRows(const Solution &solution) const {
+RowSolution Move::pickRandomRow(const Solution &solution, int plateId, mt19937 &rgen) const {
   vector<RowSolution> rows;
-  for (const PlateSolution &plate: solution.plates) {
-    for (const CutSolution &cut: plate.cuts) {
-      for (const RowSolution &row: cut.rows) {
-        rows.push_back(row);
-      }
+  const PlateSolution &plate = solution.plates[plateId];
+  for (const CutSolution &cut: plate.cuts) {
+    for (const RowSolution &row: cut.rows) {
+      rows.push_back(row);
     }
   }
-  return rows;
+  int rowId = uniform_int_distribution<int>(0, rows.size() - 1)(rgen);
+  return rows[rowId];
 }
 
-vector<CutSolution> Move::extractCuts(const Solution &solution) const {
+CutSolution Move::pickRandomCut(const Solution &solution, int plateId, mt19937 &rgen) const {
   vector<CutSolution> cuts;
-  for (const PlateSolution &plate: solution.plates) {
-    for (const CutSolution &cut: plate.cuts) {
-      cuts.push_back(cut);
-    }
+  const PlateSolution &plate = solution.plates[plateId];
+  for (const CutSolution &cut: plate.cuts) {
+    cuts.push_back(cut);
   }
-  return cuts;
-}
-
-vector<PlateSolution> Move::extractPlates(const Solution &solution) const {
-  vector<PlateSolution> plates;
-  for (const PlateSolution &plate: solution.plates) {
-    plates.push_back(plate);
-  }
-  return plates;
+  int cutId = uniform_int_distribution<int>(0, cuts.size() - 1)(rgen);
+  return cuts[cutId];
 }
 
 Solution Move::mergeRepairRun(const vector<vector<Item> > &sequence) {

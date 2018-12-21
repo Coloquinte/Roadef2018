@@ -23,10 +23,10 @@ void Merger::init(Rectangle region, const vector<Defect> &defects, const vector<
 void Merger::checkConsistency() const {
   for (size_t i = 0; i < front_.size(); ++i) {
     FrontElement elt = front_[i];
-    assert (elt.n.first <= sequences_.first.size());
-    assert (elt.n.second <= sequences_.second.size());
+    assert (elt.n.first  <= (int) sequences_.first.size());
+    assert (elt.n.second <= (int) sequences_.second.size());
     if (elt.prev == -1) continue;
-    assert (elt.prev >= 0 && elt.prev < i);
+    assert (elt.prev >= 0 && elt.prev < (int) i);
     FrontElement prev = front_[elt.prev];
     assert (prev.coord < elt.coord);
     assert ( (prev.n.first == elt.n.first && prev.n.second + 1 == elt.n.second)

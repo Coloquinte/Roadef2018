@@ -26,8 +26,10 @@ class RowMerger : Merger {
  private:
   void buildFrontExact();
   void buildFrontApproximate();
+  void checkSolution(const RowSolution &solution) const;
 
   bool canPlace(int x, int width, int height) const;
+  bool canFit(int x, int width, int height) const;
   bool canPlaceDown(int x, int width, int height) const;
   bool canPlaceUp(int x, int width, int height) const;
   bool isAdmissibleCutLine(int x) const;
