@@ -36,12 +36,12 @@ void RowMerger::buildFrontApproximate() {
     // Propagate from front element i
     FrontElement elt = front_[i];
     int x = elt.coord;
-    if (elt.n.first < sequences_.first.size()) {
+    if (elt.n.first < (int) sequences_.first.size()) {
       Item item = sequences_.first[elt.n.first];
       if (canPlace(x, item.width, item.height)) insertFrontCleanup(x + item.width , i, elt.n.first + 1, elt.n.second);
       if (canPlace(x, item.height, item.width)) insertFrontCleanup(x + item.height, i, elt.n.first + 1, elt.n.second);
     }
-    if (elt.n.second < sequences_.second.size()) {
+    if (elt.n.second < (int) sequences_.second.size()) {
       Item item = sequences_.second[elt.n.second];
       if (canPlace(x, item.width, item.height)) insertFrontCleanup(x + item.width , i, elt.n.first, elt.n.second + 1);
       if (canPlace(x, item.height, item.width)) insertFrontCleanup(x + item.height, i, elt.n.first, elt.n.second + 1);
@@ -117,10 +117,8 @@ void RowMerger::checkSolution(const RowSolution &row) const {
     assert (utils::fitsMinWaste(row.minY(), item.minY()));
     assert (utils::fitsMinWaste(item.maxY(), row.maxY()));
     assert (item.maxY() == row.maxY() || item.minY() == row.minY());
-    for (Defect defect : defects_) {
-      assert (isAdmissibleCutLine(item.minX()));
-      assert (isAdmissibleCutLine(item.maxX()));
-    }
+    assert (isAdmissibleCutLine(item.minX()));
+    assert (isAdmissibleCutLine(item.maxX()));
   }
 
   assert (utils::fitsMinWaste(row.minX(), row.items.front().minX()));

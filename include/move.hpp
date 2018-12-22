@@ -28,13 +28,18 @@ class Move {
   std::vector<Item> extractSequence(const CutSolution&) const;
   std::vector<Item> extractSequence(const RowSolution&) const;
 
-  RowSolution pickRandomRow(const Solution&, int plateId, std::mt19937 &rgen) const;
-  CutSolution pickRandomCut(const Solution&, int plateId, std::mt19937 &rgen) const;
-
-  std::vector<std::vector<Item> > extractItems(const Solution&) const;
+  std::vector<std::vector<Item> > extractItemItems(const Solution&) const;
   std::vector<std::vector<Item> > extractRowItems(const Solution&) const;
   std::vector<std::vector<Item> > extractCutItems(const Solution&) const;
   std::vector<std::vector<Item> > extractPlateItems(const Solution&) const;
+
+  std::vector<ItemSolution> extractItems(const Solution&) const;
+  std::vector<RowSolution> extractRows(const Solution&) const;
+  std::vector<CutSolution> extractCuts(const Solution&) const;
+  std::vector<PlateSolution> extractPlates(const Solution&) const;
+
+  int plateIdOfRow(int rowId) const;
+  int plateIdOfCut(int cutId) const;
 
   Solution mergeRepairRun(const std::vector<std::vector<Item> > &sequence);
   Solution runSequence(const std::vector<Item> &sequence);
@@ -42,6 +47,7 @@ class Move {
   std::vector<Item> mergeSequence(const std::vector<std::vector<Item> > &sequence);
   void repairSequence(std::vector<Item> &sequence) const;
   bool sequenceValid(const std::vector<Item> &sequence) const;
+  void checkSequenceValid(const std::vector<Item> &sequence) const;
   Solution accept(const Solution &incumbent);
 
   const Problem& problem() const { return solver_->problem_; }

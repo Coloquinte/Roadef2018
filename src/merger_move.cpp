@@ -106,30 +106,31 @@ vector<pair<int, int> > MergerMove::getImprovingFront(const vector<pair<int, int
   return betterFront;
 }
 
-vector<Item> MergerMove::recreateFullSequence(const vector<Item> &newSubseq, const vector<Item> &all) {
-  unordered_set<int> subseqIds;
-  for (Item item : newSubseq) {
-    subseqIds.insert(item.id);
-  }
-
-  vector<Item> ret;
-  for (Item item : all) {
-    if (subseqIds.count(item.id))
-      break;
-    ret.push_back(item);
-  }
-  for (Item item : newSubseq) {
-    ret.push_back(item);
-  }
-
+vector<Item> MergerMove::recreateFullSequence(const vector<Item> &newSubseq, const vector<vector<Item> > &all, int id) {
   unordered_set<int> seenIds;
-  for (Item item : ret) {
+  vector<Item> ret;
+  for (int i = 0; i < id; ++i) {
+    for (Item item : all[i]) {
+      ret.push_back(item);
+      //assert (!seenIds.count(item.id));
+      seenIds.insert(item.id);
+    }
+  }
+  for (Item item : newSubseq) {
+    ret.push_back(item);
+    //assert (!seenIds.count(item.id));
     seenIds.insert(item.id);
   }
 
-  for (Item item : all) {
-    if (!seenIds.count(item.id))
-      ret.push_back(item);
+  for (Item item : all[id]) {
+    assert (seenIds.count(item.id));
+  }
+
+  for (int i = id + 1; i < (int) all.size(); ++i) {
+    for (Item item : all[i]) {
+      if (!seenIds.count(item.id))
+        ret.push_back(item);
+    }
   }
 
   return ret;
@@ -137,19 +138,33 @@ vector<Item> MergerMove::recreateFullSequence(const vector<Item> &newSubseq, con
  
 Solution MergeRow::apply(mt19937& rgen) {
   // Select a random row to reoptimize
-  int plateId = uniform_int_distribution<int>(0, solution().plates.size() - 1)(rgen);
-  RowSolution targetRow = pickRandomRow(solution(), plateId, rgen);
+  vector<RowSolution> rows = extractRows(solution());
+  int rowId = uniform_int_distribution<int>(0, rows.size() - 1)(rgen);
+  RowSolution targetRow = rows[rowId];
 
-  // Extract two sequences
+  // Extract two sequences from it
   vector<Item> subseq = extractSequence(targetRow);
   pair<vector<Item>, vector<Item> > sequences = getMergeableSequences(rgen, subseq);
   pair<int, int> initial(sequences.first.size(), sequences.second.size());
   vector<Item> all = extractSequence(solution());
   extendMergeableSequences(sequences, rgen, all);
 
+  auto allRows = extractRowItems(solution());
+  unordered_set<int> beforeIds;
+  for (int i = 0; i < rowId; ++i) {
+    for (Item item : allRows[i])
+      beforeIds.insert(item.id);
+  }
+  for (Item item : sequences.first) {
+    assert(!beforeIds.count(item.id));
+  }
+  for (Item item : sequences.second) {
+    assert(!beforeIds.count(item.id));
+  }
+
   // Merge the sequences optimally
   RowMerger merger(params(), sequences);
-  merger.init(targetRow, problem().plateDefects()[plateId], make_pair(0, 0));
+  merger.init(targetRow, problem().plateDefects()[plateIdOfRow(rowId)], make_pair(0, 0));
   merger.buildFront();
 
   // Get all solutions that are better than the original
@@ -163,39 +178,14 @@ Solution MergeRow::apply(mt19937& rgen) {
   assert (selected.first >= initial.first && selected.second >= initial.second);
   assert (selected.first > initial.first || selected.second > initial.second);
 
-  cout << "Found!" << endl;
-  if (!front.empty()) {
-    cout << "Non empty improving front against " << initial.first << " " << initial.second << endl;
-    for (auto p : front) {
-      cout << p.first << " " << p.second << endl;
-    }
-  }
-  cout << "Plate: " << plateId << endl;
-  cout << "Row: " << targetRow.minX() << " to " << targetRow.maxX() << ", " << targetRow.minY() << " to " << targetRow.maxY() << endl;
-  cout << "Items: ";
-  for (ItemSolution item : targetRow.items)
-    cout << item.itemId << " ";
-  cout << endl;
-
   // Run the whole algorithm with the new sequence if an improvement was found
   RowSolution newRow = merger.getSolution(selected);
-  cout << "New: ";
-  for (ItemSolution item : newRow.items)
-    cout << item.itemId << " ";
-  cout << endl;
   assert (newRow.nItems() == selected.first + selected.second);
   assert (newRow == targetRow);
+
   vector<Item> newSubseq = extractSequence(newRow);
-  vector<Item> newSeq = recreateFullSequence(newSubseq, all);
-  assert (sequenceValid(newSeq));
-  solution().write("before.csv");
-  Solution ret = runSequence(newSeq);
-  ret.write("after.csv");
-  cout << "Sequence: ";
-  for (Item item : newSeq)
-    cout << item.id << " ";
-  cout << endl;
-  exit(0);
-  return ret;
+  vector<Item> newSeq = recreateFullSequence(newSubseq, extractRowItems(solution()), rowId);
+  checkSequenceValid(newSeq);
+  return runSequence(newSeq);
 }
  
