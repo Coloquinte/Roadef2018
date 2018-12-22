@@ -1,6 +1,6 @@
 
-#ifndef ROW_PACKER_HPP
-#define ROW_PACKER_HPP
+#ifndef ROW_MERGER_HPP
+#define ROW_MERGER_HPP
 
 #include "problem.hpp"
 #include "solution.hpp"
