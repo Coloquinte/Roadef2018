@@ -35,7 +35,7 @@ pair<vector<Item>, vector<Item> > MergerMove::getMergeableSequences(mt19937 &rge
   return ret; 
 }
 
-void MergerMove::extendMergeableSequences(pair<vector<Item>, vector<Item> > &sequences, mt19937 &rgen, const vector<Item> &all) {
+void MergerMove::extendMergeableSequences(pair<vector<Item>, vector<Item> > &sequences, mt19937 &rgen, const vector<vector<Item> > &all, int subseqId) {
   // Find the stacks in each sequence
   pair<unordered_set<int>, unordered_set<int> > stacksBySeq;
   for (Item item : sequences.first) stacksBySeq.first.insert(item.stack);
@@ -45,32 +45,24 @@ void MergerMove::extendMergeableSequences(pair<vector<Item>, vector<Item> > &seq
   for (int stack : stacksBySeq.first) assert(!stacksBySeq.second.count(stack));
   for (int stack : stacksBySeq.second) assert(!stacksBySeq.first.count(stack));
 
-  // Find where the subsequence starts
-  size_t seqEnd = 0;
-  for (size_t i = 0; i < all.size(); ++i) {
-    if (!sequences.first.empty() && all[i].id == sequences.first.back().id)
-      seqEnd = i + 1;
-    if (!sequences.second.empty() && all[i].id == sequences.second.back().id)
-      seqEnd = i + 1;
-  }
-
   unordered_set<int> stackSeen;
   pair<vector<Item>, vector<Item> > candidates;
   vector<Item> anySeq;
-  for (size_t i = seqEnd; i < all.size(); ++i) {
-    Item item = all[i];
-    if (stackSeen.count(item.stack))
-      continue;
-    stackSeen.insert(item.stack);
-    if (stacksBySeq.first.count(item.stack)) {
-      candidates.first.push_back(item);
-    }
-    else if (stacksBySeq.first.count(item.stack)) {
-      candidates.second.push_back(item);
-    }
-    else {
-      // An item that is not on a used stack can go on any sequence
-      anySeq.push_back(item);
+  for (size_t i = subseqId + 1; i < all.size(); ++i) {
+    for (Item item : all[i]) {
+      if (stackSeen.count(item.stack))
+        continue;
+      stackSeen.insert(item.stack);
+      if (stacksBySeq.first.count(item.stack)) {
+        candidates.first.push_back(item);
+      }
+      else if (stacksBySeq.first.count(item.stack)) {
+        candidates.second.push_back(item);
+      }
+      else {
+        // An item that is not on a used stack can go on any sequence
+        anySeq.push_back(item);
+      }
     }
   }
 
@@ -146,21 +138,9 @@ Solution MergeRow::apply(mt19937& rgen) {
   vector<Item> subseq = extractSequence(targetRow);
   pair<vector<Item>, vector<Item> > sequences = getMergeableSequences(rgen, subseq);
   pair<int, int> initial(sequences.first.size(), sequences.second.size());
-  vector<Item> all = extractSequence(solution());
-  extendMergeableSequences(sequences, rgen, all);
 
   auto allRows = extractRowItems(solution());
-  unordered_set<int> beforeIds;
-  for (int i = 0; i < rowId; ++i) {
-    for (Item item : allRows[i])
-      beforeIds.insert(item.id);
-  }
-  for (Item item : sequences.first) {
-    assert(!beforeIds.count(item.id));
-  }
-  for (Item item : sequences.second) {
-    assert(!beforeIds.count(item.id));
-  }
+  extendMergeableSequences(sequences, rgen, allRows, rowId);
 
   // Merge the sequences optimally
   RowMerger merger(params(), sequences);
@@ -175,16 +155,10 @@ Solution MergeRow::apply(mt19937& rgen) {
   // Pick one such solution
   shuffle(front.begin(), front.end(), rgen);
   pair<int, int> selected = front.back();
-  assert (selected.first >= initial.first && selected.second >= initial.second);
-  assert (selected.first > initial.first || selected.second > initial.second);
 
   // Run the whole algorithm with the new sequence if an improvement was found
-  RowSolution newRow = merger.getSolution(selected);
-  assert (newRow.nItems() == selected.first + selected.second);
-  assert (newRow == targetRow);
-
-  vector<Item> newSubseq = extractSequence(newRow);
-  vector<Item> newSeq = recreateFullSequence(newSubseq, extractRowItems(solution()), rowId);
+  vector<Item> newSubseq = extractSequence(merger.getSolution(selected));
+  vector<Item> newSeq = recreateFullSequence(newSubseq, allRows, rowId);
   checkSequenceValid(newSeq);
   return runSequence(newSeq);
 }

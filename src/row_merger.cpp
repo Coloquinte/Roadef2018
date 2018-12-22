@@ -105,6 +105,7 @@ RowSolution RowMerger::getSolution(pair<int, int> ends) const {
     cur = prev;
   }
   reverse(solution.items.begin(), solution.items.end());
+  assert (solution.nItems() == ends.first + ends.second);
   checkSolution(solution);
   return solution;
 }

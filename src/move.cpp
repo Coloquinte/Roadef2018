@@ -156,7 +156,7 @@ vector<PlateSolution> Move::extractPlates(const Solution &solution) const {
 
 int Move::plateIdOfRow(int rowId) const {
   int id = 0;
-  for (int i = 0; i < solution().plates.size(); ++i) {
+  for (int i = 0; i < (int) solution().plates.size(); ++i) {
     const PlateSolution &plate = solution().plates[i];
     for (const CutSolution &cut: plate.cuts) {
       for (const RowSolution &row: cut.rows) {
@@ -171,7 +171,7 @@ int Move::plateIdOfRow(int rowId) const {
 
 int Move::plateIdOfCut(int cutId) const {
   int id = 0;
-  for (int i = 0; i < solution().plates.size(); ++i) {
+  for (int i = 0; i < (int) solution().plates.size(); ++i) {
     const PlateSolution &plate = solution().plates[i];
     for (const CutSolution &cut: plate.cuts) {
       if (cutId == id++)
