@@ -61,8 +61,8 @@ po::options_description getHiddenOptions() {
   dev.add_options()("check", "Fail and report on violation");
   dev.add_options()("moves", po::value<size_t>()->default_value(1000000000llu),
                     "Move limit");
-  dev.add_options()("init-runs", po::value<size_t>()->default_value(5000llu),
-                    "Initialization runs");
+  dev.add_options()("init-moves", po::value<size_t>()->default_value(5000llu),
+                    "Initialization move limit");
   dev.add_options()("permissive", "Tolerate infeasible problems");
 
   po::options_description pack("GCUT packing options");
@@ -152,8 +152,8 @@ SolverParams buildParams(const po::variables_map &vm) {
   params.nbThreads = vm["threads"].as<size_t>();
   params.timeLimit = vm["time"].as<double>();
   params.failOnViolation = vm.count("check");
-  params.initializationRuns = vm["init-runs"].as<size_t>();
   params.moveLimit = vm["moves"].as<size_t>();
+  params.initializationRuns = vm["init-moves"].as<size_t>();
 
   if (vm.count("exact-row-packings")) params.rowPacking = PackingOption::Exact;
   if (vm.count("diagnose-row-packings")) params.rowPacking = PackingOption::Diagnose;

@@ -11,6 +11,8 @@ class Rectangle {
 
   int width() const { return maxX_ - minX_; }
   int height() const { return maxY_ - minY_; }
+  int area() const { return width() * height(); }
+
 
   Rectangle() {
     minX_ = 0;
@@ -68,14 +70,14 @@ class Rectangle {
         && maxY_ >= y;
   }
 
-  bool operator==(const Rectangle &o) {
+  bool operator==(const Rectangle &o) const {
     return minX_ == o.minX_
         && maxX_ == o.maxX_
         && minY_ == o.minY_
         && maxY_ == o.maxY_;
   }
 
-  bool operator!=(const Rectangle &o) {
+  bool operator!=(const Rectangle &o) const {
     return !operator==(o);
   }
 

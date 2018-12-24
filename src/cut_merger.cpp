@@ -57,22 +57,32 @@ void CutMerger::runRowMerger(int minY, int maxY, pair<int, int> starts) {
 }
 
 vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
+  long long maxArea = region_.area();
   vector<int> candidates;
+
+  long long area1 = 0;
   for (int t1 = starts.first; t1 < (int) sequences_.first.size(); ++t1) {
     Item item = sequences_.first[t1];
-    candidates.push_back(item.width);
+    area1 += item.area();
+    if (area1 > maxArea) break;
     candidates.push_back(item.height);
-    candidates.push_back(item.width  + Params::minWaste);
     candidates.push_back(item.height + Params::minWaste);
+    candidates.push_back(item.width);
+    candidates.push_back(item.width  + Params::minWaste);
   }
+
+  long long area2 = 0;
   for (int t2 = starts.second; t2 < (int) sequences_.second.size(); ++t2) {
     Item item = sequences_.second[t2];
-    candidates.push_back(item.width);
+    area2 += item.area();
+    if (area2 > maxArea) break;
     candidates.push_back(item.height);
-    candidates.push_back(item.width  + Params::minWaste);
     candidates.push_back(item.height + Params::minWaste);
+    candidates.push_back(item.width);
+    candidates.push_back(item.width  + Params::minWaste);
   }
-  // TODO: break on area limit
+
+  // TODO: take defects into account
   return candidates;
 }
 
