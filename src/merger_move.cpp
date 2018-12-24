@@ -1,6 +1,7 @@
 
 #include "merger_move.hpp"
 #include "row_merger.hpp"
+#include "cut_merger.hpp"
 
 #include <unordered_set>
 #include <iostream>
@@ -159,6 +160,41 @@ Solution MergeRow::apply(mt19937& rgen) {
   // Run the whole algorithm with the new sequence if an improvement was found
   vector<Item> newSubseq = extractSequence(merger.getSolution(selected));
   vector<Item> newSeq = recreateFullSequence(newSubseq, allRows, rowId);
+  checkSequenceValid(newSeq);
+  return runSequence(newSeq);
+}
+
+Solution MergeCut::apply(mt19937& rgen) {
+  // Select a random cut to reoptimize
+  vector<CutSolution> cuts = extractCuts(solution());
+  int cutId = uniform_int_distribution<int>(0, cuts.size() - 1)(rgen);
+  CutSolution targetCut = cuts[cutId];
+
+  // Extract two sequences from it
+  vector<Item> subseq = extractSequence(targetCut);
+  pair<vector<Item>, vector<Item> > sequences = getMergeableSequences(rgen, subseq);
+  pair<int, int> initial(sequences.first.size(), sequences.second.size());
+
+  auto allCuts = extractCutItems(solution());
+  extendMergeableSequences(sequences, rgen, allCuts, cutId);
+
+  // Merge the sequences optimally
+  CutMerger merger(params(), sequences);
+  merger.init(targetCut, problem().plateDefects()[plateIdOfCut(cutId)], make_pair(0, 0));
+  merger.buildFront();
+
+  // Get all solutions that are better than the original
+  vector<pair<int, int> > paretoFront = merger.getParetoFront();
+  vector<pair<int, int> > front = getImprovingFront(paretoFront, initial);
+  if (front.empty()) return Solution();
+
+  // Pick one such solution
+  shuffle(front.begin(), front.end(), rgen);
+  pair<int, int> selected = front.back();
+
+  // Run the whole algorithm with the new sequence if an improvement was found
+  vector<Item> newSubseq = extractSequence(merger.getSolution(selected));
+  vector<Item> newSeq = recreateFullSequence(newSubseq, allCuts, cutId);
   checkSequenceValid(newSeq);
   return runSequence(newSeq);
 }

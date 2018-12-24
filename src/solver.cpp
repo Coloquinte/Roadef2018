@@ -79,6 +79,7 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 
   // Optimal sequence merging
   moves_.emplace_back(make_unique<MergeRow>());
+  moves_.emplace_back(make_unique<MergeCut>());
 
   for (const unique_ptr<Move> &m : initializers_) m->solver_ = this;
   for (const unique_ptr<Move> &m : moves_) m->solver_ = this;
