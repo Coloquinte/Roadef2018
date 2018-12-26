@@ -2,6 +2,7 @@
 #include "merger_move.hpp"
 #include "row_merger.hpp"
 #include "cut_merger.hpp"
+#include "plate_merger.hpp"
 
 #include <unordered_set>
 #include <iostream>
@@ -199,3 +200,40 @@ Solution MergeCut::apply(mt19937& rgen) {
   return runSequence(newSeq);
 }
  
+Solution MergePlate::apply(mt19937& rgen) {
+  // Select a random plate to reoptimize
+  vector<PlateSolution> plates = solution().plates;
+  int plateId = uniform_int_distribution<int>(0, plates.size() - 1)(rgen);
+  PlateSolution targetPlate = plates[plateId];
+
+  // Extract two sequences from it
+  vector<Item> subseq = extractSequence(targetPlate);
+  pair<vector<Item>, vector<Item> > sequences = getMergeableSequences(rgen, subseq);
+  pair<int, int> initial(sequences.first.size(), sequences.second.size());
+
+  auto allPlates = extractPlateItems(solution());
+  extendMergeableSequences(sequences, rgen, allPlates, plateId);
+
+  // Merge the sequences optimally
+  PlateMerger merger(params(), sequences);
+  merger.init(targetPlate, problem().plateDefects()[plateId], make_pair(0, 0));
+  merger.buildFront();
+
+  // Get all solutions that are better than the original
+  vector<pair<int, int> > paretoFront = merger.getParetoFront();
+  vector<pair<int, int> > front = getImprovingFront(paretoFront, initial);
+  if (front.empty()) return Solution();
+
+  // Pick one such solution
+  shuffle(front.begin(), front.end(), rgen);
+  pair<int, int> selected = front.back();
+
+  // Run the whole algorithm with the new sequence if an improvement was found
+  vector<Item> newSubseq = extractSequence(merger.getSolution(selected));
+  vector<Item> newSeq = recreateFullSequence(newSubseq, allPlates, plateId);
+  checkSequenceValid(newSeq);
+  return runSequence(newSeq);
+}
+
+
+

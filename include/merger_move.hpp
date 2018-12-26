@@ -27,9 +27,9 @@ struct MergePlate : MergerMove {
   virtual std::string name() const { return "MergePlate"; }
 };
 
-struct MergeAll : MergerMove {
+struct MergeSequence : MergerMove {
   virtual Solution apply(std::mt19937& rgen);
-  virtual std::string name() const { return "MergeAll"; }
+  virtual std::string name() const { return "MergeSequence"; }
 };
 
 

@@ -32,6 +32,7 @@ SET (SOURCES
   src/main.cpp
   src/row_merger.cpp
   src/cut_merger.cpp
+  src/plate_merger.cpp
   src/merger.cpp
 )
 

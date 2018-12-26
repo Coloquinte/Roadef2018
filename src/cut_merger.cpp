@@ -71,6 +71,7 @@ void CutMerger::runRowMerger(int minY, int maxY, pair<int, int> starts) {
 }
 
 vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
+  // TODO: better estimation of the maximum number of items that can be packed
   long long maxArea = region_.area();
   vector<int> candidates;
 
