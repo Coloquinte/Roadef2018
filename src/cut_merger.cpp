@@ -19,7 +19,7 @@ void CutMerger::init(Rectangle cut, const vector<Defect> &defects, pair<int, int
 }
 
 void CutMerger::init(Rectangle cut, const vector<Defect> &defects, const vector<pair<int, int> > &starts) {
-  Merger::init(cut, defects, starts, cut.minX());
+  Merger::init(cut, defects, starts, cut.minY());
 }
 
 void CutMerger::buildFront() {
@@ -37,12 +37,26 @@ void CutMerger::buildFrontApproximate() {
     FrontElement elt = front_[i];
     vector<int> candidates = getMaxYCandidates(elt.coord, elt.n);
     for (int endCoord : candidates) {
+      if (endCoord - elt.coord < Params::minYY)
+        continue;
+      if (!isAdmissibleCutLine(endCoord))
+        continue;
       runRowMerger(elt.coord, endCoord, elt.n);
       for (pair<int, int> n : rowMerger_.getParetoFront()) {
-        insertFrontCleanup(endCoord, i, n.first, n.second);
+        insertFrontCleanup(endCoord, i, n.first, n.second, Params::minYY);
       }
     }
     // TODO: propagate from defects
+  }
+  propagateFrontToEnd();
+}
+
+void CutMerger::propagateFrontToEnd() {
+  int origFrontSize = front_.size();
+  for (int i = 0; i < origFrontSize; ++i) {
+    if (front_[i].coord > region_.maxY() - Params::minYY)
+      continue;
+    front_.emplace_back(region_.maxY(), i, front_[i].n);
   }
 }
 
@@ -82,18 +96,14 @@ vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
     candidates.push_back(item.width  + Params::minWaste);
   }
 
+  candidates.push_back(region_.maxY());
+
   // TODO: take defects into account
   return candidates;
 }
 
 vector<pair<int, int> > CutMerger::getParetoFront() const {
-  vector<pair<int, int> > paretoFront;
-  for (FrontElement elt : front_) {
-    if (elt.coord == region_.maxX())
-      paretoFront.push_back(elt.n);
-  }
-  // TODO: filter dominated elements out
-  return paretoFront;
+  return Merger::getParetoFront(region_.maxY());
 }
 
 CutSolution CutMerger::getSolution(pair<int, int> ends) {
@@ -102,7 +112,7 @@ CutSolution CutMerger::getSolution(pair<int, int> ends) {
   int cur = -1;
   for (int i = 0; i < (int) front_.size(); ++i) {
     FrontElement elt = front_[i];
-    if (elt.coord == region_.maxX() && elt.n == ends)
+    if (elt.coord == region_.maxY() && elt.n == ends)
       cur = i;
   }
   assert (cur >= 0);
@@ -119,7 +129,6 @@ CutSolution CutMerger::getSolution(pair<int, int> ends) {
     cur = prev;
   }
   reverse(solution.rows.begin(), solution.rows.end());
-  assert (solution.nItems() == ends.first + ends.second);
   checkSolution(solution);
   return solution;
 }

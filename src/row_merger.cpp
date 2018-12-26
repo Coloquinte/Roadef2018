@@ -48,6 +48,17 @@ void RowMerger::buildFrontApproximate() {
     }
     // TODO: propagate from defects
   }
+  propagateFrontToEnd();
+}
+
+void RowMerger::propagateFrontToEnd() {
+  int origFrontSize = front_.size();
+  for (int i = 0; i < origFrontSize; ++i) {
+    FrontElement elt = front_[i];
+    if (elt.coord > region_.maxX() - Params::minWaste)
+      continue;
+    front_.emplace_back(region_.maxX(), i, front_[i].n);
+  }
 }
 
 void RowMerger::buildFrontExact() {
@@ -55,13 +66,7 @@ void RowMerger::buildFrontExact() {
 }
 
 vector<pair<int, int> > RowMerger::getParetoFront() const {
-  vector<pair<int, int> > paretoFront;
-  for (FrontElement elt : front_) {
-    if (elt.coord == region_.maxX())
-      paretoFront.push_back(elt.n);
-  }
-  // TODO: filter dominated elements out
-  return paretoFront;
+  return Merger::getParetoFront(region_.maxX());
 }
 
 RowSolution RowMerger::getSolution(pair<int, int> ends) const {
@@ -105,7 +110,6 @@ RowSolution RowMerger::getSolution(pair<int, int> ends) const {
     cur = prev;
   }
   reverse(solution.items.begin(), solution.items.end());
-  assert (solution.nItems() == ends.first + ends.second);
   checkSolution(solution);
   return solution;
 }

@@ -26,6 +26,7 @@ class CutMerger : Merger {
  private:
   void buildFrontExact();
   void buildFrontApproximate();
+  void propagateFrontToEnd();
   void checkSolution(const CutSolution &solution) const;
 
   bool isAdmissibleCutLine(int y) const;

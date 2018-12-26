@@ -50,7 +50,6 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
   moves_.emplace_back(make_unique<Shuffle>(8, 16));
   moves_.emplace_back(make_unique<Shuffle>(8, 32));
 
-
   // Insertions
   moves_.emplace_back(make_unique<ItemInsert>());
   moves_.emplace_back(make_unique<RowInsert>());

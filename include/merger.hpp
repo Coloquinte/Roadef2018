@@ -37,6 +37,7 @@ class Merger {
   void eraseDominated(int coord, int nFirst, int nSecond, int distance);
   bool isDominated(int coord, int nFirst, int nSecond, int distance);
 
+  std::vector<std::pair<int, int> > getParetoFront(int coord) const;
   void insertFront(int coord, int prev, int nFirst, int nSecond);
   void insertFrontCleanup(int coord, int prev, int nFirst, int nSecond, int distance=0);
 

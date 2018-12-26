@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
 
@@ -72,5 +73,34 @@ void Merger::insertFrontCleanup(int coord, int prev, int nFirst, int nSecond, in
     return;
   eraseDominated(coord, nFirst, nSecond, distance);
   insertFront(coord, prev, nFirst, nSecond);
+}
+
+vector<pair<int, int> > Merger::getParetoFront(int coord) const {
+  vector<pair<int, int> > paretoFront;
+  for (FrontElement elt : front_) {
+    if (elt.coord == coord)
+      paretoFront.push_back(elt.n);
+  }
+
+  // Filter dominated elements out
+  for (int i = 0; i < (int) paretoFront.size();) {
+    bool dominated = false;
+    pair<int, int> p1 = paretoFront[i];
+    for (int j = 0; j < (int) paretoFront.size(); ++j) {
+      if (i == j) continue;
+      pair<int, int> p2 = paretoFront[j];
+      if (p2.first >= p1.first && p2.second >= p1.second)
+        dominated = true;
+    }
+    if (dominated) {
+      paretoFront.erase(paretoFront.cbegin() + i);
+    }
+    else {
+      ++i;
+    }
+  }
+
+  sort(paretoFront.begin(), paretoFront.end());
+  return paretoFront;
 }
 

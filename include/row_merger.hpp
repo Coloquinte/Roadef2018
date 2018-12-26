@@ -26,6 +26,7 @@ class RowMerger : Merger {
  private:
   void buildFrontExact();
   void buildFrontApproximate();
+  void propagateFrontToEnd();
   void checkSolution(const RowSolution &solution) const;
 
   bool canPlace(int x, int width, int height) const;
