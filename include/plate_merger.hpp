@@ -19,6 +19,7 @@ class PlateMerger : Merger {
 
   std::vector<std::pair<int, int> > getParetoFront(bool useAll=true) const;
   PlateSolution getSolution(std::pair<int, int> ends, bool useAll=true);
+  std::pair<int, int> getStarts(std::pair<int, int> ends, bool useAll=true) const;
 
   void checkConsistency() const;
 
@@ -27,6 +28,7 @@ class PlateMerger : Merger {
   void buildFrontApproximate();
   void propagateFrontToEnd();
   void checkSolution(const PlateSolution &solution) const;
+  int getEndFrontPos(std::pair<int, int> ends, bool useAll) const;
 
   bool isAdmissibleCutLine(int x) const;
 

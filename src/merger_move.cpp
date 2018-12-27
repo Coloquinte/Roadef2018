@@ -3,6 +3,7 @@
 #include "row_merger.hpp"
 #include "cut_merger.hpp"
 #include "plate_merger.hpp"
+#include "sequence_merger.hpp"
 
 #include <unordered_set>
 #include <iostream>
@@ -234,6 +235,13 @@ Solution MergePlate::apply(mt19937& rgen) {
   checkSequenceValid(newSeq);
   return runSequence(newSeq);
 }
+ 
+Solution MergeSequence::apply(mt19937& rgen) {
+  vector<Item> sequence = extractSequence(solution());
+  pair<vector<Item>, vector<Item> > sequences = getMergeableSequences(rgen, sequence);
+  return SequenceMerger::run(problem(), sequences, params());
+}
+
 
 
 

@@ -39,6 +39,8 @@ void PlateMerger::buildFrontApproximate() {
     for (int endCoord : candidates) {
       if (endCoord - elt.coord < Params::minXX)
         continue;
+      if (endCoord - elt.coord > Params::maxXX)
+        continue;
       if (!isAdmissibleCutLine(endCoord))
         continue;
       runCutMerger(elt.coord, endCoord, elt.n);
@@ -52,6 +54,7 @@ void PlateMerger::buildFrontApproximate() {
 }
 
 void PlateMerger::propagateFrontToEnd() {
+  // TODO: handle the case where we couldn't pack anything in-between
   int origFrontSize = front_.size();
   for (int i = 0; i < origFrontSize; ++i) {
     if (front_[i].coord > region_.maxX() - Params::minXX)
@@ -120,9 +123,7 @@ vector<pair<int, int> > PlateMerger::getParetoFront(bool useAll) const {
   return Merger::getParetoFront(region_.maxX());
 }
 
-PlateSolution PlateMerger::getSolution(pair<int, int> ends, bool useAll) {
-  PlateSolution solution(region_);
-  // Find the corresponding element on the front
+int PlateMerger::getEndFrontPos(std::pair<int, int> ends, bool useAll) const {
   int cur = -1;
   bool canStopEarly = !useAll
     && ends.first  == (int) sequences_.first.size()
@@ -140,6 +141,14 @@ PlateSolution PlateMerger::getSolution(pair<int, int> ends, bool useAll) {
   }
 
   assert (cur >= 0);
+  return cur;
+}
+
+PlateSolution PlateMerger::getSolution(pair<int, int> ends, bool useAll) {
+  PlateSolution solution(region_);
+  // Find the corresponding element on the front
+  int cur = getEndFrontPos(ends, useAll);
+
   // Backtrack
   while (true) {
     FrontElement curElt = front_[cur];
@@ -155,6 +164,19 @@ PlateSolution PlateMerger::getSolution(pair<int, int> ends, bool useAll) {
   reverse(solution.cuts.begin(), solution.cuts.end());
   checkSolution(solution);
   return solution;
+}
+
+std::pair<int, int> PlateMerger::getStarts(std::pair<int, int> ends, bool useAll) const {
+  // Find the corresponding element on the front
+  int cur = getEndFrontPos(ends, useAll);
+
+  // Backtrack
+  while (true) {
+    FrontElement curElt = front_[cur];
+    cur = curElt.prev;
+    if (cur < 0)
+      return curElt.n;
+  }
 }
 
 void PlateMerger::checkSolution(const PlateSolution &plate) const {
