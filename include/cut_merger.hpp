@@ -19,7 +19,6 @@ class CutMerger : Merger {
 
   std::vector<std::pair<int, int> > getParetoFront() const;
   CutSolution getSolution(std::pair<int, int> ends);
-  std::pair<int, int> getStarts(std::pair<int, int> ends) const;
 
   void checkConsistency() const;
 

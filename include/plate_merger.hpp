@@ -17,9 +17,8 @@ class PlateMerger : Merger {
   // Run the algorithm itself
   void buildFront();
 
-  std::vector<std::pair<int, int> > getParetoFront() const;
-  PlateSolution getSolution(std::pair<int, int> ends);
-  std::pair<int, int> getStarts(std::pair<int, int> ends) const;
+  std::vector<std::pair<int, int> > getParetoFront(bool useAll=true) const;
+  PlateSolution getSolution(std::pair<int, int> ends, bool useAll=true);
 
   void checkConsistency() const;
 

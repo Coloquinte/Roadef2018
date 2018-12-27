@@ -34,6 +34,7 @@ class Merger {
 
   void init(Rectangle region, const std::vector<Defect> &defects, const std::vector<std::pair<int, int> > &starts, int coord);
 
+  static void keepOnlyNonDominated(std::vector<std::pair<int, int> > &front);
   void eraseDominated(int coord, int nFirst, int nSecond, int distance);
   bool isDominated(int coord, int nFirst, int nSecond, int distance);
 

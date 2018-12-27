@@ -105,19 +105,40 @@ vector<int> PlateMerger::getMaxXCandidates(int minX, pair<int, int> starts) {
   return candidates;
 }
 
-vector<pair<int, int> > PlateMerger::getParetoFront() const {
+vector<pair<int, int> > PlateMerger::getParetoFront(bool useAll) const {
+  if (useAll)
+    return Merger::getParetoFront(region_.maxX());
+  // Check whether we have some residual left
+  for (FrontElement elt : front_) {
+    if (elt.n.first  == (int) sequences_.first.size()
+     && elt.n.second == (int) sequences_.second.size()) {
+      vector<pair<int, int> > ret;
+      ret.push_back(elt.n);
+      return ret;
+    }
+  }
   return Merger::getParetoFront(region_.maxX());
 }
 
-PlateSolution PlateMerger::getSolution(pair<int, int> ends) {
+PlateSolution PlateMerger::getSolution(pair<int, int> ends, bool useAll) {
   PlateSolution solution(region_);
   // Find the corresponding element on the front
   int cur = -1;
+  bool canStopEarly = !useAll
+    && ends.first  == (int) sequences_.first.size()
+    && ends.second == (int) sequences_.second.size();
   for (int i = 0; i < (int) front_.size(); ++i) {
     FrontElement elt = front_[i];
-    if (elt.coord == region_.maxX() && elt.n == ends)
-      cur = i;
+    if (canStopEarly) {
+      if(cur == -1 && elt.n == ends)
+        cur = i;
+    }
+    else {
+      if (elt.coord == region_.maxX() && elt.n == ends)
+        cur = i;
+    }
   }
+
   assert (cur >= 0);
   // Backtrack
   while (true) {

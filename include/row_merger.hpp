@@ -19,7 +19,6 @@ class RowMerger : Merger {
 
   std::vector<std::pair<int, int> > getParetoFront() const;
   RowSolution getSolution(std::pair<int, int> ends) const;
-  std::pair<int, int> getStarts(std::pair<int, int> ends) const;
 
   void checkConsistency() const;
 

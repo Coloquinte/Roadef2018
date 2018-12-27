@@ -75,6 +75,28 @@ void Merger::insertFrontCleanup(int coord, int prev, int nFirst, int nSecond, in
   insertFront(coord, prev, nFirst, nSecond);
 }
 
+void Merger::keepOnlyNonDominated(vector<pair<int, int> > &front) {
+  // Filter dominated elements out
+  for (int i = 0; i < (int) front.size();) {
+    bool dominated = false;
+    pair<int, int> p1 = front[i];
+    for (int j = 0; j < (int) front.size(); ++j) {
+      if (i == j) continue;
+      pair<int, int> p2 = front[j];
+      if (p2.first >= p1.first && p2.second >= p1.second)
+        dominated = true;
+    }
+    if (dominated) {
+      front.erase(front.cbegin() + i);
+    }
+    else {
+      ++i;
+    }
+  }
+
+  sort(front.begin(), front.end());
+}
+
 vector<pair<int, int> > Merger::getParetoFront(int coord) const {
   vector<pair<int, int> > paretoFront;
   for (FrontElement elt : front_) {
@@ -82,25 +104,7 @@ vector<pair<int, int> > Merger::getParetoFront(int coord) const {
       paretoFront.push_back(elt.n);
   }
 
-  // Filter dominated elements out
-  for (int i = 0; i < (int) paretoFront.size();) {
-    bool dominated = false;
-    pair<int, int> p1 = paretoFront[i];
-    for (int j = 0; j < (int) paretoFront.size(); ++j) {
-      if (i == j) continue;
-      pair<int, int> p2 = paretoFront[j];
-      if (p2.first >= p1.first && p2.second >= p1.second)
-        dominated = true;
-    }
-    if (dominated) {
-      paretoFront.erase(paretoFront.cbegin() + i);
-    }
-    else {
-      ++i;
-    }
-  }
-
-  sort(paretoFront.begin(), paretoFront.end());
+  keepOnlyNonDominated(paretoFront);
   return paretoFront;
 }
 
