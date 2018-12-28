@@ -76,6 +76,9 @@ void PlateMerger::runCutMerger(int minX, int maxX, pair<int, int> starts) {
 }
 
 vector<int> PlateMerger::getMaxXCandidates(int minX, pair<int, int> starts) {
+  // TODO: better estimation of the maximum number of items that can be packed
+  // TODO: factor in a specific function
+
   long long maxArea = region_.area();
   vector<int> candidates;
 

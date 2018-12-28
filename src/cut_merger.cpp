@@ -37,6 +37,8 @@ void CutMerger::buildFrontApproximate() {
     FrontElement elt = front_[i];
     vector<int> candidates = getMaxYCandidates(elt.coord, elt.n);
     for (int endCoord : candidates) {
+      if (endCoord > region_.maxY())
+        continue;
       if (endCoord - elt.coord < Params::minYY)
         continue;
       if (!isAdmissibleCutLine(endCoord))
@@ -72,25 +74,25 @@ void CutMerger::runRowMerger(int minY, int maxY, pair<int, int> starts) {
 
 vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
   // TODO: better estimation of the maximum number of items that can be packed
-  long long maxArea = region_.area();
+  // TODO: factor in a specific function
   vector<int> candidates;
 
-  long long area1 = 0;
+  long long width1 = 0;
   for (int t1 = starts.first; t1 < (int) sequences_.first.size(); ++t1) {
     Item item = sequences_.first[t1];
-    area1 += item.area();
-    if (area1 > maxArea) break;
+    width1 += item.width;
+    if (width1 > region_.width()) break;
     candidates.push_back(item.height);
     candidates.push_back(item.height + Params::minWaste);
     candidates.push_back(item.width);
     candidates.push_back(item.width  + Params::minWaste);
   }
 
-  long long area2 = 0;
+  long long width2 = 0;
   for (int t2 = starts.second; t2 < (int) sequences_.second.size(); ++t2) {
     Item item = sequences_.second[t2];
-    area2 += item.area();
-    if (area2 > maxArea) break;
+    width2 += item.width;
+    if (width2 > region_.width()) break;
     candidates.push_back(item.height);
     candidates.push_back(item.height + Params::minWaste);
     candidates.push_back(item.width);
