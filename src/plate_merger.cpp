@@ -87,10 +87,10 @@ vector<int> PlateMerger::getMaxXCandidates(int minX, pair<int, int> starts) {
     Item item = sequences_.first[t1];
     area1 += item.area();
     if (area1 > maxArea) break;
-    candidates.push_back(item.height);
-    candidates.push_back(item.height + Params::minWaste);
-    candidates.push_back(item.width);
-    candidates.push_back(item.width  + Params::minWaste);
+    candidates.push_back(minX + item.height);
+    candidates.push_back(minX + item.height + Params::minWaste);
+    candidates.push_back(minX + item.width);
+    candidates.push_back(minX + item.width  + Params::minWaste);
   }
 
   long long area2 = 0;
@@ -98,12 +98,13 @@ vector<int> PlateMerger::getMaxXCandidates(int minX, pair<int, int> starts) {
     Item item = sequences_.second[t2];
     area2 += item.area();
     if (area2 > maxArea) break;
-    candidates.push_back(item.height);
-    candidates.push_back(item.height + Params::minWaste);
-    candidates.push_back(item.width);
-    candidates.push_back(item.width  + Params::minWaste);
+    candidates.push_back(minX + item.height);
+    candidates.push_back(minX + item.height + Params::minWaste);
+    candidates.push_back(minX + item.width);
+    candidates.push_back(minX + item.width  + Params::minWaste);
   }
 
+  candidates.push_back(minX + Params::maxXX);
   candidates.push_back(region_.maxX());
 
   // TODO: make this smarter (multiple items)
@@ -220,5 +221,5 @@ void PlateMerger::checkConsistency() const {
     assert ( (elt.coord == region_.minX()) == (elt.prev == -1));
   }
 }
- 
+
 

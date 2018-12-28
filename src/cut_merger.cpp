@@ -82,10 +82,10 @@ vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
     Item item = sequences_.first[t1];
     width1 += item.width;
     if (width1 > region_.width()) break;
-    candidates.push_back(item.height);
-    candidates.push_back(item.height + Params::minWaste);
-    candidates.push_back(item.width);
-    candidates.push_back(item.width  + Params::minWaste);
+    candidates.push_back(minY + item.height);
+    candidates.push_back(minY + item.height + Params::minWaste);
+    candidates.push_back(minY + item.width);
+    candidates.push_back(minY + item.width  + Params::minWaste);
   }
 
   long long width2 = 0;
@@ -93,10 +93,10 @@ vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
     Item item = sequences_.second[t2];
     width2 += item.width;
     if (width2 > region_.width()) break;
-    candidates.push_back(item.height);
-    candidates.push_back(item.height + Params::minWaste);
-    candidates.push_back(item.width);
-    candidates.push_back(item.width  + Params::minWaste);
+    candidates.push_back(minY + item.height);
+    candidates.push_back(minY + item.height + Params::minWaste);
+    candidates.push_back(minY + item.width);
+    candidates.push_back(minY + item.width  + Params::minWaste);
   }
 
   candidates.push_back(region_.maxY());
