@@ -330,6 +330,10 @@ vector<int> Solution::readOrdering(string filename) {
     if (node.type < 0) continue;
     sequence.push_back(node.type);
   }
+  for (int id : sequence) {
+    if (id >= (int) sequence.size() || id < 0)
+      throw runtime_error("Invalid item identifier.");
+  }
   return sequence;
 }
 

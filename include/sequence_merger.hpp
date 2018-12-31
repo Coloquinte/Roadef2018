@@ -9,6 +9,7 @@
 class SequenceMerger {
  public:
   static Solution run(const Problem &problem, const std::pair<std::vector<Item>, std::vector<Item> > &sequences, SolverParams options);
+  static Solution run(const Problem &problem, const std::vector<Item> &sequence, SolverParams options);
 
  private:
   SequenceMerger(const Problem &problem, const std::pair<std::vector<Item>, std::vector<Item> > &sequences, SolverParams options);

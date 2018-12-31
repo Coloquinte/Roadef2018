@@ -7,12 +7,18 @@
 
 using namespace std;
 
-Solution SequenceMerger::run(const Problem &problem, const std::pair<std::vector<Item>, std::vector<Item> > &sequences, SolverParams options) {
+Solution SequenceMerger::run(const Problem &problem, const pair<vector<Item>, vector<Item> > &sequences, SolverParams options) {
   SequenceMerger merger(problem, sequences, options);
   return merger.run();
 }
 
-SequenceMerger::SequenceMerger(const Problem &problem, const std::pair<std::vector<Item>, std::vector<Item> > &sequences, SolverParams options)
+Solution SequenceMerger::run(const Problem &problem, const vector<Item> &sequence, SolverParams options) {
+  pair<vector<Item>, vector<Item> > sequences;
+  sequences.first = sequence;
+  return run(problem, sequences, options);
+}
+
+SequenceMerger::SequenceMerger(const Problem &problem, const pair<vector<Item>, vector<Item> > &sequences, SolverParams options)
 : problem_(problem)
 , sequences_(sequences)
 , options_(options) {

@@ -101,6 +101,9 @@ vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
 
   candidates.push_back(region_.maxY());
 
+  sort(candidates.begin(), candidates.end());
+  candidates.erase(unique(candidates.begin(), candidates.end()), candidates.end());
+
   // TODO: take defects into account
   return candidates;
 }

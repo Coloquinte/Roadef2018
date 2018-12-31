@@ -9,7 +9,6 @@
 class SequencePacker {
  public:
   static Solution run(const Problem &problem, const std::vector<Item> &sequence, SolverParams options);
-  static Solution run(const Problem &problem, const std::vector<int> &sequence, SolverParams options);
 
  private:
   SequencePacker(const Problem &problem, const std::vector<Item> &sequence, SolverParams options);

@@ -2,6 +2,7 @@
 #include "move.hpp"
 
 #include "sequence_packer.hpp"
+#include "sequence_merger.hpp"
 #include "solution_checker.hpp"
 #include "ordering_heuristic.hpp"
 

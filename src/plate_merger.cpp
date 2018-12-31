@@ -45,7 +45,7 @@ void PlateMerger::buildFrontApproximate() {
         continue;
       runCutMerger(elt.coord, endCoord, elt.n);
       for (pair<int, int> n : cutMerger_.getParetoFront()) {
-        insertFrontCleanup(endCoord, i, n.first, n.second, Params::minXX);
+        insertFrontCleanup(endCoord, i, n.first, n.second, Params::minWaste);
       }
     }
     // TODO: propagate from defects
@@ -106,6 +106,9 @@ vector<int> PlateMerger::getMaxXCandidates(int minX, pair<int, int> starts) {
 
   candidates.push_back(minX + Params::maxXX);
   candidates.push_back(region_.maxX());
+
+  sort(candidates.begin(), candidates.end());
+  candidates.erase(unique(candidates.begin(), candidates.end()), candidates.end());
 
   // TODO: make this smarter (multiple items)
   // TODO: take defects into account

@@ -91,7 +91,12 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 void Solver::init(vector<int> initial) {
   if (initial.empty()) return;
 
-  solution_ = SequencePacker::run(problem_, initial, params_);
+  vector<Item> sequence;
+  for (int id : initial) {
+    sequence.push_back(problem_.items()[id]);
+  }
+
+  solution_ = SequencePacker::run(problem_, sequence, params_);
   bestDensity_ = SolutionChecker::evalPercentDensity(problem_, solution_);
   bestMapped_ = SolutionChecker::evalPercentMapped(problem_, solution_);
 
