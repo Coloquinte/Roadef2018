@@ -1,6 +1,7 @@
 
 #include "solver.hpp"
 #include "sequence_packer.hpp"
+#include "sequence_merger.hpp"
 #include "ordering_heuristic.hpp"
 #include "solution_checker.hpp"
 
@@ -89,6 +90,9 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 }
 
 void Solver::init(vector<int> initial) {
+  if  (initializers_.empty()) throw std::runtime_error("No initialization move provided.");
+  if  (moves_.empty()) throw std::runtime_error("No move provided.");
+
   if (initial.empty()) return;
 
   vector<Item> sequence;
@@ -127,12 +131,10 @@ void Solver::run() {
 
 Move* Solver::pickMove() {
   if (nMoves_ < params_.initializationRuns) {
-    if  (initializers_.empty()) throw std::runtime_error("No initialization move provided.");
     uniform_int_distribution<int> dist(0, initializers_.size()-1);
     return initializers_[dist(rgens_[0])].get();
   }
   else {
-    if  (moves_.empty()) throw std::runtime_error("No move provided.");
     uniform_int_distribution<int> dist(0, moves_.size()-1);
     return moves_[dist(rgens_[0])].get();
   }

@@ -34,9 +34,6 @@ void Merger::checkConsistency() const {
           || (prev.n.first == elt.n.first + 1 && prev.n.second == elt.n.second)
           || (prev.n.first == elt.n.first && prev.n.second == elt.n.second));
   }
-  for (size_t i = 0; i + 1 < front_.size(); ++i) {
-    assert (front_[i].coord <= front_[i+1].coord);
-  }
 }
 
 void Merger::eraseDominated(int coord, int nFirst, int nSecond, int distance) {

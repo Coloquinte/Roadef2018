@@ -31,6 +31,7 @@ class PlateMerger : Merger {
   int getEndFrontPos(std::pair<int, int> ends, bool useAll) const;
 
   bool isAdmissibleCutLine(int x) const;
+  int findCuttingPosition(int from, int to) const;
 
   void runCutMerger(int minX, int maxX, std::pair<int, int> starts);
   std::vector<int> getMaxXCandidates(int minX, std::pair<int, int> starts);

@@ -54,14 +54,19 @@ void PlateMerger::buildFrontApproximate() {
 }
 
 void PlateMerger::propagateFrontToEnd() {
-  // TODO: handle the case where we couldn't pack anything in-between
   int origFrontSize = front_.size();
   for (int i = 0; i < origFrontSize; ++i) {
     if (front_[i].coord > region_.maxX() - Params::minXX)
       continue;
-    if (front_[i].coord < region_.maxX() - Params::maxXX)
-      continue;
-    front_.emplace_back(region_.maxX(), i, front_[i].n);
+    int prev = i;
+    pair<int, int> n = front_[i].n;
+    int coord = front_[i].coord;
+    do {
+      // Handle the case where we couldn't pack anything in-between
+      coord = findCuttingPosition(coord, region_.maxX());
+      front_.emplace_back(coord, prev, n);
+      prev = front_.size() - 1;
+    } while (coord != region_.maxX());
   }
 }
 
@@ -215,6 +220,16 @@ bool PlateMerger::isAdmissibleCutLine(int x) const {
       return false;
   }
   return true;
+}
+
+int PlateMerger::findCuttingPosition(int from, int to) const {
+  if (to - from <= Params::maxXX)
+    return to;
+  int pos = min(to - Params::minXX, from + Params::maxXX);
+  while (!isAdmissibleCutLine(pos)) {
+    --pos;
+  }
+  return pos;
 }
 
 void PlateMerger::checkConsistency() const {
