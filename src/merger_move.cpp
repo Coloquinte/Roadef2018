@@ -38,7 +38,7 @@ pair<vector<Item>, vector<Item> > MergerMove::getMergeableSequences(mt19937 &rge
   return ret; 
 }
 
-void MergerMove::extendMergeableSequences(pair<vector<Item>, vector<Item> > &sequences, mt19937 &rgen, const vector<vector<Item> > &all, int subseqId) {
+void MergerMove::extendMergeableSequences(pair<vector<Item>, vector<Item> > &sequences, mt19937 &rgen, const vector<vector<Item> > &all, int subseqId, int totalArea) {
   // Find the stacks in each sequence
   pair<unordered_set<int>, unordered_set<int> > stacksBySeq;
   for (Item item : sequences.first) stacksBySeq.first.insert(item.stack);
@@ -48,6 +48,10 @@ void MergerMove::extendMergeableSequences(pair<vector<Item>, vector<Item> > &seq
   for (int stack : stacksBySeq.first) assert(!stacksBySeq.second.count(stack));
   for (int stack : stacksBySeq.second) assert(!stacksBySeq.first.count(stack));
 
+  int remainingArea = totalArea;
+  for (Item item : sequences.first)  remainingArea -= item.area();
+  for (Item item : sequences.second) remainingArea -= item.area();
+
   unordered_set<int> stackSeen;
   pair<vector<Item>, vector<Item> > candidates;
   vector<Item> anySeq;
@@ -56,6 +60,8 @@ void MergerMove::extendMergeableSequences(pair<vector<Item>, vector<Item> > &seq
       if (stackSeen.count(item.stack))
         continue;
       stackSeen.insert(item.stack);
+      if (item.area() > remainingArea)
+        continue;
       if (stacksBySeq.first.count(item.stack)) {
         candidates.first.push_back(item);
       }
@@ -143,7 +149,14 @@ Solution MergeRow::apply(mt19937& rgen) {
   pair<int, int> initial(sequences.first.size(), sequences.second.size());
 
   auto allRows = extractRowItems(solution());
-  extendMergeableSequences(sequences, rgen, allRows, rowId);
+  extendMergeableSequences(sequences, rgen, allRows, rowId, targetRow.area());
+
+  pair<int, int> possible(sequences.first.size(), sequences.second.size());
+  if (possible == initial) {
+    if (params().verbosity >= 4)
+      cout << "No new item found fitting the given area" << endl;
+    return Solution();
+  }
 
   // Merge the sequences optimally
   RowMerger merger(params(), sequences);
@@ -153,7 +166,11 @@ Solution MergeRow::apply(mt19937& rgen) {
   // Get all solutions that are better than the original
   vector<pair<int, int> > paretoFront = merger.getParetoFront();
   vector<pair<int, int> > front = getImprovingFront(paretoFront, initial);
-  if (front.empty()) return Solution();
+  if (front.empty()) {
+    if (params().verbosity >= 4)
+      cout << "No improvement found" << endl;
+    return Solution();
+  }
 
   // Pick one such solution
   shuffle(front.begin(), front.end(), rgen);
@@ -178,7 +195,14 @@ Solution MergeCut::apply(mt19937& rgen) {
   pair<int, int> initial(sequences.first.size(), sequences.second.size());
 
   auto allCuts = extractCutItems(solution());
-  extendMergeableSequences(sequences, rgen, allCuts, cutId);
+  extendMergeableSequences(sequences, rgen, allCuts, cutId, targetCut.area());
+
+  pair<int, int> possible(sequences.first.size(), sequences.second.size());
+  if (possible == initial) {
+    if (params().verbosity >= 4)
+      cout << "No new item found fitting the given area" << endl;
+    return Solution();
+  }
 
   // Merge the sequences optimally
   CutMerger merger(params(), sequences);
@@ -188,7 +212,11 @@ Solution MergeCut::apply(mt19937& rgen) {
   // Get all solutions that are better than the original
   vector<pair<int, int> > paretoFront = merger.getParetoFront();
   vector<pair<int, int> > front = getImprovingFront(paretoFront, initial);
-  if (front.empty()) return Solution();
+  if (front.empty()) {
+    if (params().verbosity >= 4)
+      cout << "No improvement found" << endl;
+    return Solution();
+  }
 
   // Pick one such solution
   shuffle(front.begin(), front.end(), rgen);
@@ -213,7 +241,14 @@ Solution MergePlate::apply(mt19937& rgen) {
   pair<int, int> initial(sequences.first.size(), sequences.second.size());
 
   auto allPlates = extractPlateItems(solution());
-  extendMergeableSequences(sequences, rgen, allPlates, plateId);
+  extendMergeableSequences(sequences, rgen, allPlates, plateId, targetPlate.area());
+
+  pair<int, int> possible(sequences.first.size(), sequences.second.size());
+  if (possible == initial) {
+    if (params().verbosity >= 4)
+      cout << "No new item found fitting the given area" << endl;
+    return Solution();
+  }
 
   // Merge the sequences optimally
   PlateMerger merger(params(), sequences);
@@ -223,7 +258,11 @@ Solution MergePlate::apply(mt19937& rgen) {
   // Get all solutions that are better than the original
   vector<pair<int, int> > paretoFront = merger.getParetoFront();
   vector<pair<int, int> > front = getImprovingFront(paretoFront, initial);
-  if (front.empty()) return Solution();
+  if (front.empty()) {
+    if (params().verbosity >= 4)
+      cout << "No improvement found" << endl;
+    return Solution();
+  }
 
   // Pick one such solution
   shuffle(front.begin(), front.end(), rgen);
