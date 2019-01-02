@@ -26,6 +26,7 @@ class PlateMerger : Merger {
  private:
   void buildFrontExact();
   void buildFrontApproximate();
+  void propagateFromElement(int ind);
   void propagateFrontToEnd();
   void checkSolution(const PlateSolution &solution) const;
   int getEndFrontPos(std::pair<int, int> ends, bool useAll) const;

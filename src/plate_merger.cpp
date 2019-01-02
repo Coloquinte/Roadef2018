@@ -33,21 +33,7 @@ void PlateMerger::buildFront() {
 
 void PlateMerger::buildFrontApproximate() {
   for (int i = 0; i < (int) front_.size(); ++i) {
-    // Propagate from front element i
-    FrontElement elt = front_[i];
-    vector<int> candidates = getMaxXCandidates(elt.coord, elt.n);
-    for (int endCoord : candidates) {
-      if (endCoord - elt.coord < Params::minXX)
-        continue;
-      if (endCoord - elt.coord > Params::maxXX)
-        continue;
-      if (!isAdmissibleCutLine(endCoord))
-        continue;
-      runCutMerger(elt.coord, endCoord, elt.n);
-      for (pair<int, int> n : cutMerger_.getParetoFront()) {
-        insertFrontCleanup(endCoord, i, n.first, n.second, Params::minWaste);
-      }
-    }
+    propagateFromElement(i);
     // TODO: propagate from defects
   }
   propagateFrontToEnd();
@@ -70,6 +56,23 @@ void PlateMerger::propagateFrontToEnd() {
   }
 }
 
+void PlateMerger::propagateFromElement(int i) {
+  FrontElement elt = front_[i];
+  vector<int> candidates = getMaxXCandidates(elt.coord, elt.n);
+  for (int endCoord : candidates) {
+    if (endCoord - elt.coord < Params::minXX)
+      continue;
+    if (endCoord - elt.coord > Params::maxXX)
+      continue;
+    if (!isAdmissibleCutLine(endCoord))
+      continue;
+    runCutMerger(elt.coord, endCoord, elt.n);
+    for (pair<int, int> n : cutMerger_.getParetoFront()) {
+      insertFrontCleanup(endCoord, i, n.first, n.second, Params::minWaste);
+    }
+  }
+}
+
 void PlateMerger::buildFrontExact() {
   // TODO
 }
@@ -84,29 +87,41 @@ vector<int> PlateMerger::getMaxXCandidates(int minX, pair<int, int> starts) {
   // TODO: better estimation of the maximum number of items that can be packed
   // TODO: factor in a specific function
 
-  long long maxArea = region_.area();
+  int maxArea = region_.area();
   vector<int> candidates;
 
-  long long area1 = 0;
+  int area1 = 0;
+  int minDim1 = 0;
   for (int t1 = starts.first; t1 < (int) sequences_.first.size(); ++t1) {
     Item item = sequences_.first[t1];
     area1 += item.area();
+    minDim1 = max(minDim1, item.width);
     if (area1 > maxArea) break;
-    candidates.push_back(minX + item.height);
-    candidates.push_back(minX + item.height + Params::minWaste);
-    candidates.push_back(minX + item.width);
-    candidates.push_back(minX + item.width  + Params::minWaste);
+    if (item.height >= minDim1)
+      candidates.push_back(minX + item.height);
+    if (item.height + Params::minWaste >= minDim1)
+      candidates.push_back(minX + item.height + Params::minWaste);
+    if (item.width >= minDim1)
+      candidates.push_back(minX + item.width);
+    if (item.width + Params::minWaste >= minDim1)
+      candidates.push_back(minX + item.width  + Params::minWaste);
   }
 
-  long long area2 = 0;
+  int area2 = 0;
+  int minDim2 = 0;
   for (int t2 = starts.second; t2 < (int) sequences_.second.size(); ++t2) {
     Item item = sequences_.second[t2];
     area2 += item.area();
+    minDim2 = max(minDim2, item.width);
     if (area2 > maxArea) break;
-    candidates.push_back(minX + item.height);
-    candidates.push_back(minX + item.height + Params::minWaste);
-    candidates.push_back(minX + item.width);
-    candidates.push_back(minX + item.width  + Params::minWaste);
+    if (item.height >= minDim2)
+      candidates.push_back(minX + item.height);
+    if (item.height + Params::minWaste >= minDim2)
+      candidates.push_back(minX + item.height + Params::minWaste);
+    if (item.width >= minDim2)
+      candidates.push_back(minX + item.width);
+    if (item.width + Params::minWaste >= minDim2)
+      candidates.push_back(minX + item.width  + Params::minWaste);
   }
 
   candidates.push_back(minX + Params::maxXX);

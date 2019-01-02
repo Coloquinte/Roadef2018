@@ -25,6 +25,7 @@ class CutMerger : Merger {
  private:
   void buildFrontExact();
   void buildFrontApproximate();
+  void propagateFromElement(int ind);
   void propagateFrontToEnd();
   void checkSolution(const CutSolution &solution) const;
 

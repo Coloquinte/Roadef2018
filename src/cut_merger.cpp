@@ -33,24 +33,27 @@ void CutMerger::buildFront() {
 
 void CutMerger::buildFrontApproximate() {
   for (int i = 0; i < (int) front_.size(); ++i) {
-    // Propagate from front element i
-    FrontElement elt = front_[i];
-    vector<int> candidates = getMaxYCandidates(elt.coord, elt.n);
-    for (int endCoord : candidates) {
-      if (endCoord > region_.maxY())
-        continue;
-      if (endCoord - elt.coord < Params::minYY)
-        continue;
-      if (!isAdmissibleCutLine(endCoord))
-        continue;
-      runRowMerger(elt.coord, endCoord, elt.n);
-      for (pair<int, int> n : rowMerger_.getParetoFront()) {
-        insertFrontCleanup(endCoord, i, n.first, n.second, Params::minYY);
-      }
-    }
+    propagateFromElement(i);
     // TODO: propagate from defects
   }
   propagateFrontToEnd();
+}
+
+void CutMerger::propagateFromElement(int i) {
+  FrontElement elt = front_[i];
+  vector<int> candidates = getMaxYCandidates(elt.coord, elt.n);
+  for (int endCoord : candidates) {
+    if (endCoord > region_.maxY())
+      return;
+    if (endCoord - elt.coord < Params::minYY)
+      return;
+    if (!isAdmissibleCutLine(endCoord))
+      return;
+    runRowMerger(elt.coord, endCoord, elt.n);
+    for (pair<int, int> n : rowMerger_.getParetoFront()) {
+      insertFrontCleanup(endCoord, i, n.first, n.second, Params::minWaste);
+    }
+  }
 }
 
 void CutMerger::propagateFrontToEnd() {
@@ -77,7 +80,7 @@ vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
   // TODO: factor in a specific function
   vector<int> candidates;
 
-  long long width1 = 0;
+  int width1 = 0;
   for (int t1 = starts.first; t1 < (int) sequences_.first.size(); ++t1) {
     Item item = sequences_.first[t1];
     width1 += item.width;
@@ -88,7 +91,7 @@ vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
     candidates.push_back(minY + item.width  + Params::minWaste);
   }
 
-  long long width2 = 0;
+  int width2 = 0;
   for (int t2 = starts.second; t2 < (int) sequences_.second.size(); ++t2) {
     Item item = sequences_.second[t2];
     width2 += item.width;

@@ -33,22 +33,29 @@ void RowMerger::buildFront() {
 
 void RowMerger::buildFrontApproximate() {
   for (int i = 0; i < (int) front_.size(); ++i) {
-    // Propagate from front element i
-    FrontElement elt = front_[i];
-    int x = elt.coord;
-    if (elt.n.first < (int) sequences_.first.size()) {
-      Item item = sequences_.first[elt.n.first];
-      if (canPlace(x, item.width, item.height)) insertFrontCleanup(x + item.width , i, elt.n.first + 1, elt.n.second);
-      if (canPlace(x, item.height, item.width)) insertFrontCleanup(x + item.height, i, elt.n.first + 1, elt.n.second);
-    }
-    if (elt.n.second < (int) sequences_.second.size()) {
-      Item item = sequences_.second[elt.n.second];
-      if (canPlace(x, item.width, item.height)) insertFrontCleanup(x + item.width , i, elt.n.first, elt.n.second + 1);
-      if (canPlace(x, item.height, item.width)) insertFrontCleanup(x + item.height, i, elt.n.first, elt.n.second + 1);
-    }
+    propagateFromElement(i);
     // TODO: propagate from defects
   }
   propagateFrontToEnd();
+}
+
+void RowMerger::propagateFromElement(int i) {
+  FrontElement elt = front_[i];
+  int x = elt.coord;
+  if (elt.n.first < (int) sequences_.first.size()) {
+    Item item = sequences_.first[elt.n.first];
+    if (canPlace(x, item.width, item.height))
+      insertFrontCleanup(x + item.width , i, elt.n.first + 1, elt.n.second);
+    if (canPlace(x, item.height, item.width))
+      insertFrontCleanup(x + item.height, i, elt.n.first + 1, elt.n.second);
+  }
+  if (elt.n.second < (int) sequences_.second.size()) {
+    Item item = sequences_.second[elt.n.second];
+    if (canPlace(x, item.width, item.height))
+      insertFrontCleanup(x + item.width , i, elt.n.first, elt.n.second + 1);
+    if (canPlace(x, item.height, item.width))
+      insertFrontCleanup(x + item.height, i, elt.n.first, elt.n.second + 1);
+  }
 }
 
 void RowMerger::propagateFrontToEnd() {

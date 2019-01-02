@@ -25,6 +25,7 @@ class RowMerger : Merger {
  private:
   void buildFrontExact();
   void buildFrontApproximate();
+  void propagateFromElement(int ind);
   void propagateFrontToEnd();
   void checkSolution(const RowSolution &solution) const;
 
