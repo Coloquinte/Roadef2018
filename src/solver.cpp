@@ -141,11 +141,12 @@ Move* Solver::pickMove() {
 }
 
 void Solver::step() {
-  vector<Solution> incumbents(params_.nbThreads);
+  size_t parallelEvals = min(params_.nbThreads, params_.moveLimit - nMoves_);
+  vector<Solution> incumbents(parallelEvals);
 
   // Move selection
-  vector<Move*> moves(params_.nbThreads);
-  for (std::size_t i = 0; i < params_.nbThreads; ++i) {
+  vector<Move*> moves(parallelEvals);
+  for (std::size_t i = 0; i < parallelEvals; ++i) {
     moves[i] = pickMove();
   }
 
@@ -154,15 +155,15 @@ void Solver::step() {
     incumbents[ind] = moves[ind]->apply(rgens_[ind]);
   };
   vector<thread> threads;
-  for (std::size_t i = 0; i < params_.nbThreads; ++i) {
+  for (std::size_t i = 0; i < parallelEvals; ++i) {
     threads.push_back(thread(runner, i));
   }
-  for (std::size_t i = 0; i < params_.nbThreads; ++i) {
+  for (std::size_t i = 0; i < parallelEvals; ++i) {
     threads[i].join();
   }
 
   // Sequential acceptance
-  for (std::size_t i = 0; i < params_.nbThreads; ++i, ++nMoves_) {
+  for (std::size_t i = 0; i < parallelEvals; ++i, ++nMoves_) {
     MoveStatus status = accept(*moves[i], incumbents[i]);
     updateStats(*moves[i], status);
   }
