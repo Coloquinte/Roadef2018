@@ -32,6 +32,7 @@ class CutMerger : Merger {
   bool isAdmissibleCutLine(int y) const;
 
   void runRowMerger(int minY, int maxY, std::pair<int, int> starts);
+  void addMaxYCandidates(std::vector<int> &candidates, int minY, const std::vector<Item> &sequence, int start);
   std::vector<int> getMaxYCandidates(int minY, std::pair<int, int> starts);
 
  private:

@@ -35,6 +35,7 @@ class PlateMerger : Merger {
   int findCuttingPosition(int from, int to) const;
 
   void runCutMerger(int minX, int maxX, std::pair<int, int> starts);
+  void addMaxXCandidates(std::vector<int> &candidates, int minX, const std::vector<Item> &sequence, int start);
   std::vector<int> getMaxXCandidates(int minX, std::pair<int, int> starts);
 
  private:
