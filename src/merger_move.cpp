@@ -5,42 +5,71 @@
 #include "plate_merger.hpp"
 #include "sequence_merger.hpp"
 
-#include <unordered_set>
+#include <set>
 #include <iostream>
 #include <algorithm>
 #include <cassert>
 
 using namespace std;
 
-pair<vector<Item>, vector<Item> > MergerMove::getMergeableSequences(mt19937 &rgen, const vector<Item> &subseq) {
+pair<vector<Item>, vector<Item> > MergerMove::getRandomStacksSequences(mt19937 &rgen, const vector<Item> &subseq) {
+  if (subseq.empty())
+    return pair<vector<Item>, vector<Item> >();
+
   // Gather the stacks in the sequence
-  unordered_set<int> stacks;
+  set<int> stacks;
   for (Item item : subseq) stacks.insert(item.stack);
 
-  // Split them in two groups
-  pair<unordered_set<int>, unordered_set<int> > stacksBySeq;
-  for (int stack : stacks) {
-    if (bernoulli_distribution()(rgen))
-      stacksBySeq.first.insert(stack);
-    else
-      stacksBySeq.second.insert(stack);
-  }
+  // Split them in two (non-empty) groups
+  vector<int> stackVec(stacks.begin(), stacks.end());
+  shuffle(stackVec.begin(), stackVec.end(), rgen);
+  assert (!stackVec.empty());
+  int nbStacks = 1;
+  if (stackVec.size() >= 2)
+    nbStacks = uniform_int_distribution<int>(1, stackVec.size() - 1)(rgen);
+  set<int> firstSeq(stackVec.begin(), stackVec.begin() + nbStacks);
 
   // Make two sequences based on those stacks
   pair<vector<Item>, vector<Item> > ret;
   for (Item item : subseq) {
-    if (stacksBySeq.first.count(item.stack))
+    if (firstSeq.count(item.stack))
       ret.first.push_back(item);
     else
       ret.second.push_back(item);
   }
 
-  return ret; 
+  return ret;
+}
+
+pair<vector<Item>, vector<Item> > MergerMove::getOneStackSequences(mt19937 &rgen, const vector<Item> &subseq) {
+  if (subseq.empty())
+    return pair<vector<Item>, vector<Item> >();
+
+  // Gather the stacks in the sequence
+  set<int> stacks;
+  for (Item item : subseq) stacks.insert(item.stack);
+
+  // Pick one and only one
+  vector<int> stackVec(stacks.begin(), stacks.end());
+  shuffle(stackVec.begin(), stackVec.end(), rgen);
+  assert (!stackVec.empty());
+  int selectedStack = stackVec.front();
+
+  // Make two sequences based on those stacks
+  pair<vector<Item>, vector<Item> > ret;
+  for (Item item : subseq) {
+    if (item.stack == selectedStack)
+      ret.first.push_back(item);
+    else
+      ret.second.push_back(item);
+  }
+
+  return ret;
 }
 
 void MergerMove::extendMergeableSequences(pair<vector<Item>, vector<Item> > &sequences, mt19937 &rgen, const vector<vector<Item> > &all, int subseqId, int totalArea) {
   // Find the stacks in each sequence
-  pair<unordered_set<int>, unordered_set<int> > stacksBySeq;
+  pair<set<int>, set<int> > stacksBySeq;
   for (Item item : sequences.first) stacksBySeq.first.insert(item.stack);
   for (Item item : sequences.second) stacksBySeq.second.insert(item.stack);
 
@@ -52,7 +81,7 @@ void MergerMove::extendMergeableSequences(pair<vector<Item>, vector<Item> > &seq
   for (Item item : sequences.first)  remainingArea -= item.area();
   for (Item item : sequences.second) remainingArea -= item.area();
 
-  unordered_set<int> stackSeen;
+  set<int> stackSeen;
   pair<vector<Item>, vector<Item> > candidates;
   vector<Item> anySeq;
   for (size_t i = subseqId + 1; i < all.size(); ++i) {
@@ -108,7 +137,7 @@ vector<pair<int, int> > MergerMove::getImprovingFront(const vector<pair<int, int
 }
 
 vector<Item> MergerMove::recreateFullSequence(const vector<Item> &newSubseq, const vector<vector<Item> > &all, int id) {
-  unordered_set<int> seenIds;
+  set<int> seenIds;
   vector<Item> ret;
   for (int i = 0; i < id; ++i) {
     for (Item item : all[i]) {
@@ -136,7 +165,7 @@ vector<Item> MergerMove::recreateFullSequence(const vector<Item> &newSubseq, con
 
   return ret;
 }
- 
+
 Solution MergeRow::apply(mt19937& rgen) {
   // Select a random row to reoptimize
   vector<RowSolution> rows = extractRows(solution());
@@ -145,7 +174,7 @@ Solution MergeRow::apply(mt19937& rgen) {
 
   // Extract two sequences from it
   vector<Item> subseq = extractSequence(targetRow);
-  pair<vector<Item>, vector<Item> > sequences = getMergeableSequences(rgen, subseq);
+  pair<vector<Item>, vector<Item> > sequences = getRandomStacksSequences(rgen, subseq);
   pair<int, int> initial(sequences.first.size(), sequences.second.size());
 
   auto allRows = extractRowItems(solution());
@@ -191,7 +220,7 @@ Solution MergeCut::apply(mt19937& rgen) {
 
   // Extract two sequences from it
   vector<Item> subseq = extractSequence(targetCut);
-  pair<vector<Item>, vector<Item> > sequences = getMergeableSequences(rgen, subseq);
+  pair<vector<Item>, vector<Item> > sequences = getRandomStacksSequences(rgen, subseq);
   pair<int, int> initial(sequences.first.size(), sequences.second.size());
 
   auto allCuts = extractCutItems(solution());
@@ -228,7 +257,7 @@ Solution MergeCut::apply(mt19937& rgen) {
   checkSequenceValid(newSeq);
   return runSequence(newSeq);
 }
- 
+
 Solution MergePlate::apply(mt19937& rgen) {
   // Select a random plate to reoptimize
   vector<PlateSolution> plates = solution().plates;
@@ -237,7 +266,7 @@ Solution MergePlate::apply(mt19937& rgen) {
 
   // Extract two sequences from it
   vector<Item> subseq = extractSequence(targetPlate);
-  pair<vector<Item>, vector<Item> > sequences = getMergeableSequences(rgen, subseq);
+  pair<vector<Item>, vector<Item> > sequences = getRandomStacksSequences(rgen, subseq);
   pair<int, int> initial(sequences.first.size(), sequences.second.size());
 
   auto allPlates = extractPlateItems(solution());
@@ -274,10 +303,16 @@ Solution MergePlate::apply(mt19937& rgen) {
   checkSequenceValid(newSeq);
   return runSequence(newSeq);
 }
- 
-Solution MergeSequence::apply(mt19937& rgen) {
+
+Solution MergeRandomStacks::apply(mt19937& rgen) {
   vector<Item> sequence = extractSequence(solution());
-  pair<vector<Item>, vector<Item> > sequences = getMergeableSequences(rgen, sequence);
+  pair<vector<Item>, vector<Item> > sequences = getRandomStacksSequences(rgen, sequence);
+  return SequenceMerger::run(problem(), sequences, params());
+}
+
+Solution MergeOneStack::apply(mt19937& rgen) {
+  vector<Item> sequence = extractSequence(solution());
+  pair<vector<Item>, vector<Item> > sequences = getOneStackSequences(rgen, sequence);
   return SequenceMerger::run(problem(), sequences, params());
 }
 
