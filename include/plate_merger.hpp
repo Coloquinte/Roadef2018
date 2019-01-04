@@ -33,6 +33,8 @@ class PlateMerger : Merger {
 
   bool isAdmissibleCutLine(int x) const;
   int findCuttingPosition(int from, int to) const;
+  void makeAdmissible(int &x) const;
+  int getMaxUsedX(const CutSolution &cut) const;
 
   void runCutMerger(int minX, int maxX, std::pair<int, int> starts);
   void addMaxXCandidates(std::vector<int> &candidates, int minX, const std::vector<Item> &sequence, int start);

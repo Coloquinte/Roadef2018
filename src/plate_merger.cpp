@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <queue>
 
 using namespace std;
 
@@ -41,6 +42,36 @@ void PlateMerger::buildFrontApproximate() {
 
 void PlateMerger::propagateFromElement(int i) {
   FrontElement elt = front_[i];
+  /*
+  priority_queue<int> candidates;
+  const int maxAllowedCoord = min(region_.maxX(), elt.coord + Params::maxXX);
+  int startCoord = maxAllowedCoord + Params::minWaste;
+  if (startCoord < elt.coord + Params::minXX)
+    return;
+  candidates.push(startCoord);
+  int maxSeenCoord = startCoord + 1;
+  while (!candidates.empty()) {
+    int coord = candidates.top();
+    candidates.pop();
+    if (coord >= maxSeenCoord) continue;
+    if (coord < elt.coord + Params::minXX) continue;
+    maxSeenCoord = coord;
+    runCutMerger(elt.coord, coord, elt.n);
+    // TODO: quick filtering without calling the lower level
+    for (pair<int, int> n : cutMerger_.getParetoFront()) {
+      if (coord <= maxAllowedCoord && isAdmissibleCutLine(coord))
+        insertFrontCleanup(coord, i, n.first, n.second, Params::minWaste);
+      CutSolution cut = cutMerger_.getSolution(n);
+      int exactCandidate = getMaxUsedX(cut);
+      assert (isAdmissibleCutLine(exactCandidate));
+      candidates.push(exactCandidate);
+      int previousCandidate = exactCandidate - 1;
+      makeAdmissible(previousCandidate);
+      candidates.push(previousCandidate);
+    }
+  }
+  */
+
   vector<int> candidates = getMaxXCandidates(elt.coord, elt.n);
   for (int endCoord : candidates) {
     if (endCoord - elt.coord < Params::minXX)
@@ -49,7 +80,6 @@ void PlateMerger::propagateFromElement(int i) {
       continue;
     if (!isAdmissibleCutLine(endCoord))
       continue;
-    // TODO: quick filtering without calling the lower level
     runCutMerger(elt.coord, endCoord, elt.n);
     for (pair<int, int> n : cutMerger_.getParetoFront()) {
       insertFrontCleanup(endCoord, i, n.first, n.second, Params::minWaste);
@@ -120,6 +150,31 @@ vector<int> PlateMerger::getMaxXCandidates(int minX, pair<int, int> starts) {
   // TODO: make this smarter (multiple items)
   // TODO: take defects into account
   return candidates;
+}
+
+void PlateMerger::makeAdmissible(int &x) const {
+  while (!isAdmissibleCutLine(x))
+    --x;
+}
+
+int PlateMerger::getMaxUsedX(const CutSolution &cut) const {
+  int maxX = cut.minX();
+  for (const RowSolution &row : cut.rows) {
+    if (row.items.empty()) continue;
+    maxX = max(maxX, row.items.back().maxX());
+  }
+  bool fits = true;
+  for (const RowSolution &row : cut.rows) {
+    if (row.items.empty()) continue;
+    fits |= utils::fitsMinWaste(row.items.back().maxX(), maxX);
+  }
+  int maxUsedX = maxX;
+  if (!fits || maxX < cut.minX() + Params::minXX || !isAdmissibleCutLine(maxX)) {
+    maxUsedX = max(maxX + Params::minWaste, cut.minX() + Params::minXX);
+  }
+  makeAdmissible(maxUsedX);
+  assert (maxUsedX <= region_.maxX());
+  return maxUsedX;
 }
 
 vector<pair<int, int> > PlateMerger::getParetoFront(bool useAll) const {
@@ -228,9 +283,7 @@ int PlateMerger::findCuttingPosition(int from, int to) const {
   if (to - from <= Params::maxXX)
     return to;
   int pos = min(to - Params::minXX, from + Params::maxXX);
-  while (!isAdmissibleCutLine(pos)) {
-    --pos;
-  }
+  makeAdmissible(pos);
   return pos;
 }
 
