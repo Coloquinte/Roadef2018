@@ -37,6 +37,7 @@ void CutMerger::buildFrontApproximate() {
     // TODO: propagate from and to defects
   }
   propagateFrontToEnd();
+  checkConsistency();
 }
 
 void CutMerger::propagateFromElement(int i) {

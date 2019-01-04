@@ -30,9 +30,6 @@ void Merger::checkConsistency() const {
     assert (elt.prev >= 0 && elt.prev < (int) i);
     FrontElement prev = front_[elt.prev];
     assert (prev.coord < elt.coord);
-    assert ( (prev.n.first == elt.n.first && prev.n.second + 1 == elt.n.second)
-          || (prev.n.first == elt.n.first + 1 && prev.n.second == elt.n.second)
-          || (prev.n.first == elt.n.first && prev.n.second == elt.n.second));
   }
 }
 
@@ -56,7 +53,7 @@ bool Merger::isDominated(int coord, int nFirst, int nSecond, int distance) {
 
 void Merger::insertFront(int coord, int prev, int nFirst, int nSecond) {
   // Find where to insert
-  auto insertPoint = front_.begin();
+  vector<FrontElement>::iterator insertPoint = front_.begin();
   for (; insertPoint != front_.end(); ++insertPoint) {
     if (insertPoint->coord > coord) break;
   }
@@ -73,6 +70,7 @@ void Merger::insertFrontCleanup(int coord, int prev, int nFirst, int nSecond, in
 }
 
 void Merger::keepOnlyNonDominated(vector<pair<int, int> > &front) {
+  // TODO: check that no element depends on those
   // Filter dominated elements out
   for (int i = 0; i < (int) front.size();) {
     bool dominated = false;

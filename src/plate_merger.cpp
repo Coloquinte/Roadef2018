@@ -38,6 +38,7 @@ void PlateMerger::buildFrontApproximate() {
     // TODO: propagate from and to defects
   }
   propagateFrontToEnd();
+  checkConsistency();
 }
 
 void PlateMerger::propagateFromElement(int i) {

@@ -32,11 +32,66 @@ void RowMerger::buildFront() {
 }
 
 void RowMerger::buildFrontApproximate() {
+  // TODO: quick handling of the trivial case
   for (int i = 0; i < (int) front_.size(); ++i) {
+    insertIntermediateDefects(i);
     propagateFromElement(i);
-    // TODO: propagate from defects
   }
   propagateFrontToEnd();
+  checkConsistency();
+}
+
+void RowMerger::insertIntermediateDefects(int i) {
+  // TODO: allow some waste after the defect
+  if (i == 0)
+    return;
+  int minCoord = front_[i-1].coord;
+  int maxCoord = front_[i].coord;
+  bool found = false;
+  int defectCoord = maxCoord;
+  for (Defect d : defects_) {
+    int coord = d.maxX() + 1;
+    if (coord <= minCoord) continue;
+    if (coord >= maxCoord) continue;
+    if (!found || coord < defectCoord) {
+      found = true;
+      defectCoord = coord;
+    }
+  }
+  if (!found)
+    return;
+  // TODO: fix this automatically
+  if (!isAdmissibleCutLine(defectCoord))
+    return;
+
+  // Gather previous elements and eliminate duplicates
+  vector<FrontElement> candidates;
+  for (int j = 0; j < i; ++j) {
+    FrontElement elt = front_[j];
+    if (elt.coord + Params::minWaste >= defectCoord)
+      continue;
+    candidates.emplace_back(defectCoord, j, elt.n);
+  }
+  for (size_t j = 0; j < candidates.size();) {
+    bool dominated = false;
+    for (size_t k = 0; k < candidates.size(); ++k) {
+      if (j == k) continue;
+      auto elt1 = candidates[j].n;
+      auto elt2 = candidates[k].n;
+      if (elt2.first >= elt1.first && elt2.second >= elt1.second)
+        dominated = true;
+    }
+    if (dominated) {
+      candidates.erase(candidates.begin() + j);
+    }
+    else {
+      ++j;
+    }
+  }
+  for (FrontElement elt : candidates) {
+    assert (elt.prev < i);
+  }
+  front_.insert(front_.begin() + i, candidates.begin(), candidates.end());
 }
 
 void RowMerger::propagateFromElement(int i) {
@@ -45,16 +100,16 @@ void RowMerger::propagateFromElement(int i) {
   if (elt.n.first < (int) sequences_.first.size()) {
     Item item = sequences_.first[elt.n.first];
     if (canPlace(x, item.width, item.height))
-      insertFrontCleanup(x + item.width , i, elt.n.first + 1, elt.n.second);
+      insertFrontCleanup(x + item.width , i, elt.n.first + 1, elt.n.second, Params::minWaste);
     if (canPlace(x, item.height, item.width))
-      insertFrontCleanup(x + item.height, i, elt.n.first + 1, elt.n.second);
+      insertFrontCleanup(x + item.height, i, elt.n.first + 1, elt.n.second, Params::minWaste);
   }
   if (elt.n.second < (int) sequences_.second.size()) {
     Item item = sequences_.second[elt.n.second];
     if (canPlace(x, item.width, item.height))
-      insertFrontCleanup(x + item.width , i, elt.n.first, elt.n.second + 1);
+      insertFrontCleanup(x + item.width , i, elt.n.first, elt.n.second + 1, Params::minWaste);
     if (canPlace(x, item.height, item.width))
-      insertFrontCleanup(x + item.height, i, elt.n.first, elt.n.second + 1);
+      insertFrontCleanup(x + item.height, i, elt.n.first, elt.n.second + 1, Params::minWaste);
   }
 }
 
@@ -199,6 +254,12 @@ void RowMerger::checkConsistency() const {
   for (FrontElement elt : front_) {
     assert (isAdmissibleCutLine(elt.coord));
     assert ( (elt.coord == region_.minX()) == (elt.prev == -1));
+    if (elt.prev != - 1) {
+      FrontElement prev = front_[elt.prev];
+      assert ( (prev.n.first == elt.n.first && prev.n.second + 1 == elt.n.second)
+            || (prev.n.first + 1 == elt.n.first && prev.n.second == elt.n.second)
+            || (prev.n.first == elt.n.first && prev.n.second == elt.n.second));
+    }
   }
 }
  
