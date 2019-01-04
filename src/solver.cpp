@@ -131,14 +131,20 @@ void Solver::run() {
 }
 
 Move* Solver::pickMove() {
+  Move* move;
   if (nMoves_ < params_.initializationRuns) {
     uniform_int_distribution<int> dist(0, initializers_.size()-1);
-    return initializers_[dist(rgens_[0])].get();
+    move = initializers_[dist(rgens_[0])].get();
   }
   else {
     uniform_int_distribution<int> dist(0, moves_.size()-1);
-    return moves_[dist(rgens_[0])].get();
+    move = moves_[dist(rgens_[0])].get();
   }
+
+  if (params_.verbosity >= 3) {
+    cout << "Selected " << move->name() << endl;
+  }
+  return move;
 }
 
 void Solver::step() {
