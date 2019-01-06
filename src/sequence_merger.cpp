@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
 
@@ -42,6 +43,10 @@ Solution SequenceMerger::run() {
     if (starts.front().first  == (int) sequences_.first.size()
      && starts.front().second == (int) sequences_.second.size())
       break;
+
+    if (options_.verbosity >= 4) {
+      cout << "Plate " << i << " processed" << endl;
+    }
 
     plates.emplace_back(options_, sequences_);
     plates.back().init(plateRegion, problem_.plateDefects()[i], starts);

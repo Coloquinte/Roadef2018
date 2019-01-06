@@ -53,6 +53,8 @@ void CutMerger::propagateFromElement(int i) {
     if (coord >= maxSeenCoord) continue;
     if (coord < elt.coord + Params::minYY) continue;
     maxSeenCoord = coord;
+    if (isRowDominated(elt.coord, coord, elt.n))
+      continue;
     runRowMerger(elt.coord, coord, elt.n);
     // TODO: quick filtering without calling the lower level
     for (pair<int, int> n : rowMerger_.getParetoFront()) {
@@ -104,6 +106,26 @@ void CutMerger::runRowMerger(int minY, int maxY, pair<int, int> starts) {
   Rectangle row = Rectangle::FromCoordinates(region_.minX(), minY, region_.maxX(), maxY);
   rowMerger_.init(row, defects_, starts);
   rowMerger_.buildFront();
+}
+
+bool CutMerger::isEndDominated(int coord, pair<int, int> n) const {
+  for (FrontElement elt : front_) {
+    if (elt.coord + Params::minWaste > coord) continue;
+    if (elt.n.first >= n.first && elt.n.second >= n.second)
+      return true;
+  }
+  return false;
+}
+
+bool CutMerger::isRowDominated(int minY, int maxY, pair<int, int> starts) {
+  Rectangle row = Rectangle::FromCoordinates(region_.minX(), minY, region_.maxX(), maxY);
+  rowMerger_.init(row, defects_, starts);
+  vector<pair<int, int> > optimisticFront = rowMerger_.optimisticParetoFront();
+  for (pair<int, int> n : optimisticFront) {
+    if (!isEndDominated(maxY, n))
+      return false;
+  }
+  return true;
 }
 
 void CutMerger::addMaxYCandidates(vector<int> &candidates, int minY, const vector<Item> &sequence, int start) {

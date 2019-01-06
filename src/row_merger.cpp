@@ -131,6 +131,52 @@ vector<pair<int, int> > RowMerger::getParetoFront() const {
   return Merger::getParetoFront(region_.maxX());
 }
 
+vector<int> RowMerger::getUsableItemWidths(const vector<Item> &sequence, int start) const {
+  vector<int> widths;
+  int maxWidth = region_.width();
+  int maxHeight = region_.height();
+  int totWidth = 0;
+  for (int i = start; i < (int) sequence.size(); ++i) {
+    Item item = sequence[i];
+    int width;
+    if (utils::fitsMinWaste(item.height, maxHeight))
+      width = item.width;
+    else if(utils::fitsMinWaste(item.width, region_.height()))
+      width = item.height;
+    else
+      break;
+
+    totWidth += width;
+    if (totWidth > maxWidth)
+      break;
+    widths.push_back(width);
+  }
+  return widths;
+}
+
+vector<pair<int, int> > RowMerger::optimisticParetoFront() const {
+  vector<pair<int, int> > ret;
+  int maxWidth = region_.width();
+  for (pair<int, int> start : starts_) {
+    pair<vector<int>, vector<int> > widths;
+    widths.first = getUsableItemWidths(sequences_.first, start.first);
+    widths.second = getUsableItemWidths(sequences_.second, start.second);
+
+    pair<int, int> totWidth;
+    totWidth.first = 0;
+    totWidth.second = accumulate(widths.second.begin(), widths.second.end(), 0);
+    size_t j = widths.second.size();
+    for (size_t i = 0; i <= widths.first.size(); ++i) {
+      for (; totWidth.first + totWidth.second < maxWidth && j > 0; --j) {
+        totWidth.second -= widths.second[j-1];
+      }
+      ret.emplace_back( start.first + (int) i, start.second + (int) j );
+    }
+  }
+  keepOnlyNonDominated(ret);
+  return ret;
+}
+
 RowSolution RowMerger::getSolution(pair<int, int> ends) const {
   RowSolution solution(region_);
   // Find the corresponding element on the front

@@ -52,6 +52,7 @@ class Merger {
   SolverParams options_;
 
   std::vector<FrontElement> front_;
+  std::vector<std::pair<int, int> > starts_;
 
   friend class RowMerger;
   friend class CutMerger;

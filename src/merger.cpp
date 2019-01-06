@@ -19,6 +19,7 @@ void Merger::init(Rectangle region, const vector<Defect> &defects, const vector<
   for (pair<int, int> start : starts) {
     front_.emplace_back(coord, -1, start);
   }
+  starts_ = starts;
 }
 
 void Merger::checkConsistency() const {

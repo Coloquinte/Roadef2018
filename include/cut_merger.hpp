@@ -37,6 +37,9 @@ class CutMerger : Merger {
   void addMaxYCandidates(std::vector<int> &candidates, int minY, const std::vector<Item> &sequence, int start);
   std::vector<int> getMaxYCandidates(int minY, std::pair<int, int> starts);
 
+  bool isEndDominated(int coord, std::pair<int, int> n) const;
+  bool isRowDominated(int minY, int maxY, std::pair<int, int> starts);
+
  private:
   RowMerger rowMerger_;
 };

@@ -18,6 +18,7 @@ class RowMerger : Merger {
   void buildFront();
 
   std::vector<std::pair<int, int> > getParetoFront() const;
+  std::vector<std::pair<int, int> > optimisticParetoFront() const;
   RowSolution getSolution(std::pair<int, int> ends) const;
 
   void checkConsistency() const;
@@ -35,6 +36,8 @@ class RowMerger : Merger {
   bool canPlaceDown(int x, int width, int height) const;
   bool canPlaceUp(int x, int width, int height) const;
   bool isAdmissibleCutLine(int x) const;
+
+  std::vector<int> getUsableItemWidths(const std::vector<Item> &sequence, int start) const;
 };
 
 #endif
