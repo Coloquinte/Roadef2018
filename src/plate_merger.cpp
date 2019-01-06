@@ -43,7 +43,6 @@ void PlateMerger::buildFrontApproximate() {
 
 void PlateMerger::propagateFromElement(int i) {
   FrontElement elt = front_[i];
-  /*
   priority_queue<int> candidates;
   const int maxAllowedCoord = min(region_.maxX(), elt.coord + Params::maxXX);
   int startCoord = maxAllowedCoord + Params::minWaste;
@@ -71,8 +70,8 @@ void PlateMerger::propagateFromElement(int i) {
       candidates.push(previousCandidate);
     }
   }
-  */
 
+  /*
   vector<int> candidates = getMaxXCandidates(elt.coord, elt.n);
   for (int endCoord : candidates) {
     if (endCoord - elt.coord < Params::minXX)
@@ -86,6 +85,7 @@ void PlateMerger::propagateFromElement(int i) {
       insertFrontCleanup(endCoord, i, n.first, n.second, Params::minWaste);
     }
   }
+  */
 }
 
 void PlateMerger::propagateFrontToEnd() {
@@ -167,7 +167,7 @@ int PlateMerger::getMaxUsedX(const CutSolution &cut) const {
   bool fits = true;
   for (const RowSolution &row : cut.rows) {
     if (row.items.empty()) continue;
-    fits |= utils::fitsMinWaste(row.items.back().maxX(), maxX);
+    fits &= utils::fitsMinWaste(row.items.back().maxX(), maxX);
   }
   int maxUsedX = maxX;
   if (!fits || maxX < cut.minX() + Params::minXX || !isAdmissibleCutLine(maxX)) {

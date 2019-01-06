@@ -194,11 +194,10 @@ void RowMerger::checkSolution(const RowSolution &row) const {
   for (int i = 0; i+1 < (int) row.items.size(); ++i) {
     ItemSolution item1 = row.items[i];
     ItemSolution item2 = row.items[i+1];
-    assert (item1.maxX() >= item2.minX());
+    assert (item1.maxX() <= item2.minX());
     assert (utils::fitsMinWaste(item1.maxX(), item2.minX()));
   }
 }
-
 
 bool RowMerger::canPlace(int x, int width, int height) const {
   return canPlaceDown(x, width, height) || canPlaceUp(x, width, height);
