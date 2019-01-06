@@ -59,11 +59,15 @@ po::options_description getHiddenOptions() {
   dev.add_options()("verbosity,v", po::value<int>()->default_value(1),
                     "Output verbosity");
   dev.add_options()("check", "Fail and report on violation");
-  dev.add_options()("moves", po::value<size_t>()->default_value(1000000000llu),
-                    "Move limit");
-  dev.add_options()("init-moves", po::value<size_t>()->default_value(5000llu),
-                    "Initialization move limit");
   dev.add_options()("permissive", "Tolerate infeasible problems");
+
+  po::options_description move("GCUT move options");
+  move.add_options()("moves", po::value<size_t>()->default_value(1000000000llu),
+                     "Move limit");
+  move.add_options()("init-moves", po::value<size_t>()->default_value(5000llu),
+                     "Initialization move limit");
+  move.add_options()("packing-moves", po::value<bool>()->default_value(true), "Enable packing moves");
+  move.add_options()("merging-moves", po::value<bool>()->default_value(false), "Enable merging moves");
 
   po::options_description pack("GCUT packing options");
   pack.add_options()("exact-row-packings", "Solve 3-cuts packings exactly");
@@ -76,6 +80,8 @@ po::options_description getHiddenOptions() {
 
   pack.add_options()("trace-packing-fronts", "Trace Pareto fronts in exact packing algorithms");
 
+  pack.add_options()("pack-with-merger", "Use the merging logic to evaluate packing");
+
   po::options_description merge("GCUT merging options");
   merge.add_options()("exact-row-mergings", "Solve 3-cuts mergings exactly");
   merge.add_options()("exact-cut-mergings", "Solve 2-cuts mergings exactly");
@@ -87,7 +93,7 @@ po::options_description getHiddenOptions() {
 
   merge.add_options()("trace-merging-fronts", "Trace Pareto fronts in exact merging algorithms");
 
-  desc.add(dev).add(pack).add(merge);
+  desc.add(dev).add(move).add(pack).add(merge);
 
   return desc;
 }
@@ -154,6 +160,9 @@ SolverParams buildParams(const po::variables_map &vm) {
   params.failOnViolation = vm.count("check");
   params.moveLimit = vm["moves"].as<size_t>();
   params.initializationRuns = vm["init-moves"].as<size_t>();
+  params.packWithMerger = vm.count("pack-with-merger");
+  params.enablePacking = vm["packing-moves"].as<bool>();
+  params.enableMerging = vm["merging-moves"].as<bool>();
 
   if (vm.count("exact-row-packings")) params.rowPacking = PackingOption::Exact;
   if (vm.count("diagnose-row-packings")) params.rowPacking = PackingOption::Diagnose;
@@ -174,7 +183,7 @@ SolverParams buildParams(const po::variables_map &vm) {
   return params;
 }
 
-int main(int argc, char** argv) {
+void run(int argc, char** argv) {
   cout << fixed << setprecision(2);
   cerr << fixed << setprecision(2);
   po::variables_map vm = parseArguments(argc, argv);
@@ -193,7 +202,7 @@ int main(int argc, char** argv) {
   Problem pb = Problem::read(batchFile, defectFile, vm.count("permissive"));
   if (vm.count("stats")) {
     SolutionChecker::report(pb);
-    return 0;
+    return;
   }
 
   SolverParams params = buildParams(vm);
@@ -210,7 +219,15 @@ int main(int argc, char** argv) {
 
   if (vm.count("solution"))
     solution.write(vm["solution"].as<string>());
+}
 
+int main(int argc, char** argv) {
+  try {
+    run(argc, argv);
+  } catch (const exception &e) {
+    cerr << e.what() << endl;
+    return 1;
+  }
   return 0;
 }
 

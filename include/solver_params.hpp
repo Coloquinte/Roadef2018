@@ -19,6 +19,10 @@ struct SolverParams {
   double timeLimit;
   bool failOnViolation;
 
+  bool packWithMerger;
+  bool enablePacking;
+  bool enableMerging;
+
   PackingOption rowPacking;
   PackingOption cutPacking;
   PackingOption platePacking;
@@ -37,6 +41,10 @@ struct SolverParams {
     moveLimit = 0;
     timeLimit = 0.0;
     failOnViolation = false;
+
+    packWithMerger = false;
+    enablePacking = true;
+    enableMerging = false;
 
     rowPacking = PackingOption::Approximate;
     cutPacking = PackingOption::Approximate;

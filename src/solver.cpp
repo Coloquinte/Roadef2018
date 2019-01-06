@@ -40,49 +40,53 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
   initializers_.emplace_back(make_unique<Shuffle>( 64));
   initializers_.emplace_back(make_unique<Shuffle>(128));
 
-  // Shuffle a subrange
-  moves_.emplace_back(make_unique<Shuffle>(1,  8));
-  moves_.emplace_back(make_unique<Shuffle>(1, 16));
-  //moves_.emplace_back(make_unique<Shuffle>(1, 32));
-  moves_.emplace_back(make_unique<Shuffle>(4,  8));
-  moves_.emplace_back(make_unique<Shuffle>(4, 16));
-  moves_.emplace_back(make_unique<Shuffle>(4, 32));
-  //moves_.emplace_back(make_unique<Shuffle>(8,  8));
-  moves_.emplace_back(make_unique<Shuffle>(8, 16));
-  moves_.emplace_back(make_unique<Shuffle>(8, 32));
+  if (params_.enablePacking) {
+    // Shuffle a subrange
+    moves_.emplace_back(make_unique<Shuffle>(1,  8));
+    moves_.emplace_back(make_unique<Shuffle>(1, 16));
+    //moves_.emplace_back(make_unique<Shuffle>(1, 32));
+    moves_.emplace_back(make_unique<Shuffle>(4,  8));
+    moves_.emplace_back(make_unique<Shuffle>(4, 16));
+    moves_.emplace_back(make_unique<Shuffle>(4, 32));
+    //moves_.emplace_back(make_unique<Shuffle>(8,  8));
+    moves_.emplace_back(make_unique<Shuffle>(8, 16));
+    moves_.emplace_back(make_unique<Shuffle>(8, 32));
 
-  // Insertions
-  moves_.emplace_back(make_unique<ItemInsert>());
-  moves_.emplace_back(make_unique<RowInsert>());
-  moves_.emplace_back(make_unique<CutInsert>());
-  //moves_.emplace_back(make_unique<PlateInsert>());
+    // Insertions
+    moves_.emplace_back(make_unique<ItemInsert>());
+    moves_.emplace_back(make_unique<RowInsert>());
+    moves_.emplace_back(make_unique<CutInsert>());
+    //moves_.emplace_back(make_unique<PlateInsert>());
 
-  // Swaps
-  moves_.emplace_back(make_unique<ItemSwap>());
-  moves_.emplace_back(make_unique<RowSwap>());
-  moves_.emplace_back(make_unique<CutSwap>());
-  //moves_.emplace_back(make_unique<PlateSwap>());
+    // Swaps
+    moves_.emplace_back(make_unique<ItemSwap>());
+    moves_.emplace_back(make_unique<RowSwap>());
+    moves_.emplace_back(make_unique<CutSwap>());
+    //moves_.emplace_back(make_unique<PlateSwap>());
 
-  // Local swaps
-  //moves_.emplace_back(make_unique<AdjacentItemSwap>());
-  moves_.emplace_back(make_unique<AdjacentRowSwap>());
-  moves_.emplace_back(make_unique<AdjacentCutSwap>());
-  //moves_.emplace_back(make_unique<AdjacentPlateSwap>());
+    // Local swaps
+    //moves_.emplace_back(make_unique<AdjacentItemSwap>());
+    moves_.emplace_back(make_unique<AdjacentRowSwap>());
+    moves_.emplace_back(make_unique<AdjacentCutSwap>());
+    //moves_.emplace_back(make_unique<AdjacentPlateSwap>());
 
-  // Reverse a range
-  //moves_.emplace_back(make_unique<Mirror>(4));
-  moves_.emplace_back(make_unique<Mirror>(8));
-  moves_.emplace_back(make_unique<Mirror>(16));
+    // Reverse a range
+    //moves_.emplace_back(make_unique<Mirror>(4));
+    moves_.emplace_back(make_unique<Mirror>(8));
+    moves_.emplace_back(make_unique<Mirror>(16));
 
-  // Swap two ranges
-  //moves_.emplace_back(make_unique<RangeSwap>());
+    // Swap two ranges
+    //moves_.emplace_back(make_unique<RangeSwap>());
+  }
 
-  // Optimal sequence merging
-  moves_.emplace_back(make_unique<MergeRow>());
-  moves_.emplace_back(make_unique<MergeCut>());
-  moves_.emplace_back(make_unique<MergePlate>());
-  moves_.emplace_back(make_unique<MergeRandomStacks>());
-  moves_.emplace_back(make_unique<MergeOneStack>());
+  if (params_.enableMerging) {
+    // Optimal sequence merging
+    moves_.emplace_back(make_unique<MergeRow>());
+    moves_.emplace_back(make_unique<MergeCut>());
+    moves_.emplace_back(make_unique<MergePlate>());
+    moves_.emplace_back(make_unique<MergeRandomStacks>());
+    moves_.emplace_back(make_unique<MergeOneStack>());
+  }
 
   for (const unique_ptr<Move> &m : initializers_) m->solver_ = this;
   for (const unique_ptr<Move> &m : moves_) m->solver_ = this;
