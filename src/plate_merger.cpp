@@ -63,6 +63,7 @@ void PlateMerger::propagateFromElement(int i) {
         insertFrontCleanup(coord, i, n.first, n.second, Params::minWaste);
       CutSolution cut = cutMerger_.getSolution(n);
       int exactCandidate = getMaxUsedX(cut);
+      // TODO: if the cut is tight, try exactCandidate + Params::minWaste - 1
       assert (isAdmissibleCutLine(exactCandidate));
       candidates.push(exactCandidate);
       int previousCandidate = exactCandidate - 1;

@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <queue>
 
 using namespace std;
 
@@ -42,6 +43,33 @@ void CutMerger::buildFrontApproximate() {
 
 void CutMerger::propagateFromElement(int i) {
   FrontElement elt = front_[i];
+  priority_queue<int> candidates;
+  const int startCoord = region_.maxY();
+  candidates.push(startCoord);
+  int maxSeenCoord = startCoord + 1;
+  while (!candidates.empty()) {
+    int coord = candidates.top();
+    candidates.pop();
+    if (coord >= maxSeenCoord) continue;
+    if (coord < elt.coord + Params::minYY) continue;
+    maxSeenCoord = coord;
+    runRowMerger(elt.coord, coord, elt.n);
+    // TODO: quick filtering without calling the lower level
+    for (pair<int, int> n : rowMerger_.getParetoFront()) {
+      if (isAdmissibleCutLine(coord))
+        insertFrontCleanup(coord, i, n.first, n.second, Params::minWaste);
+      RowSolution row = rowMerger_.getSolution(n);
+      int exactCandidate = getMaxUsedY(row);
+      // TODO: if the cut is tight, try exactCandidate + Params::minWaste - 1
+      assert (isAdmissibleCutLine(exactCandidate));
+      candidates.push(exactCandidate);
+      int previousCandidate = exactCandidate - 1;
+      makeAdmissible(previousCandidate);
+      candidates.push(previousCandidate);
+    }
+  }
+
+  /*
   vector<int> candidates = getMaxYCandidates(elt.coord, elt.n);
   for (int endCoord : candidates) {
     if (endCoord > region_.maxY())
@@ -56,6 +84,7 @@ void CutMerger::propagateFromElement(int i) {
       insertFrontCleanup(endCoord, i, n.first, n.second, Params::minWaste);
     }
   }
+  */
 }
 
 void CutMerger::propagateFrontToEnd() {
@@ -110,6 +139,29 @@ vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
 
   // TODO: take defects into account
   return candidates;
+}
+
+void CutMerger::makeAdmissible(int &y) const {
+  while (!isAdmissibleCutLine(y))
+    --y;
+}
+
+int CutMerger::getMaxUsedY(const RowSolution &row) const {
+  int maxY = row.minY();
+  for (const ItemSolution &item : row.items) {
+    maxY = max(maxY, item.maxY());
+  }
+  bool fits = true;
+  for (const ItemSolution &item : row.items) {
+    fits &= utils::fitsMinWaste(item.maxY(), maxY);
+  }
+  int maxUsedY = maxY;
+  if (!fits || maxY < row.minY() + Params::minYY || !isAdmissibleCutLine(maxY)) {
+    maxUsedY = max(maxY + Params::minWaste, row.minY() + Params::minYY);
+  }
+  makeAdmissible(maxUsedY);
+  assert (maxUsedY <= region_.maxY());
+  return maxUsedY;
 }
 
 vector<pair<int, int> > CutMerger::getParetoFront() const {
