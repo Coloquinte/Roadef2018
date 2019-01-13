@@ -10,7 +10,8 @@ using namespace std;
 
 CutMerger::CutMerger(SolverParams options, const pair<vector<Item>, vector<Item> > &sequences)
 : Merger(options, sequences)
-, rowMerger_(options, sequences) {
+, rowMerger_(options, sequences)
+, nCalls_(0) {
 }
 
 void CutMerger::init(Rectangle cut, const vector<Defect> &defects, pair<int, int> starts) {
@@ -24,6 +25,7 @@ void CutMerger::init(Rectangle cut, const vector<Defect> &defects, const vector<
 }
 
 void CutMerger::buildFront() {
+  ++nCalls_;
   if (options_.cutMerging == PackingOption::Approximate) {
     buildFrontApproximate();
   }
@@ -53,10 +55,10 @@ void CutMerger::propagateFromElement(int i) {
     if (coord >= maxSeenCoord) continue;
     if (coord < elt.coord + Params::minYY) continue;
     maxSeenCoord = coord;
-    if (isRowDominated(elt.coord, coord, elt.n))
+    if (isRowDominated(elt.coord, coord, elt.n)) {
       continue;
+    }
     runRowMerger(elt.coord, coord, elt.n);
-    // TODO: quick filtering without calling the lower level
     for (pair<int, int> n : rowMerger_.getParetoFront()) {
       if (isAdmissibleCutLine(coord))
         insertFrontCleanup(coord, i, n.first, n.second, Params::minWaste);
@@ -187,7 +189,52 @@ int CutMerger::getMaxUsedY(const RowSolution &row) const {
 }
 
 vector<pair<int, int> > CutMerger::getParetoFront() const {
-  return Merger::getParetoFront(region_.maxY());
+  vector<pair<int, int> > pareto = Merger::getParetoFront(region_.maxY());
+  checkRefines(pareto, optimisticParetoFront());
+  return pareto;
+}
+
+vector<int> CutMerger::getUsableItemAreas(const vector<Item> &sequence, int start) const {
+  vector<int> areas;
+  int maxArea = region_.area();
+  int totArea = 0;
+  for (int i = start; i < (int) sequence.size(); ++i) {
+    Item item = sequence[i];
+    if(!utils::fitsMinWaste(item.width, region_.height())
+    && !utils::fitsMinWaste(item.width, region_.width()))
+      break;
+
+    totArea += item.area();
+    if (totArea > maxArea)
+      break;
+    areas.push_back(item.area());
+  }
+  return areas;
+}
+
+vector<pair<int, int> > CutMerger::optimisticParetoFront() const {
+  vector<pair<int, int> > ret;
+  int maxArea = region_.area();
+  for (pair<int, int> start : starts_) {
+    pair<vector<int>, vector<int> > areas;
+    areas.first = getUsableItemAreas(sequences_.first, start.first);
+    areas.second = getUsableItemAreas(sequences_.second, start.second);
+
+    pair<int, int> totArea;
+    totArea.first = 0;
+    totArea.second = accumulate(areas.second.begin(), areas.second.end(), 0);
+    size_t j = areas.second.size();
+    for (size_t i = 0; i <= areas.first.size(); ++i) {
+      if (i > 0)
+        totArea.first += areas.first[i-1];
+      for (; totArea.first + totArea.second > maxArea && j > 0; --j) {
+        totArea.second -= areas.second[j-1];
+      }
+      ret.emplace_back( start.first + (int) i, start.second + (int) j );
+    }
+  }
+  keepOnlyNonDominated(ret);
+  return ret;
 }
 
 CutSolution CutMerger::getSolution(pair<int, int> ends) {

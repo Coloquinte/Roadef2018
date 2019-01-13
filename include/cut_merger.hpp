@@ -18,9 +18,12 @@ class CutMerger : Merger {
   void buildFront();
 
   std::vector<std::pair<int, int> > getParetoFront() const;
+  std::vector<std::pair<int, int> > optimisticParetoFront() const;
   CutSolution getSolution(std::pair<int, int> ends);
 
   void checkConsistency() const;
+  long long nCalls() const { return nCalls_; }
+  long long nRowCalls() const { return rowMerger_.nCalls(); }
 
  private:
   void buildFrontExact();
@@ -40,8 +43,11 @@ class CutMerger : Merger {
   bool isEndDominated(int coord, std::pair<int, int> n) const;
   bool isRowDominated(int minY, int maxY, std::pair<int, int> starts);
 
+  std::vector<int> getUsableItemAreas(const std::vector<Item> &sequence, int start) const;
+
  private:
   RowMerger rowMerger_;
+  long long nCalls_;
 };
 
 #endif

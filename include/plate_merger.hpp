@@ -22,6 +22,9 @@ class PlateMerger : Merger {
   std::pair<int, int> getStarts(std::pair<int, int> ends, bool useAll=true) const;
 
   void checkConsistency() const;
+  long long nCalls() const { return nCalls_; }
+  long long nCutCalls() const { return cutMerger_.nCalls(); }
+  long long nRowCalls() const { return cutMerger_.nRowCalls(); }
 
  private:
   void buildFrontExact();
@@ -40,8 +43,12 @@ class PlateMerger : Merger {
   void addMaxXCandidates(std::vector<int> &candidates, int minX, const std::vector<Item> &sequence, int start);
   std::vector<int> getMaxXCandidates(int minX, std::pair<int, int> starts);
 
+  bool isEndDominated(int coord, std::pair<int, int> n) const;
+  bool isCutDominated(int minX, int maxX, std::pair<int, int> starts);
+
  private:
   CutMerger cutMerger_;
+  long long nCalls_;
 };
 
 #endif

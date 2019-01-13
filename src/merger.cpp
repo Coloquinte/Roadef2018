@@ -104,3 +104,13 @@ vector<pair<int, int> > Merger::getParetoFront(int coord) const {
   return paretoFront;
 }
 
+void Merger::checkRefines(const vector<pair<int, int> > &pareto, const vector<pair<int, int> > &optimistic) {
+  for (pair<int, int> p : pareto) {
+    bool dominated = false;
+    for (pair<int, int> o : pareto)
+      if (o.first >= p.first && o.second >= p.second)
+        dominated = true;
+    assert (dominated);
+  }
+}
+

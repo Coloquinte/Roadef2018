@@ -10,7 +10,8 @@ using namespace std;
 
 PlateMerger::PlateMerger(SolverParams options, const pair<vector<Item>, vector<Item> > &sequences)
 : Merger(options, sequences)
-, cutMerger_(options, sequences) {
+, cutMerger_(options, sequences)
+, nCalls_(0) {
 }
 
 void PlateMerger::init(Rectangle plate, const vector<Defect> &defects, pair<int, int> starts) {
@@ -24,6 +25,7 @@ void PlateMerger::init(Rectangle plate, const vector<Defect> &defects, const vec
 }
 
 void PlateMerger::buildFront() {
+  ++nCalls_;
   if (options_.plateMerging == PackingOption::Approximate) {
     buildFrontApproximate();
   }
@@ -56,8 +58,10 @@ void PlateMerger::propagateFromElement(int i) {
     if (coord >= maxSeenCoord) continue;
     if (coord < elt.coord + Params::minXX) continue;
     maxSeenCoord = coord;
+    if (isCutDominated(elt.coord, coord, elt.n)) {
+      continue;
+    }
     runCutMerger(elt.coord, coord, elt.n);
-    // TODO: quick filtering without calling the lower level
     for (pair<int, int> n : cutMerger_.getParetoFront()) {
       if (coord <= maxAllowedCoord && isAdmissibleCutLine(coord))
         insertFrontCleanup(coord, i, n.first, n.second, Params::minWaste);
@@ -114,6 +118,26 @@ void PlateMerger::runCutMerger(int minX, int maxX, pair<int, int> starts) {
   Rectangle cut = Rectangle::FromCoordinates(minX, region_.minY(), maxX, region_.maxY());
   cutMerger_.init(cut, defects_, starts);
   cutMerger_.buildFront();
+}
+
+bool PlateMerger::isEndDominated(int coord, pair<int, int> n) const {
+  for (FrontElement elt : front_) {
+    if (elt.coord + Params::minWaste > coord) continue;
+    if (elt.n.first >= n.first && elt.n.second >= n.second)
+      return true;
+  }
+  return false;
+}
+
+bool PlateMerger::isCutDominated(int minX, int maxX, pair<int, int> starts) {
+  Rectangle cut = Rectangle::FromCoordinates(minX, region_.minY(), maxX, region_.maxY());
+  cutMerger_.init(cut, defects_, starts);
+  vector<pair<int, int> > optimisticFront = cutMerger_.optimisticParetoFront();
+  for (pair<int, int> n : optimisticFront) {
+    if (!isEndDominated(maxX, n))
+      return false;
+  }
+  return true;
 }
 
 void PlateMerger::addMaxXCandidates(vector<int> &candidates, int minX, const vector<Item> &sequence, int start) {

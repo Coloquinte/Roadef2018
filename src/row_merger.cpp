@@ -9,7 +9,8 @@ using namespace std;
 
 
 RowMerger::RowMerger(SolverParams options, const pair<vector<Item>, vector<Item> > &sequences)
-: Merger(options, sequences) {
+: Merger(options, sequences)
+, nCalls_(0) {
 }
 
 void RowMerger::init(Rectangle row, const vector<Defect> &defects, pair<int, int> starts) {
@@ -23,6 +24,7 @@ void RowMerger::init(Rectangle row, const vector<Defect> &defects, const vector<
 }
 
 void RowMerger::buildFront() {
+  ++nCalls_;
   if (options_.rowMerging == PackingOption::Approximate) {
     buildFrontApproximate();
   }
@@ -128,7 +130,9 @@ void RowMerger::buildFrontExact() {
 }
 
 vector<pair<int, int> > RowMerger::getParetoFront() const {
-  return Merger::getParetoFront(region_.maxX());
+  vector<pair<int, int> > pareto = Merger::getParetoFront(region_.maxX());
+  checkRefines(pareto, optimisticParetoFront());
+  return pareto;
 }
 
 vector<int> RowMerger::getUsableItemWidths(const vector<Item> &sequence, int start) const {
@@ -167,7 +171,9 @@ vector<pair<int, int> > RowMerger::optimisticParetoFront() const {
     totWidth.second = accumulate(widths.second.begin(), widths.second.end(), 0);
     size_t j = widths.second.size();
     for (size_t i = 0; i <= widths.first.size(); ++i) {
-      for (; totWidth.first + totWidth.second < maxWidth && j > 0; --j) {
+      if (i > 0)
+        totWidth.first += widths.first[i-1];
+      for (; totWidth.first + totWidth.second > maxWidth && j > 0; --j) {
         totWidth.second -= widths.second[j-1];
       }
       ret.emplace_back( start.first + (int) i, start.second + (int) j );
