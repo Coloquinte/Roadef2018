@@ -22,9 +22,10 @@ class PlateMerger : Merger {
   std::pair<int, int> getStarts(std::pair<int, int> ends, bool useAll=true) const;
 
   void checkConsistency() const;
-  long long nCalls() const { return nCalls_; }
-  long long nCutCalls() const { return cutMerger_.nCalls(); }
+  long long nCutCalls() const { return nCutCalls_; }
+  long long nPrunedCutCalls() const { return nPrunedCutCalls_; }
   long long nRowCalls() const { return cutMerger_.nRowCalls(); }
+  long long nPrunedRowCalls() const { return cutMerger_.nPrunedRowCalls(); }
 
  private:
   void buildFrontExact();
@@ -48,7 +49,8 @@ class PlateMerger : Merger {
 
  private:
   CutMerger cutMerger_;
-  long long nCalls_;
+  long long nCutCalls_;
+  long long nPrunedCutCalls_;
 };
 
 #endif

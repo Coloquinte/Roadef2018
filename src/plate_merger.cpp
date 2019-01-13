@@ -11,7 +11,8 @@ using namespace std;
 PlateMerger::PlateMerger(SolverParams options, const pair<vector<Item>, vector<Item> > &sequences)
 : Merger(options, sequences)
 , cutMerger_(options, sequences)
-, nCalls_(0) {
+, nCutCalls_(0)
+, nPrunedCutCalls_(0) {
 }
 
 void PlateMerger::init(Rectangle plate, const vector<Defect> &defects, pair<int, int> starts) {
@@ -25,7 +26,6 @@ void PlateMerger::init(Rectangle plate, const vector<Defect> &defects, const vec
 }
 
 void PlateMerger::buildFront() {
-  ++nCalls_;
   if (options_.plateMerging == PackingOption::Approximate) {
     buildFrontApproximate();
   }
@@ -59,6 +59,7 @@ void PlateMerger::propagateFromElement(int i) {
     if (coord < elt.coord + Params::minXX) continue;
     maxSeenCoord = coord;
     if (isCutDominated(elt.coord, coord, elt.n)) {
+      ++nPrunedCutCalls_;
       continue;
     }
     runCutMerger(elt.coord, coord, elt.n);
@@ -118,6 +119,7 @@ void PlateMerger::runCutMerger(int minX, int maxX, pair<int, int> starts) {
   Rectangle cut = Rectangle::FromCoordinates(minX, region_.minY(), maxX, region_.maxY());
   cutMerger_.init(cut, defects_, starts);
   cutMerger_.buildFront();
+  ++nCutCalls_;
 }
 
 bool PlateMerger::isEndDominated(int coord, pair<int, int> n) const {

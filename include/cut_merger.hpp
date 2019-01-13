@@ -22,8 +22,8 @@ class CutMerger : Merger {
   CutSolution getSolution(std::pair<int, int> ends);
 
   void checkConsistency() const;
-  long long nCalls() const { return nCalls_; }
-  long long nRowCalls() const { return rowMerger_.nCalls(); }
+  long long nRowCalls() const { return nRowCalls_; }
+  long long nPrunedRowCalls() const { return nPrunedRowCalls_; }
 
  private:
   void buildFrontExact();
@@ -47,7 +47,8 @@ class CutMerger : Merger {
 
  private:
   RowMerger rowMerger_;
-  long long nCalls_;
+  long long nRowCalls_;
+  long long nPrunedRowCalls_;
 };
 
 #endif

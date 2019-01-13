@@ -11,7 +11,8 @@ using namespace std;
 CutMerger::CutMerger(SolverParams options, const pair<vector<Item>, vector<Item> > &sequences)
 : Merger(options, sequences)
 , rowMerger_(options, sequences)
-, nCalls_(0) {
+, nRowCalls_(0)
+, nPrunedRowCalls_(0) {
 }
 
 void CutMerger::init(Rectangle cut, const vector<Defect> &defects, pair<int, int> starts) {
@@ -25,7 +26,6 @@ void CutMerger::init(Rectangle cut, const vector<Defect> &defects, const vector<
 }
 
 void CutMerger::buildFront() {
-  ++nCalls_;
   if (options_.cutMerging == PackingOption::Approximate) {
     buildFrontApproximate();
   }
@@ -56,6 +56,7 @@ void CutMerger::propagateFromElement(int i) {
     if (coord < elt.coord + Params::minYY) continue;
     maxSeenCoord = coord;
     if (isRowDominated(elt.coord, coord, elt.n)) {
+      ++nPrunedRowCalls_;
       continue;
     }
     runRowMerger(elt.coord, coord, elt.n);
@@ -108,6 +109,7 @@ void CutMerger::runRowMerger(int minY, int maxY, pair<int, int> starts) {
   Rectangle row = Rectangle::FromCoordinates(region_.minX(), minY, region_.maxX(), maxY);
   rowMerger_.init(row, defects_, starts);
   rowMerger_.buildFront();
+  ++nRowCalls_;
 }
 
 bool CutMerger::isEndDominated(int coord, pair<int, int> n) const {

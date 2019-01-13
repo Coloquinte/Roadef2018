@@ -9,8 +9,7 @@ using namespace std;
 
 
 RowMerger::RowMerger(SolverParams options, const pair<vector<Item>, vector<Item> > &sequences)
-: Merger(options, sequences)
-, nCalls_(0) {
+: Merger(options, sequences) {
 }
 
 void RowMerger::init(Rectangle row, const vector<Defect> &defects, pair<int, int> starts) {
@@ -24,7 +23,6 @@ void RowMerger::init(Rectangle row, const vector<Defect> &defects, const vector<
 }
 
 void RowMerger::buildFront() {
-  ++nCalls_;
   if (options_.rowMerging == PackingOption::Approximate) {
     buildFrontApproximate();
   }

@@ -22,7 +22,6 @@ class RowMerger : Merger {
   RowSolution getSolution(std::pair<int, int> ends) const;
 
   void checkConsistency() const;
-  long long nCalls() const { return nCalls_; }
 
  private:
   void buildFrontExact();
@@ -39,9 +38,6 @@ class RowMerger : Merger {
   bool isAdmissibleCutLine(int x) const;
 
   std::vector<int> getUsableItemWidths(const std::vector<Item> &sequence, int start) const;
-
- private:
-  long long nCalls_;
 };
 
 #endif

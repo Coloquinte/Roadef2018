@@ -26,9 +26,10 @@ SequenceMerger::SequenceMerger(const Problem &problem, const pair<vector<Item>, 
 }
 
 Solution SequenceMerger::run() {
-  long long plateCalls = 0;
   long long cutCalls = 0;
   long long rowCalls = 0;
+  long long cutPrunedCalls = 0;
+  long long rowPrunedCalls = 0;
   // Run plate by plate
   Rectangle plateRegion = Rectangle::FromCoordinates(0, 0, Params::widthPlates, Params::heightPlates);
   vector<PlateMerger> plates;
@@ -54,14 +55,15 @@ Solution SequenceMerger::run() {
     plates.emplace_back(options_, sequences_);
     plates.back().init(plateRegion, problem_.plateDefects()[i], starts);
     plates.back().buildFront();
-    plateCalls += plates.back().nCalls();
     cutCalls   += plates.back().nCutCalls();
     rowCalls   += plates.back().nRowCalls();
+    cutPrunedCalls   += plates.back().nPrunedCutCalls();
+    rowPrunedCalls   += plates.back().nPrunedRowCalls();
   }
   if (options_.verbosity >= 3) {
-    cout << plateCalls << " plate calls, "
-         << cutCalls << " cut calls, "
-         << rowCalls << " row calls"
+    cout << plates.size() << " plate calls, "
+         << cutCalls << " cut calls (" << (100.0 * cutPrunedCalls / (cutCalls + cutPrunedCalls)) << "% pruned), "
+         << rowCalls << " row calls (" << (100.0 * rowPrunedCalls / (rowCalls + rowPrunedCalls)) << "% pruned) "
          << endl;
   }
 
