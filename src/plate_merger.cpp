@@ -5,6 +5,7 @@
 #include <cassert>
 #include <algorithm>
 #include <queue>
+#include <unordered_set>
 
 using namespace std;
 
@@ -45,19 +46,19 @@ void PlateMerger::buildFrontApproximate() {
 
 void PlateMerger::propagateFromElement(int i) {
   FrontElement elt = front_[i];
-  priority_queue<int> candidates;
+  unordered_set<int> evaluated;
+  priority_queue<int, vector<int>, greater<int> > candidates;
   const int maxAllowedCoord = min(region_.maxX(), elt.coord + Params::maxXX);
   int startCoord = maxAllowedCoord + Params::minWaste;
   if (startCoord < elt.coord + Params::minXX)
     return;
   candidates.push(startCoord);
-  int maxSeenCoord = startCoord + 1;
   while (!candidates.empty()) {
     int coord = candidates.top();
     candidates.pop();
-    if (coord >= maxSeenCoord) continue;
     if (coord < elt.coord + Params::minXX) continue;
-    maxSeenCoord = coord;
+    if (evaluated.count(coord)) continue;
+    evaluated.insert(coord);
     if (isCutDominated(elt.coord, coord, elt.n)) {
       ++nPrunedCutCalls_;
       continue;
@@ -162,8 +163,7 @@ void PlateMerger::addMaxXCandidates(vector<int> &candidates, int minX, const vec
 }
 
 vector<int> PlateMerger::getMaxXCandidates(int minX, pair<int, int> starts) {
-  // TODO: better estimation of the maximum number of items that can be packed
-
+  // Very simple (and insufficient) approach based on item widths
   vector<int> candidates;
 
   addMaxXCandidates(candidates, minX, sequences_.first, starts.first);
@@ -175,8 +175,6 @@ vector<int> PlateMerger::getMaxXCandidates(int minX, pair<int, int> starts) {
   sort(candidates.begin(), candidates.end());
   candidates.erase(unique(candidates.begin(), candidates.end()), candidates.end());
 
-  // TODO: make this smarter (multiple items)
-  // TODO: take defects into account
   return candidates;
 }
 

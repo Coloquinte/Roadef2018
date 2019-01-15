@@ -152,7 +152,7 @@ void CutMerger::addMaxYCandidates(vector<int> &candidates, int minY, const vecto
 }
 
 vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
-  // TODO: better estimation of the maximum number of items that can be packed
+  // Very simple approach based on item widths
   vector<int> candidates;
 
   addMaxYCandidates(candidates, minY, sequences_.first, starts.first);
@@ -163,7 +163,6 @@ vector<int> CutMerger::getMaxYCandidates(int minY, pair<int, int> starts) {
   sort(candidates.begin(), candidates.end());
   candidates.erase(unique(candidates.begin(), candidates.end()), candidates.end());
 
-  // TODO: take defects into account
   return candidates;
 }
 

@@ -81,9 +81,9 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 
   if (params_.enableMerging) {
     // Optimal sequence merging
-    moves_.emplace_back(make_unique<MergeRow>());
-    moves_.emplace_back(make_unique<MergeCut>());
-    moves_.emplace_back(make_unique<MergePlate>());
+    //moves_.emplace_back(make_unique<MergeRow>());
+    //moves_.emplace_back(make_unique<MergeCut>());
+    //moves_.emplace_back(make_unique<MergePlate>());
     moves_.emplace_back(make_unique<MergeRandomStacks>());
     moves_.emplace_back(make_unique<MergeOneStack>());
   }
