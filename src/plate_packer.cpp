@@ -241,7 +241,7 @@ void PlatePacker::propagateBreakpoints(int after) {
     // Note that whenever a cut is not admissible, another defect will account for a valid one (as long as it's not tight)
     for (int i = 1; i <= after; ++i) {
       int cutPos = front_[i].end + Params::minWaste;
-      if (cutPos > bp && isAdmissibleCutLine(cutPos))
+      if (cutPos > bp && isAdmissibleCutLine(cutPos) && cutPos <= front_[i].begin + Params::maxXX)
         propagate(i, cutPos);
     }
     int firstCutPos = region_.minX() + Params::minXX;
@@ -250,7 +250,8 @@ void PlatePacker::propagateBreakpoints(int after) {
     }
     int maxValid = 0;
     for (int i = 1; i <= after; ++i) {
-      if (front_[i].end + Params::minWaste <= bp)
+      if (front_[i].end + Params::minWaste <= bp &&
+        (front_[i].end + Params::minXX <= bp || front_[i].begin + Params::maxXX >= bp))
         maxValid = i;
     }
     if (isAdmissibleCutLine(bp)) {
@@ -272,7 +273,7 @@ PlateSolution PlatePacker::backtrack() {
     plateSolution.cuts.push_back(solution);
   }
   assert (slices_.back() <= region_.maxX());
-  assert (nPacked == nItems() || slices_.back() == region_.maxX());
+  //assert (nPacked == nItems() || slices_.back() == region_.maxX());
 
   return plateSolution;
 }
