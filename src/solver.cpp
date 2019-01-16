@@ -122,15 +122,17 @@ void Solver::init(vector<int> initial) {
 }
 
 void Solver::run() {
-  auto start = chrono::system_clock::now();
+  startTime_ = chrono::system_clock::now();
   nMoves_ = 0;
 
   while (nMoves_ < params_.moveLimit) {
-    chrono::duration<double> elapsed(chrono::system_clock::now() - start);
-    if (elapsed.count() > 0.98 * params_.timeLimit) break;
+    if (chrono::duration<double>(chrono::system_clock::now() - startTime_).count()
+      > 0.98 * params_.timeLimit)
+      break;
     step();
   }
-  
+
+  endTime_ = chrono::system_clock::now();
   finalReport();
 }
 
@@ -324,5 +326,7 @@ void Solver::finalReport() const {
     }
     cout << endl;
     cout << nMoves_ << " moves attempted for " << nEvaluated << " evaluated and " << nImprovement << " improvements" << endl;
+    cout << chrono::duration<double>(endTime_ - startTime_).count() << "s optimization time" << endl;
+    cout << endl;
   }
 }

@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <random>
+#include <chrono>
 
 class Move;
 
@@ -45,6 +46,8 @@ class Solver {
 
   std::vector<std::mt19937> rgens_;
   std::size_t nMoves_;
+  std::chrono::time_point<std::chrono::system_clock> startTime_;
+  std::chrono::time_point<std::chrono::system_clock> endTime_;
 
   friend class Move;
 };
