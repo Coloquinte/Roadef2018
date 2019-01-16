@@ -28,17 +28,21 @@ class Solver {
   void init(std::vector<int> initial);
   void run();
   Move* pickMove();
+  Move* pickMove(const std::vector<std::pair<std::unique_ptr<Move>, int> > &moves);
 
   void step();
   MoveStatus accept(Move &move, const Solution &incumbent);
   void updateStats(Move &move, MoveStatus status);
   void finalReport() const;
 
+  void addInitializer(std::unique_ptr<Move> &&move, int weight=1);
+  void addMove(std::unique_ptr<Move> &&move, int weight=1);
+
  private:
   const Problem &problem_;
   SolverParams params_;
-  std::vector<std::unique_ptr<Move> > moves_;
-  std::vector<std::unique_ptr<Move> > initializers_;
+  std::vector<std::pair<std::unique_ptr<Move>, int> > moves_;
+  std::vector<std::pair<std::unique_ptr<Move>, int> > initializers_;
 
   Solution solution_;
   double bestMapped_;

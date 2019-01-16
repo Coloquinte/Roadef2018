@@ -29,74 +29,82 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
   vector<size_t> seeds(params_.nbThreads);
   seed_seq seq { params_.seed };
   seq.generate(seeds.begin(), seeds.end());
-  for (std::size_t i = 0; i < params_.nbThreads; ++i) {
-    rgens_.push_back(std::mt19937(seeds[i]));
+  for (size_t i = 0; i < params_.nbThreads; ++i) {
+    rgens_.push_back(mt19937(seeds[i]));
   }
 
   // Shuffle everything
-  initializers_.emplace_back(make_unique<Shuffle>(  1));
-  //initializers_.emplace_back(make_unique<Shuffle>(  4));
-  initializers_.emplace_back(make_unique<Shuffle>( 16));
-  initializers_.emplace_back(make_unique<Shuffle>( 64));
-  initializers_.emplace_back(make_unique<Shuffle>(128));
+  addInitializer(make_unique<Shuffle>(  1));
+  //addInitializer(make_unique<Shuffle>(  4));
+  addInitializer(make_unique<Shuffle>( 16));
+  addInitializer(make_unique<Shuffle>( 64));
+  addInitializer(make_unique<Shuffle>(128));
 
   if (params_.enablePacking) {
     // Shuffle a subrange
-    moves_.emplace_back(make_unique<Shuffle>(1,  8));
-    moves_.emplace_back(make_unique<Shuffle>(1, 16));
-    //moves_.emplace_back(make_unique<Shuffle>(1, 32));
-    moves_.emplace_back(make_unique<Shuffle>(4,  8));
-    moves_.emplace_back(make_unique<Shuffle>(4, 16));
-    moves_.emplace_back(make_unique<Shuffle>(4, 32));
-    //moves_.emplace_back(make_unique<Shuffle>(8,  8));
-    moves_.emplace_back(make_unique<Shuffle>(8, 16));
-    moves_.emplace_back(make_unique<Shuffle>(8, 32));
+    addMove(make_unique<Shuffle>(1,  8));
+    addMove(make_unique<Shuffle>(1, 16));
+    //addMove(make_unique<Shuffle>(1, 32));
+    addMove(make_unique<Shuffle>(4,  8));
+    addMove(make_unique<Shuffle>(4, 16));
+    addMove(make_unique<Shuffle>(4, 32));
+    //addMove(make_unique<Shuffle>(8,  8));
+    addMove(make_unique<Shuffle>(8, 16));
+    addMove(make_unique<Shuffle>(8, 32));
 
     // Insertions
-    moves_.emplace_back(make_unique<ItemInsert>());
-    moves_.emplace_back(make_unique<RowInsert>());
-    moves_.emplace_back(make_unique<CutInsert>());
-    //moves_.emplace_back(make_unique<PlateInsert>());
+    addMove(make_unique<ItemInsert>());
+    addMove(make_unique<RowInsert>());
+    addMove(make_unique<CutInsert>());
+    //addMove(make_unique<PlateInsert>());
 
     // Swaps
-    moves_.emplace_back(make_unique<ItemSwap>());
-    moves_.emplace_back(make_unique<RowSwap>());
-    moves_.emplace_back(make_unique<CutSwap>());
-    //moves_.emplace_back(make_unique<PlateSwap>());
+    addMove(make_unique<ItemSwap>());
+    addMove(make_unique<RowSwap>());
+    addMove(make_unique<CutSwap>());
+    //addMove(make_unique<PlateSwap>());
 
     // Local swaps
-    //moves_.emplace_back(make_unique<AdjacentItemSwap>());
-    moves_.emplace_back(make_unique<AdjacentRowSwap>());
-    moves_.emplace_back(make_unique<AdjacentCutSwap>());
-    //moves_.emplace_back(make_unique<AdjacentPlateSwap>());
+    //addMove(make_unique<AdjacentItemSwap>());
+    addMove(make_unique<AdjacentRowSwap>());
+    addMove(make_unique<AdjacentCutSwap>());
+    //addMove(make_unique<AdjacentPlateSwap>());
 
     // Reverse a range
-    //moves_.emplace_back(make_unique<Mirror>(4));
-    moves_.emplace_back(make_unique<Mirror>(8));
-    moves_.emplace_back(make_unique<Mirror>(16));
+    //addMove(make_unique<Mirror>(4));
+    addMove(make_unique<Mirror>(8));
+    addMove(make_unique<Mirror>(16));
 
     // Swap two ranges
-    //moves_.emplace_back(make_unique<RangeSwap>());
+    //addMove(make_unique<RangeSwap>());
   }
 
   if (params_.enableMerging) {
     // Optimal sequence merging
-    //moves_.emplace_back(make_unique<MergeRow>());
-    //moves_.emplace_back(make_unique<MergeCut>());
-    //moves_.emplace_back(make_unique<MergePlate>());
-    moves_.emplace_back(make_unique<MergeRandomStacks>());
-    moves_.emplace_back(make_unique<MergeOneStack>());
+    //addMove(make_unique<MergeRow>());
+    //addMove(make_unique<MergeCut>());
+    //addMove(make_unique<MergePlate>());
+    addMove(make_unique<MergeRandomStacks>());
+    addMove(make_unique<MergeOneStack>());
   }
 
-  for (const unique_ptr<Move> &m : initializers_) m->solver_ = this;
-  for (const unique_ptr<Move> &m : moves_) m->solver_ = this;
+  for (const auto &m : initializers_) m.first->solver_ = this;
+  for (const auto &m : moves_) m.first->solver_ = this;
 
   init(initial);
 }
 
+void Solver::addInitializer(unique_ptr<Move> &&mv, int weight) {
+  initializers_.emplace_back(move(mv), weight);
+}
+
+void Solver::addMove(unique_ptr<Move> &&mv, int weight) {
+  moves_.emplace_back(move(mv), weight);
+}
+
 void Solver::init(vector<int> initial) {
-  if  (initializers_.empty()) throw std::runtime_error("No initialization move provided.");
-  if  (moves_.empty()) throw std::runtime_error("No move provided.");
+  if  (initializers_.empty()) throw runtime_error("No initialization move provided.");
+  if  (moves_.empty()) throw runtime_error("No move provided.");
 
   if (initial.empty()) return;
 
@@ -139,12 +147,10 @@ void Solver::run() {
 Move* Solver::pickMove() {
   Move* move;
   if (nMoves_ < params_.initializationRuns) {
-    uniform_int_distribution<int> dist(0, initializers_.size()-1);
-    move = initializers_[dist(rgens_[0])].get();
+    return pickMove(initializers_);
   }
   else {
-    uniform_int_distribution<int> dist(0, moves_.size()-1);
-    move = moves_[dist(rgens_[0])].get();
+    return pickMove(moves_);
   }
 
   if (params_.verbosity >= 3) {
@@ -153,30 +159,46 @@ Move* Solver::pickMove() {
   return move;
 }
 
+Move* Solver::pickMove(const vector<pair<unique_ptr<Move>, int> > &moves) {
+  int totWeight = 0;
+  for (const auto& m : moves) totWeight += m.second;
+
+  uniform_int_distribution<int> dist(0, totWeight-1);
+  int roll = dist(rgens_[0]);
+
+  int weight = 0;
+  for (const auto& m : moves) {
+    weight += m.second;
+    if (weight > roll)
+      return m.first.get();
+  }
+  return moves[0].first.get();
+}
+
 void Solver::step() {
   size_t parallelEvals = min(params_.nbThreads, params_.moveLimit - nMoves_);
   vector<Solution> incumbents(parallelEvals);
 
   // Move selection
   vector<Move*> moves(parallelEvals);
-  for (std::size_t i = 0; i < parallelEvals; ++i) {
+  for (size_t i = 0; i < parallelEvals; ++i) {
     moves[i] = pickMove();
   }
 
   // Parallel evaluation
-  auto runner = [&](std::size_t ind) {
+  auto runner = [&](size_t ind) {
     incumbents[ind] = moves[ind]->apply(rgens_[ind]);
   };
   vector<thread> threads;
-  for (std::size_t i = 0; i < parallelEvals; ++i) {
+  for (size_t i = 0; i < parallelEvals; ++i) {
     threads.push_back(thread(runner, i));
   }
-  for (std::size_t i = 0; i < parallelEvals; ++i) {
+  for (size_t i = 0; i < parallelEvals; ++i) {
     threads[i].join();
   }
 
   // Sequential acceptance
-  for (std::size_t i = 0; i < parallelEvals; ++i, ++nMoves_) {
+  for (size_t i = 0; i < parallelEvals; ++i, ++nMoves_) {
     MoveStatus status = accept(*moves[i], incumbents[i]);
     updateStats(*moves[i], status);
   }
@@ -199,7 +221,7 @@ Solver::MoveStatus Solver::accept(Move &move, const Solution &incumbent) {
       incumbent.report();
       SolutionChecker::report(problem_, incumbent);
       incumbent.write("invalid_solution.csv");
-      throw std::runtime_error("A move returned an invalid solution.");
+      throw runtime_error("A move returned an invalid solution.");
     }
     return MoveStatus::Violation;
   }
@@ -292,11 +314,11 @@ void Solver::finalReport() const {
     int nImprovement = 0;
     cout << endl << "MoveName        \tTotal\t-\t=\t+\tFail\tErr" << endl;
 
-    std::vector<Move*> allMoves;
+    vector<Move*> allMoves;
     for (auto &m : initializers_)
-      allMoves.push_back(m.get());
+      allMoves.push_back(m.first.get());
     for (auto &m : moves_)
-      allMoves.push_back(m.get());
+      allMoves.push_back(m.first.get());
     for (Move *m : allMoves) {
       string name = m->name();
       while (name.size() < 16)
