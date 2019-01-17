@@ -7,6 +7,7 @@
 
 #include "move.hpp"
 #include "merger_move.hpp"
+#include "packer_move.hpp"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -77,6 +78,10 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
 
     // Swap two ranges
     //addMove(make_unique<RangeSwap>());
+    // Local improvement
+    addMove(make_unique<PackRowInsert>());
+    addMove(make_unique<PackCutInsert>());
+    addMove(make_unique<PackPlateInsert>());
   }
 
   if (params_.enableMerging) {
