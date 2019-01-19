@@ -21,11 +21,11 @@ class Solver {
     Plateau,
     Improvement
   };
-  static Solution run(const Problem &problem, SolverParams params, std::vector<int> initial=std::vector<int>());
+  static Solution run(const Problem &problem, SolverParams params, const Solution &initial=Solution());
  
  private: 
-  Solver(const Problem &problem, SolverParams params, std::vector<int> initial);
-  void init(std::vector<int> initial);
+  Solver(const Problem &problem, SolverParams params, const Solution &initial);
+  void init(const Solution &initial);
   void run();
   Move* pickMove();
   Move* pickMove(const std::vector<std::pair<std::unique_ptr<Move>, int> > &moves);

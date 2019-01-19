@@ -14,13 +14,13 @@
 
 using namespace std;
 
-Solution Solver::run(const Problem &problem, SolverParams params, vector<int> initial) {
+Solution Solver::run(const Problem &problem, SolverParams params, const Solution &initial) {
   Solver solver(problem, params, initial);
   solver.run();
   return solver.solution_;
 }
 
-Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
+Solver::Solver(const Problem &problem, SolverParams params, const Solution &initial)
 : problem_(problem)
 , params_(params)
 , bestMapped_(0.0)
@@ -110,18 +110,13 @@ void Solver::addMove(unique_ptr<Move> &&mv, int weight) {
   moves_.emplace_back(move(mv), weight);
 }
 
-void Solver::init(vector<int> initial) {
+void Solver::init(const Solution &solution) {
   if  (initializers_.empty()) throw runtime_error("No initialization move provided.");
   if  (moves_.empty()) throw runtime_error("No move provided.");
 
-  if (initial.empty()) return;
+  if (solution.nItems() == 0) return;
 
-  vector<Item> sequence;
-  for (int id : initial) {
-    sequence.push_back(problem_.items()[id]);
-  }
-
-  solution_ = SequencePacker::run(problem_, sequence, params_);
+  solution_ = solution;
   bestDensity_ = SolutionChecker::evalPercentDensity(problem_, solution_);
   bestMapped_ = SolutionChecker::evalPercentMapped(problem_, solution_);
 

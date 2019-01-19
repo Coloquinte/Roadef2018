@@ -2,6 +2,7 @@
 #include "problem.hpp"
 #include "solver.hpp"
 #include "solution_checker.hpp"
+#include "sequence_packer.hpp"
 #include "utils.hpp"
 
 #include <iostream>
@@ -80,8 +81,6 @@ po::options_description getHiddenOptions() {
 
   pack.add_options()("trace-packing-fronts", "Trace Pareto fronts in exact packing algorithms");
 
-  pack.add_options()("pack-with-merger", "Use the merging logic to evaluate packing");
-
   po::options_description merge("GCUT merging options");
   merge.add_options()("exact-row-mergings", "Solve 3-cuts mergings exactly");
   merge.add_options()("exact-cut-mergings", "Solve 2-cuts mergings exactly");
@@ -93,7 +92,12 @@ po::options_description getHiddenOptions() {
 
   merge.add_options()("trace-merging-fronts", "Trace Pareto fronts in exact merging algorithms");
 
-  desc.add(dev).add(move).add(pack).add(merge);
+  po::options_description expe("GCUT experimental options");
+  pack.add_options()("pack-with-merger", "Use the merging logic to evaluate packing");
+  pack.add_options()("first-plate", po::value<int>(), "First plate to consider from the initial solution");
+  pack.add_options()("last-plate" , po::value<int>(), "Last plate to consider from the initial solution");
+
+  desc.add(dev).add(move).add(pack).add(merge).add(expe);
 
   return desc;
 }
@@ -183,6 +187,62 @@ SolverParams buildParams(const po::variables_map &vm) {
   return params;
 }
 
+void makeInitial(Problem &pb, Solution &initial, const po::variables_map &vm, const SolverParams &params) {
+  if (!vm.count("initial")) return;
+
+  vector<int> initialOrder = Solution::readOrdering(vm["initial"].as<string>());
+  vector<Item> initialSequence;
+  for (int id : initialOrder) {
+    initialSequence.push_back(pb.items()[id]);
+  }
+
+  initial = SequencePacker::run(pb, initialSequence, params);
+
+  if (!vm.count("first-plate") && !vm.count("last-plate")) return;
+
+  int firstPlate = vm.count("first-plate") ? min(vm["first-plate"].as<int>(), initial.nPlates()) : 0;
+  int lastPlate = vm.count("last-plate") ? min(vm["last-plate"].as<int>() + 1, initial.nPlates()) : initial.nPlates();
+
+  // Now reduce the problem size; keep only the items that are on those plates
+  initial.plates.erase(initial.plates.begin() + lastPlate, initial.plates.end());
+  initial.plates.erase(initial.plates.begin(), initial.plates.begin() + firstPlate);
+
+  vector<Item> items;
+  vector<Defect> defects;
+
+  int itemId = 0;
+  for (PlateSolution &plate : initial.plates) {
+    for (CutSolution &cut: plate.cuts) {
+      for (RowSolution &row: cut.rows) {
+        for (ItemSolution &isol: row.items) {
+          Item item = pb.items()[isol.itemId];
+          item.id = itemId;
+          isol.itemId = itemId;
+          items.push_back(item);
+          ++itemId;
+        }
+      }
+    }
+  }
+
+  for (Defect defect : pb.defects()) {
+    if (defect.plateId < firstPlate) continue;
+    if (defect.plateId >= lastPlate) continue;
+    defect.plateId -= firstPlate;
+    defects.push_back(defect);
+  }
+
+  int stackId = 0;
+  map<int, int> stackIdMapping;
+  for (Item &item : items) {
+    if (!stackIdMapping.count(item.stack))
+      stackIdMapping.emplace(item.stack, stackId++);
+    item.stack = stackIdMapping[item.stack];
+  }
+
+  pb = Problem(items, defects);
+}
+
 void run(int argc, char** argv) {
   cout << fixed << setprecision(2);
   cerr << fixed << setprecision(2);
@@ -207,11 +267,11 @@ void run(int argc, char** argv) {
 
   SolverParams params = buildParams(vm);
 
-  vector<int> initialOrder;
-  if (vm.count("initial"))
-    initialOrder = Solution::readOrdering(vm["initial"].as<string>());
+  Solution initial;
+  makeInitial(pb, initial, vm, params);
 
-  Solution solution = Solver::run(pb, params, initialOrder);
+  Solution solution = Solver::run(pb, params, initial);
+
   if (params.verbosity >= 3)
     solution.report();
   if (params.verbosity >= 1)

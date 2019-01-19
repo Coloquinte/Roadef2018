@@ -131,7 +131,7 @@ void IOProblem::readDefect(const string &s, vector<Defect> &defects) {
   , ceil(defect_fields[5])
   );
   defect.id = defect_fields[0];
-  defect.plate_id = defect_fields[1];
+  defect.plateId = defect_fields[1];
   defects.push_back(defect);
 }
 
@@ -174,7 +174,7 @@ void IOProblem::writeDefects(const vector<Defect> &defects) {
   f << "DEFECT_ID;PLATE_ID;X;Y;WIDTH;HEIGHT" << endl;
   for (Defect defect : defects) {
     f << defect.id << ";";
-    f << defect.plate_id << ";";
+    f << defect.plateId << ";";
     f << defect.minX() << ";";
     f << defect.minY() << ";";
     f << defect.width() << ";";

@@ -23,6 +23,7 @@ void Problem::buildSequences() {
     stackToItems[i.stack].push_back(i);
   }
   for (auto p : stackToItems) {
+    // TODO: make sure that the stacks match the ids in the items
     vector<Item> stack = p.second;
     sort(stack.begin(), stack.end(), [](Item a, Item b) { return a.sequence < b.sequence; });
     stackItems_.push_back(stack);
@@ -32,9 +33,9 @@ void Problem::buildSequences() {
 void Problem::buildPlates() {
   plateDefects_.resize(Params::nPlates);
   for (Defect d : defects_) {
-    if (d.plate_id < 0 || d.plate_id >= Params::nPlates)
+    if (d.plateId < 0 || d.plateId >= Params::nPlates)
       continue;
-    plateDefects_[d.plate_id].push_back(d);
+    plateDefects_[d.plateId].push_back(d);
   }
 }
 

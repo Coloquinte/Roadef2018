@@ -6,7 +6,7 @@
 
 struct Defect : public Rectangle {
   int id;
-  int plate_id;
+  int plateId;
 
   Defect(int x, int y, int w, int h) {
     *(Rectangle*) this = Rectangle::FromDimensions(x, y, w, h);
