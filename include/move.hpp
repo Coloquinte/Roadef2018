@@ -16,11 +16,18 @@ class Move {
   virtual ~Move() {}
 
   std::size_t nCall() const { return nViolation_ + nImprovement_ + nDegradation_ + nPlateau_ + nFailure_; }
+  std::size_t nAcceptable() const { return nImprovement_ + nDegradation_ + nPlateau_; }
   std::size_t nViolation() const { return nViolation_; }
   std::size_t nImprovement() const { return nImprovement_; }
   std::size_t nDegradation() const { return nDegradation_; }
   std::size_t nPlateau() const { return nPlateau_; }
   std::size_t nFailure() const { return nFailure_; }
+
+  double recomputationPercentage() const {
+    int recomputation = nDifferentPlates_;
+    int total = nDifferentPlates_ + nCommonPrefixPlates_ + nCommonSuffixPlates_;
+    return 100.0 * recomputation / total;
+  }
 
  protected:
   std::vector<Item> extractSequence(const Solution&) const;
@@ -63,6 +70,10 @@ class Move {
   std::size_t nDegradation_;
   std::size_t nPlateau_;
   std::size_t nFailure_;
+
+  std::size_t nCommonPrefixPlates_;
+  std::size_t nCommonSuffixPlates_;
+  std::size_t nDifferentPlates_;
 
  public:
   const Solver *solver_;

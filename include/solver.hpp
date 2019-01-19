@@ -32,7 +32,7 @@ class Solver {
 
   void step();
   MoveStatus accept(Move &move, const Solution &incumbent);
-  void updateStats(Move &move, MoveStatus status);
+  void updateStats(Move &move, MoveStatus status, const Solution &incumbent);
   void finalReport() const;
 
   void addInitializer(std::unique_ptr<Move> &&move, int weight=1);

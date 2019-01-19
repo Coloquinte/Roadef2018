@@ -208,7 +208,7 @@ void Solver::step() {
   // Sequential acceptance
   for (size_t i = 0; i < parallelEvals; ++i, ++nMoves_) {
     MoveStatus status = accept(*moves[i], incumbents[i]);
-    updateStats(*moves[i], status);
+    updateStats(*moves[i], status, incumbents[i]);
   }
 }
 
@@ -264,24 +264,6 @@ Solver::MoveStatus Solver::accept(Move &move, const Solution &incumbent) {
     cout << " solution: " << density << "% density";
     if (mapped < 99.9) cout << " but only " << mapped << "% mapped";
     cout << " obtained by " << move.name() << endl;
-
-    if (params_.verbosity >= 4) {
-      int nCommonPrefix = 0;
-      int nCommonSuffix = 0;
-      for (; nCommonPrefix < incumbent.nPlates() && nCommonPrefix < solution_.nPlates(); ++nCommonPrefix) {
-        if (solution_.plates[nCommonPrefix].sequence() != incumbent.plates[nCommonPrefix].sequence())
-          break;
-      }
-      for (; nCommonSuffix < incumbent.nPlates(); ++nCommonSuffix) {
-        if (incumbent.nPlates() != solution_.nPlates())
-          break;
-        int ind = incumbent.nPlates() - 1 - nCommonSuffix;
-        if (solution_.plates[ind].sequence() != incumbent.plates[ind].sequence())
-          break;
-      }
-
-      cout << nCommonPrefix << " first plates and " << nCommonSuffix << " last plates shared with previous solution" << endl;
-    }
   }
   else if (status == MoveStatus::Improvement && params_.verbosity >= 2) {
     cout << density << "%\t" << nMoves_ << "\t" << move.name() << endl;
@@ -296,7 +278,7 @@ Solver::MoveStatus Solver::accept(Move &move, const Solution &incumbent) {
   return status;
 }
 
-void Solver::updateStats(Move &move, MoveStatus status) {
+void Solver::updateStats(Move &move, MoveStatus status, const Solution &incumbent) {
   switch (status) {
     case MoveStatus::Improvement:
       ++move.nImprovement_;
@@ -314,13 +296,31 @@ void Solver::updateStats(Move &move, MoveStatus status) {
       ++move.nFailure_;
       break;
   }
+
+  int nCommonPrefix = 0;
+  int nCommonSuffix = 0;
+  for (; nCommonPrefix < incumbent.nPlates() && nCommonPrefix < solution_.nPlates(); ++nCommonPrefix) {
+    if (solution_.plates[nCommonPrefix].sequence() != incumbent.plates[nCommonPrefix].sequence())
+      break;
+  }
+  for (; nCommonSuffix < incumbent.nPlates() - nCommonPrefix; ++nCommonSuffix) {
+    if (incumbent.nPlates() != solution_.nPlates())
+      break;
+    int ind = incumbent.nPlates() - 1 - nCommonSuffix;
+    if (solution_.plates[ind].sequence() != incumbent.plates[ind].sequence())
+      break;
+  }
+
+  move.nCommonPrefixPlates_ += nCommonPrefix;
+  move.nCommonSuffixPlates_ += nCommonSuffix;
+  move.nDifferentPlates_ += incumbent.nPlates() - nCommonSuffix - nCommonPrefix;
 }
 
 void Solver::finalReport() const {
   if (params_.verbosity >= 2) {
     int nEvaluated = 0;
     int nImprovement = 0;
-    cout << endl << "MoveName        \tTotal\t-\t=\t+\tFail\tErr" << endl;
+    cout << endl << "MoveName        \tTotal\t-\t=\t+\tFail\tErr\tRecompute" << endl;
 
     vector<Move*> allMoves;
     for (auto &m : initializers_)
@@ -351,6 +351,12 @@ void Solver::finalReport() const {
 
       nEvaluated += m->nDegradation() + m->nPlateau() + m->nImprovement();
       nImprovement += m->nImprovement();
+
+      cout << "\t";
+      if (m->nAcceptable())
+        cout << m->recomputationPercentage() << "%";
+      else
+        cout << "-";
 
       cout << endl;
     }

@@ -19,7 +19,11 @@ Move::Move()
 , nImprovement_(0)
 , nDegradation_(0)
 , nPlateau_(0)
-, nFailure_(0) {
+, nFailure_(0)
+, nCommonPrefixPlates_ (0)
+, nCommonSuffixPlates_(0)
+, nDifferentPlates_(0)
+{
 }
 
 vector<Item> Move::extractSequence(const Solution &solution) const {
