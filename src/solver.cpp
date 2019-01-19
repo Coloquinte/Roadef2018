@@ -79,9 +79,12 @@ Solver::Solver(const Problem &problem, SolverParams params, vector<int> initial)
     // Swap two ranges
     //addMove(make_unique<RangeSwap>());
     // Local improvement
-    addMove(make_unique<PackRowInsert>());
-    addMove(make_unique<PackCutInsert>());
-    addMove(make_unique<PackPlateInsert>());
+    addMove(make_unique<PackRowInsert>()    );
+    addMove(make_unique<PackCutInsert>()    );
+    addMove(make_unique<PackPlateInsert>()  );
+    addMove(make_unique<PackRowShuffle>()   );
+    addMove(make_unique<PackCutShuffle>()   );
+    addMove(make_unique<PackPlateShuffle>() );
   }
 
   if (params_.enableMerging) {

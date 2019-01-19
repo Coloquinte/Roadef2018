@@ -306,7 +306,7 @@ void Move::repairSequence(vector<Item> &sequence) const {
   for (Item item : sequence) {
     int stack = item.stack;
     int index = stackCounts[stack]++;
-    assert (index < (int) problem().stackItems()[stack].size());
+    assert (index < (int) stacks[stack].size());
     result.push_back(stacks[stack][index]);
   }
 
