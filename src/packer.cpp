@@ -29,9 +29,10 @@ int Packer::firstValidVerticalCutFrom(int fromX, int minX, bool tightX) const {
       }
     }
     // If a defect is at the border of the plate
-    minX = min(minX, region_.maxX());
     if (!hasDefect)
       return minX;
+    if (minX > region_.maxX())
+      return region_.maxX();
     minX = max(minNonTight, minX);
   }
 }
@@ -51,9 +52,10 @@ int Packer::firstValidHorizontalCutFrom(int fromY, int minY, bool tightY) const 
       }
     }
     // If a defect is at the border of the plate
-    minY = min(minY, region_.maxY());
     if (!hasDefect)
       return minY;
+    if (minY > region_.maxY())
+      return region_.maxY();
     minY = max(minNonTight, minY);
   }
 }
