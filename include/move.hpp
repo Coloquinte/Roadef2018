@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef MOVE_HPP
 #define MOVE_HPP

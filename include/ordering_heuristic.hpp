@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef ORDERING_HEURISTICS_HPP
 #define ORDERING_HEURISTICS_HPP

@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef SEQUENCE_PACKER_HPP
 #define SEQUENCE_PACKER_HPP

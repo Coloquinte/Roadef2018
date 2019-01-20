@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #include "cut_merger.hpp"
 #include "utils.hpp"

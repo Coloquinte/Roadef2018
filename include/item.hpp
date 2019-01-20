@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef ITEM_HPP
 #define ITEM_HPP

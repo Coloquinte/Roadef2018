@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #include "cut_packer.hpp"
 #include "utils.hpp"

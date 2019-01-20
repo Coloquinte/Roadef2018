@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #include "solver.hpp"
 #include "sequence_packer.hpp"

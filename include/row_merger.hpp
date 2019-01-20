@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef ROW_MERGER_HPP
 #define ROW_MERGER_HPP

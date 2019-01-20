@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef SEQUENCE_MERGER_HPP
 #define SEQUENCE_MERGER_HPP

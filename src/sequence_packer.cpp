@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #include "sequence_packer.hpp"
 #include "plate_packer.hpp"

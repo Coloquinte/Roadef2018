@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef PLATE_PACKER_HPP
 #define PLATE_PACKER_HPP

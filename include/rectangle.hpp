@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef RECTANGLE_HPP
 #define RECTANGLE_HPP

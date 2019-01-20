@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef CUT_MERGER_HPP
 #define CUT_MERGER_HPP

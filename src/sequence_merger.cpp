@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #include "sequence_merger.hpp"
 #include "utils.hpp"

@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef ROW_PACKER_HPP
 #define ROW_PACKER_HPP

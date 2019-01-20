@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #include "merger_move.hpp"
 #include "row_merger.hpp"

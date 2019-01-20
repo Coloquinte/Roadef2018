@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef IO_PROBLEM_HPP
 #define IO_PROBLEM_HPP

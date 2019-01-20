@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #include "packer_move.hpp"
 #include "row_packer.hpp"

@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef SOLUTION_CHECKER_HPP
 #define SOLUTION_CHECKER_HPP

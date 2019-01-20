@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef PACKER_FRONT_HPP
 #define PACKER_FRONT_HPP

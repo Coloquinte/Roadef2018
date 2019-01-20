@@ -1,3 +1,4 @@
+// Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #ifndef SOLVER_PARAMS_HPP
 #define SOLVER_PARAMS_HPP
