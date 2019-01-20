@@ -27,7 +27,8 @@ int Packer::firstValidVerticalCutFrom(int fromX, int minX, bool tightX) const {
         hasDefect = true;
       }
     }
-    assert (minX <= region_.maxX());
+    // If a defect is at the border of the plate
+    minX = min(minX, region_.maxX());
     if (!hasDefect)
       return minX;
     minX = max(minNonTight, minX);
@@ -48,7 +49,8 @@ int Packer::firstValidHorizontalCutFrom(int fromY, int minY, bool tightY) const 
         hasDefect = true;
       }
     }
-    assert (minY <= region_.maxY());
+    // If a defect is at the border of the plate
+    minY = min(minY, region_.maxY());
     if (!hasDefect)
       return minY;
     minY = max(minNonTight, minY);
@@ -71,7 +73,7 @@ void Packer::checkItems() const {
 
 void Packer::checkDefects() const {
   for (Defect defect : defects_) {
-    assert (region_.containsStrictly(defect));
+    assert (region_.contains(defect));
   }
 }
 
