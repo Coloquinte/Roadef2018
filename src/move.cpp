@@ -3,7 +3,6 @@
 #include "move.hpp"
 
 #include "sequence_packer.hpp"
-#include "sequence_merger.hpp"
 #include "solution_checker.hpp"
 #include "ordering_heuristic.hpp"
 
@@ -198,10 +197,7 @@ Solution Move::runSequence(const vector<Item> &sequence) {
   if (!sequenceValid(sequence))
     return Solution();
 
-  if (params().packWithMerger)
-    return SequenceMerger::run(problem(), sequence, params());
-  else
-    return SequencePacker::run(problem(), sequence, params());
+  return SequencePacker::run(problem(), sequence, params());
 }
 
 void randomInsert(vector<vector<Item> > &vec, mt19937 &rgen) {

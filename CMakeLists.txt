@@ -29,13 +29,7 @@ SET (SOURCES
   src/params.cpp
   src/move.cpp
   src/packer_move.cpp
-  src/merger_move.cpp
   src/main.cpp
-  src/sequence_merger.cpp
-  src/plate_merger.cpp
-  src/cut_merger.cpp
-  src/row_merger.cpp
-  src/merger.cpp
 )
 
 add_executable(gcut ${SOURCES})

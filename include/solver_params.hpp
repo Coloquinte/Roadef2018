@@ -20,19 +20,10 @@ struct SolverParams {
   double timeLimit;
   bool failOnViolation;
 
-  bool packWithMerger;
-  bool enablePacking;
-  bool enableMerging;
-
   PackingOption rowPacking;
   PackingOption cutPacking;
   PackingOption platePacking;
   bool tracePackingFronts;
-
-  PackingOption rowMerging;
-  PackingOption cutMerging;
-  PackingOption plateMerging;
-  bool traceMergingFronts;
 
   SolverParams() {
     verbosity = 0;
@@ -43,19 +34,10 @@ struct SolverParams {
     timeLimit = 0.0;
     failOnViolation = false;
 
-    packWithMerger = false;
-    enablePacking = true;
-    enableMerging = false;
-
     rowPacking = PackingOption::Approximate;
     cutPacking = PackingOption::Approximate;
     platePacking = PackingOption::Approximate;
     tracePackingFronts = false;
-
-    rowMerging = PackingOption::Approximate;
-    cutMerging = PackingOption::Approximate;
-    plateMerging = PackingOption::Approximate;
-    traceMergingFronts = false;
   }
 };
 

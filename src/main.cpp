@@ -68,8 +68,6 @@ po::options_description getHiddenOptions() {
                      "Move limit");
   move.add_options()("init-moves", po::value<size_t>()->default_value(5000llu),
                      "Initialization move limit");
-  move.add_options()("packing-moves", po::value<bool>()->default_value(true), "Enable packing moves");
-  move.add_options()("merging-moves", po::value<bool>()->default_value(false), "Enable merging moves");
 
   po::options_description pack("GCUT packing options");
   pack.add_options()("exact-row-packings", "Solve 3-cuts packings exactly");
@@ -82,23 +80,11 @@ po::options_description getHiddenOptions() {
 
   pack.add_options()("trace-packing-fronts", "Trace Pareto fronts in exact packing algorithms");
 
-  po::options_description merge("GCUT merging options");
-  merge.add_options()("exact-row-mergings", "Solve 3-cuts mergings exactly");
-  merge.add_options()("exact-cut-mergings", "Solve 2-cuts mergings exactly");
-  merge.add_options()("exact-plate-mergings", "Solve 1-cuts mergings exactly");
-
-  merge.add_options()("diagnose-row-mergings", "Diagnose 3-cut mergings suboptimalities");
-  merge.add_options()("diagnose-cut-mergings", "Diagnose 2-cut mergings suboptimalities");
-  merge.add_options()("diagnose-plate-mergings", "Diagnose 1-cut mergings suboptimalities");
-
-  merge.add_options()("trace-merging-fronts", "Trace Pareto fronts in exact merging algorithms");
-
   po::options_description expe("GCUT experimental options");
-  pack.add_options()("pack-with-merger", "Use the merging logic to evaluate packing");
   pack.add_options()("first-plate", po::value<int>(), "First plate to consider from the initial solution");
   pack.add_options()("last-plate" , po::value<int>(), "Last plate to consider from the initial solution");
 
-  desc.add(dev).add(move).add(pack).add(merge).add(expe);
+  desc.add(dev).add(move).add(pack).add(expe);
 
   return desc;
 }
@@ -165,9 +151,6 @@ SolverParams buildParams(const po::variables_map &vm) {
   params.failOnViolation = vm.count("check");
   params.moveLimit = vm["moves"].as<size_t>();
   params.initializationRuns = vm["init-moves"].as<size_t>();
-  params.packWithMerger = vm.count("pack-with-merger");
-  params.enablePacking = vm["packing-moves"].as<bool>();
-  params.enableMerging = vm["merging-moves"].as<bool>();
 
   if (vm.count("exact-row-packings")) params.rowPacking = PackingOption::Exact;
   if (vm.count("diagnose-row-packings")) params.rowPacking = PackingOption::Diagnose;
@@ -176,14 +159,6 @@ SolverParams buildParams(const po::variables_map &vm) {
   if (vm.count("exact-plate-packings")) params.platePacking = PackingOption::Exact;
   if (vm.count("diagnose-plate-packings")) params.platePacking = PackingOption::Diagnose;
   if (vm.count("trace-packing-fronts")) params.tracePackingFronts = true;
-
-  if (vm.count("exact-row-mergings")) params.rowMerging = PackingOption::Exact;
-  if (vm.count("diagnose-row-mergings")) params.rowMerging = PackingOption::Diagnose;
-  if (vm.count("exact-cut-mergings")) params.cutMerging = PackingOption::Exact;
-  if (vm.count("diagnose-cut-mergings")) params.cutMerging = PackingOption::Diagnose;
-  if (vm.count("exact-plate-mergings")) params.plateMerging = PackingOption::Exact;
-  if (vm.count("diagnose-plate-mergings")) params.plateMerging = PackingOption::Diagnose;
-  if (vm.count("trace-merging-fronts")) params.traceMergingFronts = true;
 
   return params;
 }
