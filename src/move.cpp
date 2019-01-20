@@ -20,8 +20,8 @@ Move::Move()
 , nDegradation_(0)
 , nPlateau_(0)
 , nFailure_(0)
-, nCommonPrefixPlates_ (0)
-, nCommonSuffixPlates_(0)
+, nCommonPlates_ (0)
+, nPrunedPlates_(0)
 , nDifferentPlates_(0)
 {
 }

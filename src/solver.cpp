@@ -10,6 +10,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <cassert>
 
 using namespace std;
 
@@ -282,23 +283,47 @@ void Solver::updateStats(Move &move, MoveStatus status, const Solution &incumben
       break;
   }
 
-  int nCommonPrefix = 0;
-  int nCommonSuffix = 0;
-  for (; nCommonPrefix < incumbent.nPlates() && nCommonPrefix < solution_.nPlates(); ++nCommonPrefix) {
-    if (solution_.plates[nCommonPrefix].sequence() != incumbent.plates[nCommonPrefix].sequence())
-      break;
+  vector<Item> oldSequence = move.extractSequence(solution_);
+  vector<Item> newSequence = move.extractSequence(incumbent);
+
+  int beginDiff = 0;
+  for (beginDiff = 0; beginDiff < (int) newSequence.size(); ++beginDiff) {
+    int ind = beginDiff;
+    if (ind < (int) oldSequence.size()
+     && oldSequence[ind].id != newSequence[ind].id) break;
   }
-  for (; nCommonSuffix < incumbent.nPlates() - nCommonPrefix; ++nCommonSuffix) {
-    if (incumbent.nPlates() != solution_.nPlates())
-      break;
-    int ind = incumbent.nPlates() - 1 - nCommonSuffix;
-    if (solution_.plates[ind].sequence() != incumbent.plates[ind].sequence())
-      break;
+  int endDiff = 0;
+  for (endDiff = 0; endDiff < (int) newSequence.size(); ++endDiff) {
+    int ind = endDiff;
+    if (ind < (int) oldSequence.size()
+     && oldSequence[ind].id != newSequence[ind].id) break;
   }
 
-  move.nCommonPrefixPlates_ += nCommonPrefix;
-  move.nCommonSuffixPlates_ += nCommonSuffix;
-  move.nDifferentPlates_ += incumbent.nPlates() - nCommonSuffix - nCommonPrefix;
+  int foundSolutionItems = 0;
+  int foundIncumbentItems = 0;
+  int nCommonPlates = 0;
+  int nPrunedPlates = 0;
+  for (int i = 0; i < incumbent.nPlates() && i < solution_.nPlates(); ++i) {
+    foundSolutionItems += solution_.plates[i].nItems();
+    foundIncumbentItems += incumbent.plates[i].nItems();
+    if (foundSolutionItems <= beginDiff) {
+      nCommonPlates = i;
+    }
+    else if (foundSolutionItems > endDiff) {
+      if (foundSolutionItems > foundIncumbentItems) {
+        nPrunedPlates = incumbent.nPlates() - i;
+      }
+      else {
+        nCommonPlates += incumbent.nPlates() - i;
+      }
+      break;
+    }
+  }
+  assert (nCommonPlates + nPrunedPlates <= incumbent.nPlates());
+
+  move.nCommonPlates_ += nCommonPlates;
+  move.nPrunedPlates_ += nPrunedPlates;
+  move.nDifferentPlates_ += incumbent.nPlates() - nCommonPlates - nPrunedPlates;
 }
 
 void Solver::finalReport() const {

@@ -26,7 +26,7 @@ class Move {
 
   double recomputationPercentage() const {
     int recomputation = nDifferentPlates_;
-    int total = nDifferentPlates_ + nCommonPrefixPlates_ + nCommonSuffixPlates_;
+    int total = nDifferentPlates_ + nCommonPlates_ + nPrunedPlates_;
     return 100.0 * recomputation / total;
   }
 
@@ -72,8 +72,8 @@ class Move {
   std::size_t nPlateau_;
   std::size_t nFailure_;
 
-  std::size_t nCommonPrefixPlates_;
-  std::size_t nCommonSuffixPlates_;
+  std::size_t nCommonPlates_;
+  std::size_t nPrunedPlates_;
   std::size_t nDifferentPlates_;
 
  public:
