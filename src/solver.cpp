@@ -275,6 +275,8 @@ Solver::MoveStatus Solver::accept(Move &move, const Solution &incumbent) {
 }
 
 void Solver::updateStats(Move &move, MoveStatus status, const Solution &incumbent) {
+  if (params_.verbosity < 2) return;
+
   switch (status) {
     case MoveStatus::Improvement:
       ++move.nImprovement_;

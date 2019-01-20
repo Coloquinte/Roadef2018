@@ -53,8 +53,8 @@ void SolutionChecker::report(const Problem &problem) {
 void SolutionChecker::report(const Problem &problem, const Solution &solution) {
   SolutionChecker checker(problem);
   checker.checkSolution(solution);
-  checker.reportErrors();
   checker.reportProblem();
+  checker.reportErrors();
   checker.reportQuality(solution);
 }
 
@@ -430,6 +430,10 @@ void SolutionChecker::reportProblem() {
   int minDim = maxDim;
   for (Item item : problem_.items()) minDim = min(minDim, item.width);
   cout << minDim << " minimum size" << endl;
+  long long total = evalTotalArea();
+  long long plate = evalPlateArea();
+  cout << 1.0 * total / plate << " plates minimum" << endl;
+  cout << endl;
 }
 
 void SolutionChecker::reportQuality(const Solution &solution) {
@@ -446,7 +450,6 @@ void SolutionChecker::reportQuality(const Solution &solution) {
   cout << 100.0 * wasted / used << "% wasted" << endl;
   cout << 1.0 * used / plate << " plates used" << endl;
   cout << 1.0 * wasted / plate << " plates wasted" << endl;
-  cout << total << " item area" << endl;
   cout << wasted << " objective value" << endl;
   cout << endl;
 }
