@@ -283,8 +283,8 @@ void Solver::updateStats(Move &move, MoveStatus status, const Solution &incumben
       break;
   }
 
-  vector<Item> oldSequence = move.extractSequence(solution_);
-  vector<Item> newSequence = move.extractSequence(incumbent);
+  vector<Item> oldSequence = solution_.sequence(problem_);
+  vector<Item> newSequence = incumbent.sequence(problem_);
 
   int beginDiff = 0;
   for (beginDiff = 0; beginDiff < (int) newSequence.size(); ++beginDiff) {

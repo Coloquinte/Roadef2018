@@ -31,11 +31,6 @@ class Move {
   }
 
  protected:
-  std::vector<Item> extractSequence(const Solution&) const;
-  std::vector<Item> extractSequence(const PlateSolution&) const;
-  std::vector<Item> extractSequence(const CutSolution&) const;
-  std::vector<Item> extractSequence(const RowSolution&) const;
-
   std::vector<std::vector<Item> > extractItemItems(const Solution&) const;
   std::vector<std::vector<Item> > extractRowItems(const Solution&) const;
   std::vector<std::vector<Item> > extractCutItems(const Solution&) const;

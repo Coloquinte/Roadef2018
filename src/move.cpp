@@ -26,50 +26,6 @@ Move::Move()
 {
 }
 
-vector<Item> Move::extractSequence(const Solution &solution) const {
-  vector<Item> sequence;
-  for (const PlateSolution &plate: solution.plates) {
-    for (const CutSolution &cut: plate.cuts) {
-      for (const RowSolution &row: cut.rows) {
-        for (ItemSolution item : row.items) {
-          sequence.push_back(problem().items()[item.itemId]);
-        }
-      }
-    }
-  }
-  return sequence;
-}
-
-vector<Item> Move::extractSequence(const PlateSolution &plate) const {
-  vector<Item> sequence;
-  for (const CutSolution &cut: plate.cuts) {
-    for (const RowSolution &row: cut.rows) {
-      for (ItemSolution item : row.items) {
-        sequence.push_back(problem().items()[item.itemId]);
-      }
-    }
-  }
-  return sequence;
-}
-
-vector<Item> Move::extractSequence(const CutSolution &cut) const {
-  vector<Item> sequence;
-  for (const RowSolution &row: cut.rows) {
-    for (ItemSolution item : row.items) {
-      sequence.push_back(problem().items()[item.itemId]);
-    }
-  }
-  return sequence;
-}
-
-vector<Item> Move::extractSequence(const RowSolution &row) const {
-  vector<Item> sequence;
-  for (ItemSolution item : row.items) {
-    sequence.push_back(problem().items()[item.itemId]);
-  }
-  return sequence;
-}
-
 vector<vector<Item> > Move::extractItemItems(const Solution &solution) const {
   vector<vector<Item> > items;
   for (const PlateSolution &plate: solution.plates) {
@@ -90,7 +46,7 @@ vector<vector<Item> > Move::extractRowItems(const Solution &solution) const {
   for (const PlateSolution &plate: solution.plates) {
     for (const CutSolution &cut: plate.cuts) {
       for (const RowSolution &row: cut.rows) {
-        rows.push_back(extractSequence(row));
+        rows.push_back(row.sequence(problem()));
       }
     }
   }
@@ -101,7 +57,7 @@ vector<vector<Item> > Move::extractCutItems(const Solution &solution) const {
   vector<vector<Item> > cuts;
   for (const PlateSolution &plate: solution.plates) {
     for (const CutSolution &cut: plate.cuts) {
-      cuts.push_back(extractSequence(cut));
+      cuts.push_back(cut.sequence(problem()));
     }
   }
   return cuts;
@@ -110,7 +66,7 @@ vector<vector<Item> > Move::extractCutItems(const Solution &solution) const {
 vector<vector<Item> > Move::extractPlateItems(const Solution &solution) const {
   vector<vector<Item> > plates;
   for (const PlateSolution &plate: solution.plates) {
-    plates.push_back(extractSequence(plate));
+    plates.push_back(plate.sequence(problem()));
   }
   return plates;
 }
@@ -366,7 +322,7 @@ Solution Shuffle::apply(mt19937& rgen) {
   if (windowSize_ == 0) {
     sequence = OrderingHeuristic::orderShuffle(problem(), rgen, chunkSize_);
   } else {
-    vector<Item> initial = extractSequence(solution());
+    vector<Item> initial = solution().sequence(problem());
     sequence = OrderingHeuristic::orderShuffle(problem(), rgen,
         initial, chunkSize_, windowSize_);
   }

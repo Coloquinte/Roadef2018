@@ -130,7 +130,7 @@ Solution PackerMove::runPackRow(Rectangle targetRow, const std::vector<Item> &se
   }
 
   // Run the whole algorithm with the new sequence if an improvement was found
-  vector<Item> newSubseq = extractSequence(newSol);
+  vector<Item> newSubseq = newSol.sequence(problem());
   vector<Item> newSeq = recreateFullSequence(newSubseq, allRows, rowId);
   checkSequenceValid(newSeq);
   return runSequence(newSeq);
@@ -157,7 +157,7 @@ Solution PackerMove::runPackCut(Rectangle targetCut, const std::vector<Item> &se
   }
 
   // Run the whole algorithm with the new sequence if an improvement was found
-  vector<Item> newSubseq = extractSequence(newSol);
+  vector<Item> newSubseq = newSol.sequence(problem());
   vector<Item> newSeq = recreateFullSequence(newSubseq, allCuts, cutId);
   checkSequenceValid(newSeq);
   return runSequence(newSeq);
@@ -184,7 +184,7 @@ Solution PackerMove::runPackPlate(Rectangle targetPlate, const std::vector<Item>
   }
 
   // Run the whole algorithm with the new sequence if an improvement was found
-  vector<Item> newSubseq = extractSequence(newSol);
+  vector<Item> newSubseq = newSol.sequence(problem());
   vector<Item> newSeq = recreateFullSequence(newSubseq, allPlates, plateId);
   checkSequenceValid(newSeq);
   return runSequence(newSeq);
@@ -198,7 +198,7 @@ Solution PackRowInsert::apply(mt19937& rgen) {
   RowSolution targetRow = rows[rowId];
 
   auto allRows = extractRowItems(solution());
-  vector<Item> sequence = extractSequence(rows[rowId]);
+  vector<Item> sequence = rows[rowId].sequence(problem());
   sequenceInsert(sequence, rgen, allRows, rowId, targetRow.area());
 
   return runPackRow(targetRow, sequence, allRows, rowId);
@@ -211,7 +211,7 @@ Solution PackCutInsert::apply(mt19937& rgen) {
   CutSolution targetCut = cuts[cutId];
 
   auto allCuts = extractCutItems(solution());
-  vector<Item> sequence = extractSequence(cuts[cutId]);
+  vector<Item> sequence = cuts[cutId].sequence(problem());
   sequenceInsert(sequence, rgen, allCuts, cutId, targetCut.area());
 
   return runPackCut(targetCut, sequence, allCuts, cutId);
@@ -224,7 +224,7 @@ Solution PackPlateInsert::apply(mt19937& rgen) {
   PlateSolution targetPlate = plates[plateId];
 
   auto allPlates = extractPlateItems(solution());
-  vector<Item> sequence = extractSequence(plates[plateId]);
+  vector<Item> sequence = plates[plateId].sequence(problem());
   sequenceInsert(sequence, rgen, allPlates, plateId, targetPlate.area());
 
   return runPackPlate(targetPlate, sequence, allPlates, plateId);
@@ -237,7 +237,7 @@ Solution PackRowShuffle::apply(mt19937& rgen) {
   RowSolution targetRow = rows[rowId];
 
   auto allRows = extractRowItems(solution());
-  vector<Item> sequence = extractSequence(rows[rowId]);
+  vector<Item> sequence = rows[rowId].sequence(problem());
   sequenceShuffle(sequence, rgen, allRows, rowId, targetRow.area());
 
   return runPackRow(targetRow, sequence, allRows, rowId);
@@ -250,7 +250,7 @@ Solution PackCutShuffle::apply(mt19937& rgen) {
   CutSolution targetCut = cuts[cutId];
 
   auto allCuts = extractCutItems(solution());
-  vector<Item> sequence = extractSequence(cuts[cutId]);
+  vector<Item> sequence = cuts[cutId].sequence(problem());
   sequenceShuffle(sequence, rgen, allCuts, cutId, targetCut.area());
 
   return runPackCut(targetCut, sequence, allCuts, cutId);
@@ -263,7 +263,7 @@ Solution PackPlateShuffle::apply(mt19937& rgen) {
   PlateSolution targetPlate = plates[plateId];
 
   auto allPlates = extractPlateItems(solution());
-  vector<Item> sequence = extractSequence(plates[plateId]);
+  vector<Item> sequence = plates[plateId].sequence(problem());
   sequenceShuffle(sequence, rgen, allPlates, plateId, targetPlate.area());
 
   return runPackPlate(targetPlate, sequence, allPlates, plateId);

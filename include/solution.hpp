@@ -10,6 +10,8 @@
 #include <vector>
 #include <iosfwd>
 
+class Problem;
+
 struct ItemSolution : Rectangle {
   ItemSolution() {}
   ItemSolution(Rectangle r, int itemId)
@@ -29,6 +31,7 @@ struct RowSolution : Rectangle {
     }
   void report() const;
   std::vector<int> sequence() const;
+  std::vector<Item> sequence(const Problem&) const;
 
   std::vector<ItemSolution> items;
 
@@ -45,6 +48,7 @@ struct CutSolution : Rectangle {
     }
   void report() const;
   std::vector<int> sequence() const;
+  std::vector<Item> sequence(const Problem&) const;
 
   std::vector<RowSolution> rows;
 
@@ -61,6 +65,7 @@ struct PlateSolution : Rectangle {
     }
   void report() const;
   std::vector<int> sequence() const;
+  std::vector<Item> sequence(const Problem&) const;
 
   std::vector<CutSolution> cuts;
 
@@ -76,6 +81,7 @@ struct Solution {
 
   void report() const;
   std::vector<int> sequence() const;
+  std::vector<Item> sequence(const Problem&) const;
   void write(std::string fileName) const;
 
   static std::vector<int> readOrdering(std::string filename);

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 Gabriel Gouvine - All Rights Reserved
 
 #include "solution.hpp"
+#include "problem.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -372,3 +373,49 @@ vector<int> Solution::sequence() const {
   }
   return seq;
 }
+
+vector<Item> Solution::sequence(const Problem &problem) const {
+  vector<Item> sequence;
+  for (const PlateSolution &plate: plates) {
+    for (const CutSolution &cut: plate.cuts) {
+      for (const RowSolution &row: cut.rows) {
+        for (ItemSolution item : row.items) {
+          sequence.push_back(problem.items()[item.itemId]);
+        }
+      }
+    }
+  }
+  return sequence;
+}
+
+vector<Item> PlateSolution::sequence(const Problem &problem) const {
+  vector<Item> sequence;
+  for (const CutSolution &cut: cuts) {
+    for (const RowSolution &row: cut.rows) {
+      for (ItemSolution item : row.items) {
+        sequence.push_back(problem.items()[item.itemId]);
+      }
+    }
+  }
+  return sequence;
+}
+
+vector<Item> CutSolution::sequence(const Problem &problem) const {
+  vector<Item> sequence;
+  for (const RowSolution &row: rows) {
+    for (ItemSolution item : row.items) {
+      sequence.push_back(problem.items()[item.itemId]);
+    }
+  }
+  return sequence;
+}
+
+vector<Item> RowSolution::sequence(const Problem &problem) const {
+  vector<Item> sequence;
+  for (ItemSolution item : items) {
+    sequence.push_back(problem.items()[item.itemId]);
+  }
+  return sequence;
+}
+
+
