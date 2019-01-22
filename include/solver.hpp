@@ -36,8 +36,8 @@ class Solver {
   void updateStats(Move &move, MoveStatus status, const Solution &incumbent);
   void finalReport() const;
 
-  void addInitializer(std::unique_ptr<Move> &&move, int weight=1);
-  void addMove(std::unique_ptr<Move> &&move, int weight=1);
+  void addInitializer(std::unique_ptr<Move> &&move, int weight=100);
+  void addMove(std::unique_ptr<Move> &&move, int weight=100);
 
  private:
   const Problem &problem_;

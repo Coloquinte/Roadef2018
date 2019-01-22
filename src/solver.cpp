@@ -36,7 +36,7 @@ Solver::Solver(const Problem &problem, SolverParams params, const Solution &init
 
   // Shuffle everything
   addInitializer(make_unique<Shuffle>(  1));
-  //addInitializer(make_unique<Shuffle>(  4));
+  addInitializer(make_unique<Shuffle>(  4));
   addInitializer(make_unique<Shuffle>( 16));
   addInitializer(make_unique<Shuffle>( 64));
   addInitializer(make_unique<Shuffle>(128));
@@ -44,39 +44,46 @@ Solver::Solver(const Problem &problem, SolverParams params, const Solution &init
   // Shuffle a subrange
   addMove(make_unique<Shuffle>(1,  8));
   addMove(make_unique<Shuffle>(1, 16));
-  //addMove(make_unique<Shuffle>(1, 32));
+  addMove(make_unique<Shuffle>(1, 32));
+  addMove(make_unique<Shuffle>(1, 64));
   addMove(make_unique<Shuffle>(4,  8));
   addMove(make_unique<Shuffle>(4, 16));
   addMove(make_unique<Shuffle>(4, 32));
-  //addMove(make_unique<Shuffle>(8,  8));
+  addMove(make_unique<Shuffle>(4, 64));
+  addMove(make_unique<Shuffle>(8,  8));
   addMove(make_unique<Shuffle>(8, 16));
   addMove(make_unique<Shuffle>(8, 32));
+  addMove(make_unique<Shuffle>(8, 64));
 
+  /*
   // Insertions
   addMove(make_unique<ItemInsert>());
   addMove(make_unique<RowInsert>());
   addMove(make_unique<CutInsert>());
-  //addMove(make_unique<PlateInsert>());
+  addMove(make_unique<PlateInsert>());
 
   // Swaps
   addMove(make_unique<ItemSwap>());
   addMove(make_unique<RowSwap>());
   addMove(make_unique<CutSwap>());
-  //addMove(make_unique<PlateSwap>());
+  addMove(make_unique<PlateSwap>());
+  */
 
   // Local swaps
-  //addMove(make_unique<AdjacentItemSwap>());
+  addMove(make_unique<AdjacentItemSwap>());
   addMove(make_unique<AdjacentRowSwap>());
   addMove(make_unique<AdjacentCutSwap>());
   //addMove(make_unique<AdjacentPlateSwap>());
 
   // Reverse a range
-  //addMove(make_unique<Mirror>(4));
+  addMove(make_unique<Mirror>(4));
   addMove(make_unique<Mirror>(8));
   addMove(make_unique<Mirror>(16));
 
   // Swap two ranges
   //addMove(make_unique<RangeSwap>());
+
+  /*
   // Local improvement
   addMove(make_unique<PackRowInsert>()    );
   addMove(make_unique<PackCutInsert>()    );
@@ -84,6 +91,7 @@ Solver::Solver(const Problem &problem, SolverParams params, const Solution &init
   addMove(make_unique<PackRowShuffle>()   );
   addMove(make_unique<PackCutShuffle>()   );
   addMove(make_unique<PackPlateShuffle>() );
+  */
   
   for (const auto &m : initializers_) m.first->solver_ = this;
   for (const auto &m : moves_) m.first->solver_ = this;
