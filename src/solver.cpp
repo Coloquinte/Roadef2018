@@ -40,20 +40,26 @@ Solver::Solver(const Problem &problem, SolverParams params, const Solution &init
   addInitializer(make_unique<Shuffle>( 16));
   addInitializer(make_unique<Shuffle>( 64));
   addInitializer(make_unique<Shuffle>(128));
+  addInitializer(make_unique<Shuffle>(256));
 
   // Shuffle a subrange
-  addMove(make_unique<Shuffle>(1,  8));
-  addMove(make_unique<Shuffle>(1, 16));
-  addMove(make_unique<Shuffle>(1, 32));
-  addMove(make_unique<Shuffle>(1, 64));
-  addMove(make_unique<Shuffle>(4,  8));
-  addMove(make_unique<Shuffle>(4, 16));
-  addMove(make_unique<Shuffle>(4, 32));
-  addMove(make_unique<Shuffle>(4, 64));
-  addMove(make_unique<Shuffle>(8,  8));
-  addMove(make_unique<Shuffle>(8, 16));
-  addMove(make_unique<Shuffle>(8, 32));
-  addMove(make_unique<Shuffle>(8, 64));
+  addMove(make_unique<Shuffle>( 1,  4));
+  addMove(make_unique<Shuffle>( 1,  8));
+  addMove(make_unique<Shuffle>( 1, 16));
+  addMove(make_unique<Shuffle>( 1, 32));
+  addMove(make_unique<Shuffle>( 1, 64));
+  addMove(make_unique<Shuffle>( 4,  4));
+  addMove(make_unique<Shuffle>( 4,  8));
+  addMove(make_unique<Shuffle>( 4, 16));
+  addMove(make_unique<Shuffle>( 4, 32));
+  addMove(make_unique<Shuffle>( 4, 64));
+  addMove(make_unique<Shuffle>( 8,  8));
+  addMove(make_unique<Shuffle>( 8, 16));
+  addMove(make_unique<Shuffle>( 8, 32));
+  addMove(make_unique<Shuffle>( 8, 64));
+  addMove(make_unique<Shuffle>(16, 16));
+  addMove(make_unique<Shuffle>(16, 32));
+  addMove(make_unique<Shuffle>(16, 64));
 
   /*
   // Insertions
@@ -73,12 +79,13 @@ Solver::Solver(const Problem &problem, SolverParams params, const Solution &init
   addMove(make_unique<AdjacentItemSwap>());
   addMove(make_unique<AdjacentRowSwap>());
   addMove(make_unique<AdjacentCutSwap>());
-  //addMove(make_unique<AdjacentPlateSwap>());
+  addMove(make_unique<AdjacentPlateSwap>());
 
   // Reverse a range
   addMove(make_unique<Mirror>(4));
   addMove(make_unique<Mirror>(8));
   addMove(make_unique<Mirror>(16));
+  addMove(make_unique<Mirror>(32));
 
   // Swap two ranges
   //addMove(make_unique<RangeSwap>());
