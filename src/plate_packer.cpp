@@ -213,11 +213,6 @@ void PlatePacker::insertInFront(int begin, int end, int totalItems, int previous
    && front_[previous].end + Params::maxXX < begin
    && front_[previous].end + Params::minXX > begin)
     return;
-  if (end > Params::widthPlates - Params::minXX
-   && end != Params::widthPlates
-   && totalItems != nItems()) {
-    return;
-  }
   front_.insert(begin, end, totalItems, previous);
 }
 
