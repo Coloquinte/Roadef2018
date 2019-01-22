@@ -287,17 +287,18 @@ void Solver::updateStats(Move &move, MoveStatus status, const Solution &incumben
   vector<Item> newSequence = incumbent.sequence(problem_);
 
   int beginDiff = 0;
-  for (beginDiff = 0; beginDiff < (int) newSequence.size(); ++beginDiff) {
+  for (; beginDiff < (int) newSequence.size(); ++beginDiff) {
     int ind = beginDiff;
     if (ind < (int) oldSequence.size()
      && oldSequence[ind].id != newSequence[ind].id) break;
   }
-  int endDiff = 0;
-  for (endDiff = 0; endDiff < (int) newSequence.size(); ++endDiff) {
-    int ind = endDiff;
+  int endDiff = newSequence.size();
+  for (; endDiff > 0; --endDiff) {
+    int ind = endDiff - 1;
     if (ind < (int) oldSequence.size()
      && oldSequence[ind].id != newSequence[ind].id) break;
   }
+  if (endDiff == 0) endDiff = newSequence.size();
 
   int foundSolutionItems = 0;
   int foundIncumbentItems = 0;
