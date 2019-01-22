@@ -156,7 +156,7 @@ Solution Move::runSequence(const vector<Item> &sequence) {
   return SequencePacker::run(problem(), sequence, params(), solution());
 }
 
-void randomInsert(vector<vector<Item> > &vec, mt19937 &rgen) {
+void randomInsert(vector<vector<Item> > &vec, mt19937 &rgen, int maxRange) {
   if (vec.size() <= 2)
     return;
   uniform_int_distribution<int> dist1(0, vec.size()-1);
@@ -164,20 +164,20 @@ void randomInsert(vector<vector<Item> > &vec, mt19937 &rgen) {
   vector<Item> picked = vec[pickedIndex];
   vec.erase(vec.begin() + pickedIndex);
 
-  uniform_int_distribution<int> dist2(0, vec.size()-2);
+  uniform_int_distribution<int> dist2(max(pickedIndex - maxRange, 0), min(pickedIndex + maxRange - 1, (int) vec.size()-2));
   int insertionPoint = dist2(rgen);
   if (insertionPoint >= pickedIndex)
     ++insertionPoint;
   vec.insert(vec.begin() + insertionPoint, picked);
 }
 
-void randomSwap(vector<vector<Item> > &vec, mt19937 &rgen) {
+void randomSwap(vector<vector<Item> > &vec, mt19937 &rgen, int maxRange) {
   if (vec.size() <= 2)
     return;
   uniform_int_distribution<int> dist1(0, vec.size()-1);
   int i0 = dist1(rgen);
 
-  uniform_int_distribution<int> dist2(0, vec.size()-2);
+  uniform_int_distribution<int> dist2(max(i0 - maxRange, 0), min(i0 + maxRange - 1, (int) vec.size()-2));
   int i1 = dist2(rgen);
   if (i1 >= i0)
     ++i1;
@@ -340,49 +340,49 @@ string Shuffle::name() const {
 
 Solution ItemInsert::apply(mt19937& rgen) {
   vector<vector<Item> > items = extractItemItems(solution());
-  randomInsert(items, rgen);
+  randomInsert(items, rgen, 10);
   return mergeRepairRun(items);
 }
 
 Solution RowInsert::apply(mt19937& rgen) {
   vector<vector<Item> > rows = extractRowItems(solution());
-  randomInsert(rows, rgen);
+  randomInsert(rows, rgen, 5);
   return mergeRepairRun(rows);
 }
 
 Solution CutInsert::apply(mt19937& rgen) {
   vector<vector<Item> > cuts = extractCutItems(solution());
-  randomInsert(cuts, rgen);
+  randomInsert(cuts, rgen, 3);
   return mergeRepairRun(cuts);
 }
 
 Solution PlateInsert::apply(mt19937& rgen) {
   vector<vector<Item> > plates = extractPlateItems(solution());
-  randomInsert(plates, rgen);
+  randomInsert(plates, rgen, 2);
   return mergeRepairRun(plates);
 }
 
 Solution ItemSwap::apply(mt19937& rgen) {
   vector<vector<Item> > items = extractItemItems(solution());
-  randomSwap(items, rgen);
+  randomSwap(items, rgen, 10);
   return mergeRepairRun(items);
 }
 
 Solution RowSwap::apply(mt19937& rgen) {
   vector<vector<Item> > rows = extractRowItems(solution());
-  randomSwap(rows, rgen);
+  randomSwap(rows, rgen, 5);
   return mergeRepairRun(rows);
 }
 
 Solution CutSwap::apply(mt19937& rgen) {
   vector<vector<Item> > cuts = extractCutItems(solution());
-  randomSwap(cuts, rgen);
+  randomSwap(cuts, rgen, 3);
   return mergeRepairRun(cuts);
 }
 
 Solution PlateSwap::apply(mt19937& rgen) {
   vector<vector<Item> > plates = extractPlateItems(solution());
-  randomSwap(plates, rgen);
+  randomSwap(plates, rgen, 2);
   return mergeRepairRun(plates);
 }
 

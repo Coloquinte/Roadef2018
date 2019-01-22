@@ -60,8 +60,9 @@ Solver::Solver(const Problem &problem, SolverParams params, const Solution &init
   addMove(make_unique<Shuffle>(16, 16));
   addMove(make_unique<Shuffle>(16, 32));
   addMove(make_unique<Shuffle>(16, 64));
+  addMove(make_unique<Shuffle>(32, 32));
+  addMove(make_unique<Shuffle>(32, 64));
 
-  /*
   // Insertions
   addMove(make_unique<ItemInsert>());
   addMove(make_unique<RowInsert>());
@@ -73,7 +74,6 @@ Solver::Solver(const Problem &problem, SolverParams params, const Solution &init
   addMove(make_unique<RowSwap>());
   addMove(make_unique<CutSwap>());
   addMove(make_unique<PlateSwap>());
-  */
 
   // Local swaps
   addMove(make_unique<AdjacentItemSwap>());
