@@ -83,6 +83,7 @@ po::options_description getHiddenOptions() {
   po::options_description expe("GCUT experimental options");
   pack.add_options()("first-plate", po::value<int>(), "First plate to consider from the initial solution");
   pack.add_options()("last-plate" , po::value<int>(), "Last plate to consider from the initial solution");
+  pack.add_options()("early-cancel" , po::value<bool>()->default_value(false), "Cancel non-improving moves early, without running the whole packing algorithm");
 
   desc.add(dev).add(move).add(pack).add(expe);
 
@@ -151,6 +152,7 @@ SolverParams buildParams(const po::variables_map &vm) {
   params.failOnViolation = vm.count("check");
   params.moveLimit = vm["moves"].as<size_t>();
   params.initializationRuns = vm["init-moves"].as<size_t>();
+  params.earlyCancel = vm["early-cancel"].as<bool>();
 
   if (vm.count("exact-row-packings")) params.rowPacking = PackingOption::Exact;
   if (vm.count("diagnose-row-packings")) params.rowPacking = PackingOption::Diagnose;

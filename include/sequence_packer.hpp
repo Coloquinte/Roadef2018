@@ -9,21 +9,27 @@
 
 class SequencePacker {
  public:
-  static Solution run(const Problem &problem, const std::vector<Item> &sequence, SolverParams options);
+  static Solution run(const Problem &problem, const std::vector<Item> &sequence, SolverParams options, const Solution &existing=Solution());
 
  private:
-  SequencePacker(const Problem &problem, const std::vector<Item> &sequence, SolverParams options);
+  SequencePacker(const Problem &problem, const std::vector<Item> &sequence, SolverParams options, const Solution &existing);
   void run();
+  void runNoCancel();
+  void runEarlyCancel();
 
   int nItems() const { return sequence_.size(); }
+  int sequenceBeginDiff() const;
+  int sequenceEndDiff() const;
 
  private:
   const Problem &problem_;
+  const Solution &existingSolution_;
   const std::vector<Item> &sequence_;
   SolverParams options_;
 
   Solution solution_;
   int packedItems_;
+  int packedExistingItems_;
 };
 
 #endif

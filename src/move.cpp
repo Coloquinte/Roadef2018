@@ -153,7 +153,7 @@ Solution Move::runSequence(const vector<Item> &sequence) {
   if (!sequenceValid(sequence))
     return Solution();
 
-  return SequencePacker::run(problem(), sequence, params());
+  return SequencePacker::run(problem(), sequence, params(), solution());
 }
 
 void randomInsert(vector<vector<Item> > &vec, mt19937 &rgen) {

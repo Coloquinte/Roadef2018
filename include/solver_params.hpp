@@ -19,6 +19,7 @@ struct SolverParams {
   std::size_t moveLimit;
   double timeLimit;
   bool failOnViolation;
+  bool earlyCancel;
 
   PackingOption rowPacking;
   PackingOption cutPacking;
@@ -33,6 +34,7 @@ struct SolverParams {
     moveLimit = 0;
     timeLimit = 0.0;
     failOnViolation = false;
+    earlyCancel = false;
 
     rowPacking = PackingOption::Approximate;
     cutPacking = PackingOption::Approximate;

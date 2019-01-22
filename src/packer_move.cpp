@@ -194,6 +194,7 @@ Solution PackerMove::runPackPlate(Rectangle targetPlate, const std::vector<Item>
 Solution PackRowInsert::apply(mt19937& rgen) {
   // Select a random row to reoptimize
   vector<RowSolution> rows = extractRows(solution());
+  if (rows.empty()) return Solution();
   int rowId = uniform_int_distribution<int>(0, rows.size() - 1)(rgen);
   RowSolution targetRow = rows[rowId];
 
@@ -207,6 +208,7 @@ Solution PackRowInsert::apply(mt19937& rgen) {
 Solution PackCutInsert::apply(mt19937& rgen) {
   // Select a random cut to reoptimize
   vector<CutSolution> cuts = extractCuts(solution());
+  if (cuts.empty()) return Solution();
   int cutId = uniform_int_distribution<int>(0, cuts.size() - 1)(rgen);
   CutSolution targetCut = cuts[cutId];
 
@@ -220,6 +222,7 @@ Solution PackCutInsert::apply(mt19937& rgen) {
 Solution PackPlateInsert::apply(mt19937& rgen) {
   // Select a random plate to reoptimize
   vector<PlateSolution> plates = extractPlates(solution());
+  if (plates.empty()) return Solution();
   int plateId = uniform_int_distribution<int>(0, plates.size() - 1)(rgen);
   PlateSolution targetPlate = plates[plateId];
 
@@ -233,6 +236,7 @@ Solution PackPlateInsert::apply(mt19937& rgen) {
 Solution PackRowShuffle::apply(mt19937& rgen) {
   // Select a random row to reoptimize
   vector<RowSolution> rows = extractRows(solution());
+  if (rows.empty()) return Solution();
   int rowId = uniform_int_distribution<int>(0, rows.size() - 1)(rgen);
   RowSolution targetRow = rows[rowId];
 
@@ -246,6 +250,7 @@ Solution PackRowShuffle::apply(mt19937& rgen) {
 Solution PackCutShuffle::apply(mt19937& rgen) {
   // Select a random cut to reoptimize
   vector<CutSolution> cuts = extractCuts(solution());
+  if (cuts.empty()) return Solution();
   int cutId = uniform_int_distribution<int>(0, cuts.size() - 1)(rgen);
   CutSolution targetCut = cuts[cutId];
 
@@ -259,6 +264,7 @@ Solution PackCutShuffle::apply(mt19937& rgen) {
 Solution PackPlateShuffle::apply(mt19937& rgen) {
   // Select a random plate to reoptimize
   vector<PlateSolution> plates = extractPlates(solution());
+  if (plates.empty()) return Solution();
   int plateId = uniform_int_distribution<int>(0, plates.size() - 1)(rgen);
   PlateSolution targetPlate = plates[plateId];
 
