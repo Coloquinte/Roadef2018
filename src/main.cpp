@@ -61,7 +61,7 @@ po::options_description getHiddenOptions() {
 
   po::options_description dev("GCUT developer options");
   dev.add_options()("help-all", "Print the help for all command line arguments");
-  dev.add_options()("v", po::value<int>()->default_value(1),
+  dev.add_options()("v", po::value<int>()->default_value(0),
                     "Output verbosity");
   dev.add_options()("check", "Fail and report on violation");
   dev.add_options()("permissive", "Tolerate infeasible problems");
@@ -120,11 +120,6 @@ po::variables_map parseArguments(int argc, char **argv) {
     exit(1);
   }
 
-  if (vm.count("name")) {
-    cout << "S16" << endl;
-    exit(0);
-  }
-
   if (vm.count("help")) {
     cout << visibleOptions << endl;
     exit(0);
@@ -137,6 +132,12 @@ po::variables_map parseArguments(int argc, char **argv) {
   bool prefixPresent = fileOptionPresent(vm, "p");
   bool batchPresent  = fileOptionPresent(vm, "batch");
   bool defectPresent = fileOptionPresent(vm, "defects");
+
+  if (vm.count("name")) {
+    cout << "S16" << endl;
+    if (!prefixPresent && !batchPresent)
+      exit(0);
+  }
 
   if (!prefixPresent && !batchPresent) {
     cout << "Missing input file" << endl << endl;
@@ -264,8 +265,8 @@ void run(int argc, char** argv) {
   if (params.verbosity >= 1)
     SolutionChecker::report(pb, solution);
 
-  if (vm.count("solution"))
-    solution.write(vm["solution"].as<string>());
+  if (vm.count("o"))
+    solution.write(vm["o"].as<string>());
 }
 
 int main(int argc, char** argv) {
