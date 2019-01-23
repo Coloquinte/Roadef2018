@@ -67,13 +67,13 @@ Solver::Solver(const Problem &problem, SolverParams params, const Solution &init
   addMove(make_unique<ItemInsert>());
   addMove(make_unique<RowInsert>());
   addMove(make_unique<CutInsert>());
-  addMove(make_unique<PlateInsert>());
+  addMove(make_unique<PlateInsert>(), 50);
 
   // Swaps
   addMove(make_unique<ItemSwap>());
   addMove(make_unique<RowSwap>());
   addMove(make_unique<CutSwap>());
-  addMove(make_unique<PlateSwap>());
+  addMove(make_unique<PlateSwap>(), 50);
 
   // Local swaps
   addMove(make_unique<AdjacentItemSwap>());
