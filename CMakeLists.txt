@@ -32,14 +32,14 @@ SET (SOURCES
   src/main.cpp
 )
 
-add_executable(gcut ${SOURCES})
-target_link_libraries(gcut
+add_executable(challengeSG ${SOURCES})
+target_link_libraries(challengeSG
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
 enable_testing()
 foreach (i RANGE 1 20)
-  ADD_TEST(BENCH_A${i} gcut --batch ${ROADEF2018_SOURCE_DIR}/dataset/A${i}_batch.csv --defects ${ROADEF2018_SOURCE_DIR}/dataset/A${i}_defects.csv --time ${TEST_TIME} -o A${i}_solution.csv)
+  ADD_TEST(BENCH_A${i} challengeSG --batch ${ROADEF2018_SOURCE_DIR}/dataset/A${i}_batch.csv --defects ${ROADEF2018_SOURCE_DIR}/dataset/A${i}_defects.csv --time ${TEST_TIME} -o A${i}_solution.csv)
 endforeach(i)
 

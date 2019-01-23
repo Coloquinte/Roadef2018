@@ -12,23 +12,26 @@
 
 using namespace std;
 namespace po = boost::program_options;
+namespace cls = po::command_line_style;
 
 po::options_description getOptions() {
   po::options_description desc("GCUT options");
 
-  desc.add_options()("prefix,p", po::value<string>(),
+  desc.add_options()("p", po::value<string>(),
                      "Instance name; will load <arg>_batch.csv and <arg>_defects.csv");
 
-  desc.add_options()("solution,o", po::value<string>(),
+  desc.add_options()("o", po::value<string>(),
                      "Solution file (.csv)");
 
-  desc.add_options()("time,t", po::value<double>()->default_value(3.0),
+  desc.add_options()("t", po::value<double>()->default_value(3.0),
                      "Time limit (seconds)");
 
-  desc.add_options()("seed,s", po::value<size_t>()->default_value(0),
+  desc.add_options()("s", po::value<size_t>()->default_value(0),
                      "Random seed");
 
-  desc.add_options()("help,h", "Print this help");
+  desc.add_options()("name", "Show team name");
+
+  desc.add_options()("help", "Print this help");
 
   return desc;
 }
@@ -36,7 +39,7 @@ po::options_description getOptions() {
 po::options_description getAdvancedOptions() {
   po::options_description desc("GCUT advanced options");
 
-  desc.add_options()("threads,j", po::value<size_t>()->default_value(32),
+  desc.add_options()("j", po::value<size_t>()->default_value(32),
                      "Number of threads");
 
   desc.add_options()("batch", po::value<string>(),
@@ -58,7 +61,7 @@ po::options_description getHiddenOptions() {
 
   po::options_description dev("GCUT developer options");
   dev.add_options()("help-all", "Print the help for all command line arguments");
-  dev.add_options()("verbosity,v", po::value<int>()->default_value(1),
+  dev.add_options()("v", po::value<int>()->default_value(1),
                     "Output verbosity");
   dev.add_options()("check", "Fail and report on violation");
   dev.add_options()("permissive", "Tolerate infeasible problems");
@@ -66,7 +69,7 @@ po::options_description getHiddenOptions() {
   po::options_description move("GCUT move options");
   move.add_options()("moves", po::value<size_t>()->default_value(1000000000llu),
                      "Move limit");
-  move.add_options()("init-moves", po::value<size_t>()->default_value(500llu),
+  move.add_options()("init-moves", po::value<size_t>()->default_value(1000llu),
                      "Initialization move limit");
 
   po::options_description pack("GCUT packing options");
@@ -107,13 +110,19 @@ po::variables_map parseArguments(int argc, char **argv) {
 
   po::variables_map vm;
   try {
-    po::store(po::parse_command_line(argc, argv, allOptions), vm);
+    int style = cls::unix_style | cls::allow_long_disguise;
+    po::store(po::parse_command_line(argc, argv, allOptions, style), vm);
     po::notify(vm);
   } catch (po::error &e) {
     cerr << "Error parsing command line arguments: ";
     cerr << e.what() << endl << endl;
     cout << desc << endl;
     exit(1);
+  }
+
+  if (vm.count("name")) {
+    cout << "S16" << endl;
+    exit(0);
   }
 
   if (vm.count("help")) {
@@ -125,7 +134,7 @@ po::variables_map parseArguments(int argc, char **argv) {
     exit(0);
   }
 
-  bool prefixPresent = fileOptionPresent(vm, "prefix");
+  bool prefixPresent = fileOptionPresent(vm, "p");
   bool batchPresent  = fileOptionPresent(vm, "batch");
   bool defectPresent = fileOptionPresent(vm, "defects");
 
@@ -135,7 +144,7 @@ po::variables_map parseArguments(int argc, char **argv) {
     exit(1);
   }
   if (prefixPresent && (batchPresent || defectPresent)) {
-    cout << "-prefix option cannot be used with --batch or --defects" << endl << endl;
+    cout << "-p option cannot be used with --batch or --defects" << endl << endl;
     cout << visibleOptions << endl;
     exit(1);
   }
@@ -145,10 +154,10 @@ po::variables_map parseArguments(int argc, char **argv) {
 
 SolverParams buildParams(const po::variables_map &vm) {
   SolverParams params;
-  params.verbosity = vm["verbosity"].as<int>();
-  params.seed = vm["seed"].as<size_t>();
-  params.nbThreads = vm["threads"].as<size_t>();
-  params.timeLimit = vm["time"].as<double>();
+  params.verbosity = vm["v"].as<int>();
+  params.seed = vm["s"].as<size_t>();
+  params.nbThreads = vm["j"].as<size_t>();
+  params.timeLimit = vm["t"].as<double>();
   params.failOnViolation = vm.count("check");
   params.moveLimit = vm["moves"].as<size_t>();
   params.initializationRuns = vm["init-moves"].as<size_t>();
@@ -228,9 +237,9 @@ void run(int argc, char** argv) {
 
   string batchFile;
   string defectFile;
-  if (fileOptionPresent(vm, "prefix")) {
-    batchFile = vm["prefix"].as<string>() + "_batch.csv";
-    defectFile = vm["prefix"].as<string>() + "_defects.csv";
+  if (fileOptionPresent(vm, "p")) {
+    batchFile = vm["p"].as<string>() + "_batch.csv";
+    defectFile = vm["p"].as<string>() + "_defects.csv";
   }
   else {
     batchFile = vm["batch"].as<string>();
