@@ -32,11 +32,3 @@ B/B12
 B/B13
 B/B14
 B/B15
-G/G1
-G/G2
-G/G3
-G/G4
-G/G5
-G/G6
-G/G7
-G/G8
