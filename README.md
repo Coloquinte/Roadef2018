@@ -1,5 +1,5 @@
 # Roadef2018
-Glass cutting algorithm for the [ROADEF 2018 challenge](http://www.roadef.org/challenge/2018/en/sujet.php)
+Glass cutting algorithm for the [ROADEF 2018 challenge](http://www.roadef.org/challenge/2018/en/sujet.php), team S16
 
 ## Build
 Make sure you have a C++14 compiler, CMake and the Boost libraries installed. Build with
